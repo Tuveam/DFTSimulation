@@ -1,40 +1,3 @@
-import processing.core.*; 
-import processing.data.*; 
-import processing.event.*; 
-import processing.opengl.*; 
-
-import java.util.HashMap; 
-import java.util.ArrayList; 
-import java.io.File; 
-import java.io.BufferedReader; 
-import java.io.PrintWriter; 
-import java.io.InputStream; 
-import java.io.OutputStream; 
-import java.io.IOException; 
-
-public class DFTSimulation extends PApplet {
-
-
-Knob[] a = new Knob[4];
-
-public void setup(){
-    
-
-    for(int i = 0; i < a.length; i++){
-        a[i] = new Knob(100 + i*200, 400, 50, 50);
-    }
-
-
-}
-
-public void draw(){
-    background(255, 0, 0);
-
-    for(int i = 0; i < a.length; i++){
-        a[i].update();
-    }
-
-}
 class Controller{
     //private float/boolean m_value = 0;
     
@@ -102,13 +65,13 @@ class Knob extends Controller{
 
     private float m_sensitivity = 1;
 
-    private int m_capColor;
-    private int m_barColor;
-    private int m_fillColor;
+    private color m_capColor;
+    private color m_barColor;
+    private color m_fillColor;
 
     Knob(float xPos, float yPos, float xLen, float yLen){
         super(xPos, yPos, (xLen < yLen)? xLen : yLen, (xLen < yLen)? xLen : yLen);
-        m_value = 0.8f;
+        m_value = 0.8;
         m_capColor = color(150, 150, 150);
         m_barColor = color(100, 100, 100);
         m_fillColor = color(50, 150, 50);
@@ -148,26 +111,16 @@ class Knob extends Controller{
         //Cap
         noStroke();
         fill(m_capColor);
-        ellipse(m_xPos + m_xLen / 2, m_yPos + m_yLen / 2, 0.6f * m_xLen, 0.6f * m_yLen);
+        ellipse(m_xPos + m_xLen / 2, m_yPos + m_yLen / 2, 0.6 * m_xLen, 0.6 * m_yLen);
     }
 
     public float getValue(){
         return m_value;
     }
 
-    public void setColor(int capColor, int barColor, int fillColor){
+    public void setColor(color capColor, color barColor, color fillColor){
         m_capColor = capColor;
         m_barColor = barColor;
         m_fillColor = fillColor;
     }
-}
-  public void settings() {  size(800,800); }
-  static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "DFTSimulation" };
-    if (passedArgs != null) {
-      PApplet.main(concat(appletArgs, passedArgs));
-    } else {
-      PApplet.main(appletArgs);
-    }
-  }
 }
