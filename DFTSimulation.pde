@@ -1,21 +1,20 @@
+//command+shift+b to run it in vscode
+//Anything in here is only testing code and can be deleted
 
-Knob[] a = new Knob[4];
+
+Automation a;
 
 void setup(){
     size(800,800);
 
-    for(int i = 0; i < a.length; i++){
-        a[i] = new Knob(100 + i*200, 400, 50, 50);
-    }
+    a = new Automation(200, 200, 500, 300);
 
 
 }
 
 void draw(){
-    background(255, 0, 0);
+    background(50, 0, 0);
 
-    for(int i = 0; i < a.length; i++){
-        a[i].update();
-    }
+    a.draw();
 
 }
