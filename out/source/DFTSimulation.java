@@ -22,6 +22,9 @@ Automation a;
 
 ArrayList<Knob> k = new ArrayList<Knob>();
 
+PlayButton p;
+Button b;
+
 
 boolean iterated = false;
 
@@ -35,12 +38,17 @@ public void setup(){
 
     k.get(0).setColor(color(PApplet.parseInt(random(255)), PApplet.parseInt(random(255)), PApplet.parseInt(random(255))), color(PApplet.parseInt(random(255)), PApplet.parseInt(random(255)), PApplet.parseInt(random(255))), color(PApplet.parseInt(random(255)), PApplet.parseInt(random(255)), PApplet.parseInt(random(255))));
 
+    p = new PlayButton(540, 50, 50, 50);
+    b = new Button(600, 50, 50, 50);
 }
 
 public void draw(){
     background(50, 0, 0);
 
     a.update();
+
+    p.update();
+    b.update();
 
     for(int i = 0; i < k.size(); i++){
         k.get(i).update();
@@ -241,12 +249,12 @@ class Knob extends Controller{
 
 class Tickbox extends Controller{
 
-    private boolean m_value;
+    protected boolean m_value;
 
-    private boolean m_pressed = false;
+    protected boolean m_pressed = false;
 
-    private int m_backgroundColor1;
-    private int m_backgroundColor2;
+    protected int m_backgroundColor1;
+    protected int m_backgroundColor2;
 
 
     Tickbox(float xPos, float yPos, float xLen, float yLen){
@@ -301,9 +309,15 @@ class Tickbox extends Controller{
         noStroke();
         fill(m_backgroundColor2);
         rect(0, 0, m_len.x, m_len.y, rounding);
-
-        //Tick
         float indent = 0.1f;
+
+        drawTick(indent, rounding);
+
+        popMatrix();
+    }
+
+    protected void drawTick(float indent, float rounding){
+        //Tick
         if(m_value){
             noStroke();
             fill(m_fillColor);
@@ -320,8 +334,6 @@ class Tickbox extends Controller{
             fill(255, 100);
             rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
         }
-
-        popMatrix();
     }
 
 
@@ -333,6 +345,117 @@ class Tickbox extends Controller{
         m_backgroundColor1 = backgroundColor1;
         m_backgroundColor2 = backgroundColor2;
         m_fillColor = fillColor;
+    }
+}
+
+class Button extends Tickbox{
+    protected int m_cooldown = 20;
+    protected int m_tickCooldown = m_cooldown;
+
+    Button(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen);
+    }
+
+    protected void adjust(){
+        if(m_selected){
+            m_pressed = true;
+        }
+
+        if(!m_selected && m_pressed){
+            m_value = true;
+            m_pressed = false;
+            m_tickCooldown = 0;
+        }
+
+        if(!m_pressed && !m_selected && m_value){
+            m_value = false;
+        }
+
+        if(m_tickCooldown < m_cooldown){
+            m_tickCooldown++;
+        }
+
+        if(m_tickCooldown > m_cooldown){
+            m_tickCooldown = m_cooldown;
+        }
+    }
+
+    protected void drawTick(float indent, float rounding){
+        noStroke();
+        fill(m_backgroundColor1);
+        rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+
+        fill(m_fillColor, map(m_tickCooldown, 0, 20, 255, 0));
+        rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+
+        fill(m_backgroundColor2);
+        rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+        beginShape();
+            vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
+            vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
+            vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+        endShape();
+
+        if(m_pressed){
+            fill(255,100);
+            rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+            beginShape();
+            vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
+            vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
+            vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+            endShape();
+        }
+    }
+}
+
+class PlayButton extends Tickbox{
+
+    PlayButton(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen);
+    }
+
+    protected void drawTick(float indent, float rounding){
+        //Tick
+        if(m_value){
+            noStroke();
+            fill(m_fillColor);
+        }else{
+            noStroke();
+            fill(m_backgroundColor1);
+        }
+
+        rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+
+        if(m_value){//PAUSE
+            noStroke();
+            fill(m_backgroundColor2);
+            rect(m_len.x * 3 * indent, m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+            rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+
+            if(m_pressed){
+                fill(255, 100);
+                rect(m_len.x * 3 * indent, m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+                rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+            }
+        }else{//PLAY
+            noStroke();
+            fill(m_fillColor);
+
+            beginShape();
+            vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
+            vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
+            vertex(m_len.x - m_len.x * 3 * indent, m_len.y/2);
+            endShape();
+
+            if(m_pressed){
+                fill(255,100);
+                beginShape();
+                vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
+                vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
+                vertex(m_len.x - m_len.x * 3 * indent, m_len.y/2);
+                endShape();
+            }
+        }
     }
 }
 

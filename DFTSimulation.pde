@@ -6,6 +6,9 @@ Automation a;
 
 ArrayList<Knob> k = new ArrayList<Knob>();
 
+PlayButton p;
+Button b;
+
 
 boolean iterated = false;
 
@@ -19,12 +22,17 @@ void setup(){
 
     k.get(0).setColor(color(int(random(255)), int(random(255)), int(random(255))), color(int(random(255)), int(random(255)), int(random(255))), color(int(random(255)), int(random(255)), int(random(255))));
 
+    p = new PlayButton(540, 50, 50, 50);
+    b = new Button(600, 50, 50, 50);
 }
 
 void draw(){
     background(50, 0, 0);
 
     a.update();
+
+    p.update();
+    b.update();
 
     for(int i = 0; i < k.size(); i++){
         k.get(i).update();
