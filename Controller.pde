@@ -344,6 +344,8 @@ class PlayButton extends Tickbox{
 
     PlayButton(float xPos, float yPos, float xLen, float yLen){
         super(xPos, yPos, xLen, yLen);
+
+        m_value = false;
     }
 
     protected void drawTick(float indent, float rounding){
