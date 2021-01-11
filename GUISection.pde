@@ -131,7 +131,11 @@ class InputSection extends GUISection{
 
 class MathSection extends GUISection{
     MathSection(PVector pos, PVector len){
-        super(pos, len, 0, 0);
+        super(pos, len, 0, 1);
+    }
+
+    protected void initializeControllers(){
+        m_controller[0] = new Tabs(m_pos.x, m_pos.y, m_len.x, m_len.y/8, new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"});
     }
 
     protected void drawBackground(){

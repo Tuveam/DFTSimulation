@@ -10,12 +10,16 @@ class Controller{
     protected PVector m_mouseClicked;
 
     protected color m_fillColor;
+    protected color m_backgroundColor1;
+    protected color m_backgroundColor2;
 
     Controller(PVector pos, PVector len){
         m_pos = pos;
         m_len = len;
 
         m_fillColor = color(75, 200, 75);
+        m_backgroundColor1 = color(100, 100, 100);
+        m_backgroundColor2 = color(50, 50, 50);
         
         m_mouseClicked = new PVector(mouseX, mouseY);
     }
@@ -73,16 +77,11 @@ class Knob extends Controller{
     private float m_maxRealValue = 1;
 
     private float m_sensitivity = 0.25;
-
-    private color m_capColor;
-    private color m_barColor;
     
 
     Knob(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector((xLen < yLen)? xLen : yLen, (xLen < yLen)? xLen : yLen));
         m_value = 0.8;
-        m_capColor = color(50, 50, 50);
-        m_barColor = color(100, 100, 100);
         
     }
 
@@ -134,7 +133,7 @@ class Knob extends Controller{
 
         //Bar
         noStroke();
-        fill(m_barColor);
+        fill(m_backgroundColor1);
         arc(0, 0, m_len.x, m_len.y, PI * 3 / 4, PI * 9 / 4, PIE);
 
         //Fill
@@ -146,7 +145,7 @@ class Knob extends Controller{
         
         //Cap
         noStroke();
-        fill(m_capColor);
+        fill(m_backgroundColor2);
         ellipse(0, 0, 0.8 * m_len.x, 0.8 * m_len.y);
 
         //indicator line
@@ -166,8 +165,8 @@ class Knob extends Controller{
     }
 
     public void setColor(color capColor, color barColor, color fillColor){
-        m_capColor = capColor;
-        m_barColor = barColor;
+        m_backgroundColor2 = capColor;
+        m_backgroundColor1 = barColor;
         m_fillColor = fillColor;
     }
 
@@ -184,9 +183,6 @@ class Tickbox extends Controller{
     protected boolean m_value;
 
     protected boolean m_pressed = false;
-
-    protected color m_backgroundColor1;
-    protected color m_backgroundColor2;
 
 
     Tickbox(float xPos, float yPos, float xLen, float yLen){
@@ -751,6 +747,82 @@ class AutomationPoint extends Controller{
 
     public void resetCurve(){
         m_curve = 0.5;
+    }
+
+}
+
+//====================================================================
+
+class Tabs extends Controller{
+
+    private int m_value;
+    private String[] m_tabName;
+
+    Tabs(float xPos, float yPos, float xLen, float yLen, String[] tabName){
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+
+        m_value = 0;
+
+        m_tabName = tabName;
+    }
+
+    protected void click(){
+        if(mousePressed && (m_firstClick || m_selected)){
+            m_firstClick = false;
+
+            for(int i = 0; i < m_tabName.length; i++){
+                if( mouseX >= (m_pos.x + i * m_len.x/m_tabName.length) &&
+                    mouseX <= (m_pos.x + (i + 1) * m_len.x/m_tabName.length) &&
+                    mouseY >= m_pos.y && 
+                    mouseY <= m_pos.y + m_len.y){
+
+                        m_mouseClicked.x = mouseX;
+                        m_mouseClicked.y = mouseY;
+
+                        m_selected = true;
+
+                        m_value = i;
+                    }
+            }
+
+        }
+        
+        if(!mousePressed){
+            m_selected = false;
+            m_firstClick = true;
+        }
+        
+    }
+
+    protected void draw(){
+        noStroke();
+        fill(m_backgroundColor2);
+        rect(m_pos.x, m_pos.y, m_len.x, 4 * m_len.y/5, 10);
+
+        if(m_value > 0){
+            rect(m_pos.x, m_pos.y, m_value * m_len.x/m_tabName.length, m_len.y, 10);
+        }
+
+        if(m_value < (m_tabName.length - 1)){
+            rect(m_pos.x + (m_value + 1) * m_len.x/m_tabName.length, m_pos.y, (m_tabName.length - (m_value + 1)) * m_len.x/m_tabName.length, m_len.y, m_len.y/5);
+        }
+
+        fill(m_fillColor);
+        rect(m_pos.x + m_value * m_len.x/m_tabName.length, m_pos.y, m_len.x/m_tabName.length, 4 * m_len.y/5);
+
+        stroke(m_backgroundColor1);
+        strokeWeight(2);
+        for(int i = 1; i < m_tabName.length; i++){
+            line(m_pos.x + i * m_len.x/m_tabName.length, m_pos.y + m_len.y/5, m_pos.x + i * m_len.x/m_tabName.length, m_pos.y + 4 * m_len.y/5);
+        }
+
+        fill(m_backgroundColor1);
+        textAlign(CENTER);
+        textSize(m_len.y/2);
+        for(int i = 0; i < m_tabName.length; i++){
+            text(m_tabName[i], m_pos.x + (i + 0.5) * m_len.x/m_tabName.length, m_pos.y + 5 * m_len.y/8);
+        }
+
     }
 
 }
