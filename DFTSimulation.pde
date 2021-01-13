@@ -10,6 +10,6 @@ void setup(){
 }
 
 void draw(){
-    m.draw();
+    m.update();
 
 }

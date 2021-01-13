@@ -30,7 +30,16 @@ class GUISection{
         }
     }
 
-    public void draw(){
+    public void update(){
+        tick();
+        draw();
+    }
+
+    protected void tick(){
+        //to be overloaded
+    }
+
+    protected void draw(){
         drawBackground();
         drawComponents();
         drawSections();
@@ -45,7 +54,7 @@ class GUISection{
     protected void drawSections(){
         for(int i = 0; i < m_section.length; i++){
 
-            m_section[i].draw();
+            m_section[i].update();
         }
     }
 
@@ -53,18 +62,25 @@ class GUISection{
         for(int i = 0; i < m_controller.length; i++){
             m_controller[i].update();
         }
-    }
+    }  
+    
 }
 
 //====================================================================
 
 class MainSection extends GUISection{
 
-    
+    private int m_time = 0;
 
     MainSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen), 4, 0);
 
+    }
+
+    protected void tick(){
+        //if(m_section[0].isTimeAdvancing()){
+        //    m_time++;
+        //}
     }
 
     protected void initializeSections(){
@@ -74,11 +90,21 @@ class MainSection extends GUISection{
         m_section[3] = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
     }
 
+    protected void drawSections(){
+        //m_section[1].setTime(m_time);
+        for(int i = 0; i < m_section.length; i++){
+
+            m_section[i].update();
+        }
+    }
+
 }
 
 //====================================================================
 
 class MenuSection extends GUISection{
+    boolean isAdvancingTime = false;
+
     MenuSection(PVector pos, PVector len){
         super(pos, len, 0, 3);
     }
@@ -102,14 +128,30 @@ class MenuSection extends GUISection{
         popMatrix();
     }
 
+    protected void tick(){
+        isAdvancingTime = false;
+        //if(m_controller[1].getValue()){
+        //    isAdvancingTime = true;
+        //}
+    }
+
+
+    public boolean isTimeAdvancing(){
+        return isAdvancingTime;
+    }
 
 }
 
 //====================================================================
 
 class InputSection extends GUISection{
+    private Graph m_input;
+    private int m_time = 1;
+
     InputSection(PVector pos, PVector len){
         super(pos, len, 0, 0);
+
+        m_input = new Graph(m_pos.x + m_len.x/4, m_pos.y + m_len.y/8, 3 * m_len.x/5, 3 * m_len.y/4, 50);
     }
 
     protected void drawBackground(){
@@ -124,6 +166,21 @@ class InputSection extends GUISection{
         fill(255, 30);
         text("Input", 0, 0);
         popMatrix();
+    }
+
+    protected void drawComponents(){
+        for(int i = 0; i < m_controller.length; i++){
+            m_controller[i].update();
+        }
+
+        
+        m_input.draw(m_time);
+        m_input.addData(sin(0.1 * m_time), m_time - 1);
+        
+    }
+
+    public void setTime(int time){
+        m_time = time;
     }
 }
 

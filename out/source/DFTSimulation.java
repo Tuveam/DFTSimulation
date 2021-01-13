@@ -26,7 +26,7 @@ public void setup(){
 }
 
 public void draw(){
-    m.draw();
+    m.update();
 
 }
 class Controller{
@@ -889,7 +889,16 @@ class GUISection{
         }
     }
 
-    public void draw(){
+    public void update(){
+        tick();
+        draw();
+    }
+
+    protected void tick(){
+        //to be overloaded
+    }
+
+    protected void draw(){
         drawBackground();
         drawComponents();
         drawSections();
@@ -904,7 +913,7 @@ class GUISection{
     protected void drawSections(){
         for(int i = 0; i < m_section.length; i++){
 
-            m_section[i].draw();
+            m_section[i].update();
         }
     }
 
@@ -912,18 +921,25 @@ class GUISection{
         for(int i = 0; i < m_controller.length; i++){
             m_controller[i].update();
         }
-    }
+    }  
+    
 }
 
 //====================================================================
 
 class MainSection extends GUISection{
 
-    
+    private int m_time = 0;
 
     MainSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen), 4, 0);
 
+    }
+
+    protected void tick(){
+        //if(m_section[0].isTimeAdvancing()){
+        //    m_time++;
+        //}
     }
 
     protected void initializeSections(){
@@ -933,11 +949,21 @@ class MainSection extends GUISection{
         m_section[3] = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
     }
 
+    protected void drawSections(){
+        //m_section[1].setTime(m_time);
+        for(int i = 0; i < m_section.length; i++){
+
+            m_section[i].update();
+        }
+    }
+
 }
 
 //====================================================================
 
 class MenuSection extends GUISection{
+    boolean isAdvancingTime = false;
+
     MenuSection(PVector pos, PVector len){
         super(pos, len, 0, 3);
     }
@@ -961,14 +987,30 @@ class MenuSection extends GUISection{
         popMatrix();
     }
 
+    protected void tick(){
+        isAdvancingTime = false;
+        //if(m_controller[1].getValue()){
+        //    isAdvancingTime = true;
+        //}
+    }
+
+
+    public boolean isTimeAdvancing(){
+        return isAdvancingTime;
+    }
 
 }
 
 //====================================================================
 
 class InputSection extends GUISection{
+    private Graph m_input;
+    private int m_time = 1;
+
     InputSection(PVector pos, PVector len){
         super(pos, len, 0, 0);
+
+        m_input = new Graph(m_pos.x + m_len.x/4, m_pos.y + m_len.y/8, 3 * m_len.x/5, 3 * m_len.y/4, 50);
     }
 
     protected void drawBackground(){
@@ -983,6 +1025,21 @@ class InputSection extends GUISection{
         fill(255, 30);
         text("Input", 0, 0);
         popMatrix();
+    }
+
+    protected void drawComponents(){
+        for(int i = 0; i < m_controller.length; i++){
+            m_controller[i].update();
+        }
+
+        
+        m_input.draw(m_time);
+        m_input.addData(sin(0.1f * m_time), m_time - 1);
+        
+    }
+
+    public void setTime(int time){
+        m_time = time;
     }
 }
 
@@ -1031,6 +1088,53 @@ class SpectrumSection extends GUISection{
         fill(255, 30);
         text("Spectrum", 0, 0);
         popMatrix();
+    }
+}
+class Graph{
+    private PVector m_pos;
+    private PVector m_len;
+    private float[] m_data; //goes from -1 to 1
+    private int m_color;
+
+    Graph(float xPos, float yPos, float xLen, float yLen, int arrayLength){
+        m_pos = new PVector(xPos, yPos);
+        m_len = new PVector(xLen, yLen);
+
+        m_data = new float[arrayLength];
+        for(int i = 0; i < m_data.length; i++){
+            m_data[i] = 0;
+        }
+
+        m_color = color(3, 250, 75);
+    }
+
+    public void draw(int index){
+        index %= m_data.length;
+
+        for(int i = index; i < m_data.length; i++){
+            noFill();
+            stroke(m_color);
+            strokeWeight(2);
+            ellipse(m_pos.x + (i - index) * m_len.x / m_data.length, getPointYPos(i), 10, 10);
+            line(m_pos.x + (i - index) * m_len.x / m_data.length, getPointYPos(i), m_pos.x + (i - index) * m_len.x / m_data.length, m_pos.y + m_len.y/2);
+        }
+
+        for(int i = 0; i < index; i++){
+            noFill();
+            stroke(m_color);
+            strokeWeight(2);
+            ellipse(m_pos.x + (i + m_data.length - index) * m_len.x / m_data.length, getPointYPos(i), 10, 10);
+            line(m_pos.x + (i + m_data.length - index) * m_len.x / m_data.length, getPointYPos(i), m_pos.x + (i + m_data.length - index) * m_len.x / m_data.length, m_pos.y + m_len.y/2);
+        }
+    }
+
+    private float getPointYPos(int index){
+        return map(m_data[index], -1, 1, m_pos.y + m_len.y, m_pos.y);
+    }
+
+    public void addData(float data, int index){
+        index %= m_data.length;
+        m_data[index] = data;
     }
 }
   public void settings() {  size(800,800); }
