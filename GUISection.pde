@@ -149,9 +149,13 @@ class InputSection extends GUISection{
     private int m_time = 1;
 
     InputSection(PVector pos, PVector len){
-        super(pos, len, 0, 0);
+        super(pos, len, 0, 1);
 
         m_input = new Graph(m_pos.x + m_len.x/4, m_pos.y + m_len.y/8, 3 * m_len.x/5, 3 * m_len.y/4, 50);
+    }
+
+    protected void initializeControllers(){
+        m_controller[0] = new Automation(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer);
     }
 
     protected void drawBackground(){
@@ -174,8 +178,8 @@ class InputSection extends GUISection{
         }
 
         
-        m_input.draw(m_time);
-        m_input.addData(sin(0.1 * m_time), m_time - 1);
+        //m_input.draw(m_time);
+        //m_input.addData(sin(0.1 * m_time), m_time - 1);
         
     }
 
