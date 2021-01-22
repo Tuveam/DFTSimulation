@@ -17,7 +17,7 @@ class Controller{
         m_pos = pos;
         m_len = len;
 
-        m_fillColor = color(75, 200, 75);
+        m_fillColor = color(75, 170, 75);
         m_backgroundColor1 = color(100, 100, 100);
         m_backgroundColor2 = color(50, 50, 50);
         
@@ -63,6 +63,12 @@ class Controller{
     //public float getValue(){
         //to be inherited and overloaded
     //}
+
+    public void setColor(color capColor, color barColor, color fillColor){
+        m_backgroundColor2 = capColor;
+        m_backgroundColor1 = barColor;
+        m_fillColor = fillColor;
+    }
 
 }
 
@@ -162,12 +168,6 @@ class Knob extends Controller{
 
     public float getRealValue(){
         return map(m_value, 0, 1, m_minRealValue, m_maxRealValue);
-    }
-
-    public void setColor(color capColor, color barColor, color fillColor){
-        m_backgroundColor2 = capColor;
-        m_backgroundColor1 = barColor;
-        m_fillColor = fillColor;
     }
 
     public void setRealValueRange(float minRealValue, float maxRealValue){
@@ -289,14 +289,14 @@ class Button extends Tickbox{
             m_pressed = true;
         }
 
+        if(!m_pressed && !m_selected && m_value){
+            m_value = false;
+        }
+
         if(!m_selected && m_pressed){
             m_value = true;
             m_pressed = false;
             m_tickCooldown = 0;
-        }
-
-        if(!m_pressed && !m_selected && m_value){
-            m_value = false;
         }
 
         if(m_tickCooldown < m_cooldown){
@@ -394,22 +394,26 @@ class PlayButton extends Tickbox{
 class Automation extends Controller{
 
     ArrayList<AutomationPoint> m_point = new ArrayList<AutomationPoint>();
-
-    private color m_backgroundColor1;
-    private color m_backgroundColor2;
+    private boolean m_drawBackground = true;
 
     Automation(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
-        m_backgroundColor1 = color(100, 100, 100);
-        m_backgroundColor2 = color(50, 50, 50);
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5), m_fillColor) );
+    }
 
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0)) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 1)) );
+    Automation(float xPos, float yPos, float xLen, float yLen, color fillColor, boolean drawBackground){
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+        m_fillColor = fillColor;
+        m_drawBackground = drawBackground;
+
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5), m_fillColor) );
     }
 
     private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
-        toSort.add(new AutomationPoint( new PVector(0, 0), new PVector(0, 0), new PVector(0, 0)));
+        toSort.add(new AutomationPoint( new PVector(0, 0), new PVector(0, 0), new PVector(0, 0), m_fillColor));
 
         for(int i = toSort.size() - 2; i >= index; i--){
             toSort.set(i + 1, toSort.get(i));
@@ -424,7 +428,7 @@ class Automation extends Controller{
 
             boolean createPoint = true;
 
-            for(int i = 0; i < m_point.size() && createPoint; i++){
+            for(int i = 1; i < m_point.size() - 1 && createPoint; i++){
                 if(m_point.get(i).checkHitbox()){
                     createPoint  = false;
                     m_point.remove(i);
@@ -458,7 +462,7 @@ class Automation extends Controller{
 
                     PVector temp = new PVector( (mouseX - m_pos.x) / m_len.x, 1 - (mouseY - m_pos.y) / m_len.y);
 
-                    insertPointAtIndex(new AutomationPoint(m_pos, m_len, temp), m_point, index);
+                    insertPointAtIndex(new AutomationPoint(m_pos, m_len, temp, m_fillColor), m_point, index);
 
                 }
             }
@@ -472,16 +476,10 @@ class Automation extends Controller{
     }
 
     public void draw(){
-        pushMatrix();
-        translate(m_pos.x, m_pos.y);
-
-        //background
-        fill(m_backgroundColor2);
-        stroke(m_backgroundColor1);
-        strokeWeight(2);
-        rect(0, 0, m_len.x, m_len.y);
-
-        popMatrix();
+        
+        if(m_drawBackground){//background
+            drawBackground();
+        }
 
         //points
         for(int i = 0; i < m_point.size(); i++){
@@ -490,10 +488,14 @@ class Automation extends Controller{
 
     }
 
-    public void setColor(color backgroundColor1, color backgroundColor2, color fillColor){
-        m_backgroundColor1 = backgroundColor1;
-        m_backgroundColor2 = backgroundColor2;
-        m_fillColor = fillColor;
+    public void drawBackground(){
+        pushMatrix();
+        translate(m_pos.x, m_pos.y);
+        fill(m_backgroundColor2);
+        stroke(m_backgroundColor1);
+        strokeWeight(2);
+        rect(0, 0, m_len.x, m_len.y);
+        popMatrix();
     }
 
     public float mapXToY(float x){
@@ -534,6 +536,16 @@ class AutomationPoint extends Controller{
         m_value = value;
         m_curve = 0.5;
         m_previousCurve = m_curve;
+    }
+
+    AutomationPoint(PVector windowPos, PVector windowLen, PVector value, color fillColor){
+        super(windowPos, windowLen);
+
+        m_value = value;
+        m_curve = 0.5;
+        m_previousCurve = m_curve;
+
+        setColor(m_backgroundColor1, m_backgroundColor2, fillColor);
     }
 
     public PVector getActualPosition(){

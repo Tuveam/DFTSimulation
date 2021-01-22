@@ -1,42 +1,27 @@
 class GUISection{
     protected PVector m_pos;
     protected PVector m_len;
-    protected GUISection[] m_section;
-    protected Controller[] m_controller;
 
-    float m_spacer = 50;
+    protected float m_spacer = 50;
 
-    GUISection(PVector pos, PVector len, int sectionAmount, int controllerAmount){
+    GUISection(PVector pos, PVector len){
         m_pos = pos;
         m_len = len;
-        m_section = new GUISection[sectionAmount];
-        m_controller = new Controller[controllerAmount];
 
-        initializeSections();
         initializeControllers();
-    }
-
-    protected void initializeSections(){
-        for(int i = 0; i < m_section.length; i++){
-
-            m_section[i] = new GUISection(m_pos, m_len, 0, 0);
-        }
+        initializeSections();
     }
 
     protected void initializeControllers(){
-        for(int i = 0; i < m_controller.length; i++){
 
-            m_controller[i] = new Controller(m_pos, m_len);
-        }
+    }
+
+    protected void initializeSections(){
+
     }
 
     public void update(){
-        tick();
         draw();
-    }
-
-    protected void tick(){
-        //to be overloaded
     }
 
     protected void draw(){
@@ -52,50 +37,43 @@ class GUISection{
     }
 
     protected void drawSections(){
-        for(int i = 0; i < m_section.length; i++){
 
-            m_section[i].update();
-        }
     }
 
     protected void drawComponents(){
-        for(int i = 0; i < m_controller.length; i++){
-            m_controller[i].update();
-        }
+
     }  
-    
 }
 
 //====================================================================
 
-class MainSection extends GUISection{
+class DFTSection extends GUISection{
 
-    private int m_time = 0;
+    MenuSection m_menuSection;
+    InputSection m_inputSection;
+    MathSection m_mathSection;
+    SpectrumSection m_spectrumSection;
 
-    MainSection(float xPos, float yPos, float xLen, float yLen){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen), 4, 0);
-
+    DFTSection(float xPos, float yPos, float xLen, float yLen){
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
     }
-
-    protected void tick(){
-        //if(m_section[0].isTimeAdvancing()){
-        //    m_time++;
-        //}
-    }
-
+    
     protected void initializeSections(){
-        m_section[0] = new MenuSection(m_pos, new PVector(m_len.x, m_spacer));
-        m_section[1] = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
-        m_section[2] = new MathSection(new PVector(m_pos.x, m_pos.y + (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
-        m_section[3] = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
+        m_menuSection = new MenuSection(m_pos, new PVector(m_len.x, m_spacer));
+        m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
+        m_mathSection = new MathSection(new PVector(m_pos.x, m_pos.y + (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
+        m_spectrumSection = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
     }
 
     protected void drawSections(){
-        //m_section[1].setTime(m_time);
-        for(int i = 0; i < m_section.length; i++){
-
-            m_section[i].update();
+        if(m_menuSection.isTimeAdvancing()){
+            m_inputSection.advanceTime();
         }
+
+        m_menuSection.update();
+        m_inputSection.update();
+        m_mathSection.update();
+        m_spectrumSection.update();
     }
 
 }
@@ -103,16 +81,40 @@ class MainSection extends GUISection{
 //====================================================================
 
 class MenuSection extends GUISection{
-    boolean isAdvancingTime = false;
+    PlayButton m_playButton;
+    Button m_skipButton;
+    Knob m_sampleRateKnob;
+
+    int m_iterateTime = 0;
+    boolean m_isAdvancingTime = false;
+
+    int m_blink = 0;
 
     MenuSection(PVector pos, PVector len){
-        super(pos, len, 0, 3);
+        super(pos, len);
     }
 
     protected void initializeControllers(){
-        m_controller[0] = new PlayButton(m_pos.x + m_spacer, m_pos.y, m_spacer, m_spacer);
-        m_controller[1] = new Button(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
-        m_controller[2] = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
+        m_playButton = new PlayButton(m_pos.x + m_spacer, m_pos.y, m_spacer, m_spacer);
+        m_skipButton = new Button(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
+        m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
+        m_sampleRateKnob.setRealValueRange(60, 1);
+    }
+
+    public void update(){
+        draw();
+
+        m_isAdvancingTime = false;
+        if(m_playButton.getValue()){
+            if(m_iterateTime >= m_sampleRateKnob.getRealValue()){
+                m_isAdvancingTime = true;
+                m_iterateTime = 0;
+            }
+
+            m_iterateTime++;
+        }else if(m_skipButton.getValue()){
+            m_isAdvancingTime = true;
+        }
     }
 
     protected void drawBackground(){
@@ -126,18 +128,32 @@ class MenuSection extends GUISection{
         fill(255, 30);
         text("Menu", 0, 0);
         popMatrix();
+
+        blink();
     }
 
-    protected void tick(){
-        isAdvancingTime = false;
-        //if(m_controller[1].getValue()){
-        //    isAdvancingTime = true;
-        //}
+    private void blink(){
+        if(m_isAdvancingTime){
+            m_blink = 10;
+        }
+
+        fill(map(m_blink, 0, 10, 0, 255), 0, 0);
+        noStroke();
+        ellipse(m_pos.x + m_len.x - m_len.y/2, m_pos.y + m_len.y/2, m_len.y, m_len.y);
+
+        if(m_blink > 0){
+            m_blink--;
+        }
     }
 
+    protected void drawComponents(){
+        m_playButton.update();
+        m_skipButton.update();
+        m_sampleRateKnob.update();
+    }
 
     public boolean isTimeAdvancing(){
-        return isAdvancingTime;
+        return m_isAdvancingTime;
     }
 
 }
@@ -145,17 +161,18 @@ class MenuSection extends GUISection{
 //====================================================================
 
 class InputSection extends GUISection{
+    Automation m_windowShape; 
+    Generator m_generator;
     private Graph m_input;
-    private int m_time = 1;
 
     InputSection(PVector pos, PVector len){
-        super(pos, len, 0, 1);
-
-        m_input = new Graph(m_pos.x + m_len.x/4, m_pos.y + m_len.y/8, 3 * m_len.x/5, 3 * m_len.y/4, 50);
+        super(pos, len);
     }
 
     protected void initializeControllers(){
-        m_controller[0] = new Automation(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer);
+        m_windowShape = new Automation(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer, color(200, 75, 75), false);
+        m_input = new Graph(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer);
+        m_generator = new Generator(50);
     }
 
     protected void drawBackground(){
@@ -173,30 +190,30 @@ class InputSection extends GUISection{
     }
 
     protected void drawComponents(){
-        for(int i = 0; i < m_controller.length; i++){
-            m_controller[i].update();
-        }
-
+        m_windowShape.drawBackground();
         
-        //m_input.draw(m_time);
+        m_input.draw(m_generator.getArray());
         //m_input.addData(sin(0.1 * m_time), m_time - 1);
+
+        m_windowShape.update();
         
     }
 
-    public void setTime(int time){
-        m_time = time;
+    public void advanceTime(){
+        m_generator.advanceTime();
     }
 }
 
 //====================================================================
 
 class MathSection extends GUISection{
+    Tabs m_tabs;
     MathSection(PVector pos, PVector len){
-        super(pos, len, 0, 1);
+        super(pos, len);
     }
 
     protected void initializeControllers(){
-        m_controller[0] = new Tabs(m_pos.x, m_pos.y, m_len.x, m_len.y/8, new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"});
+        m_tabs = new Tabs(m_pos.x, m_pos.y, m_len.x, m_len.y/8, new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"});
     }
 
     protected void drawBackground(){
@@ -218,7 +235,7 @@ class MathSection extends GUISection{
 
 class SpectrumSection extends GUISection{
     SpectrumSection(PVector pos, PVector len){
-        super(pos, len, 0, 0);
+        super(pos, len);
     }
 
     protected void drawBackground(){
