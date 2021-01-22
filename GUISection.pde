@@ -2,7 +2,7 @@ class GUISection{
     protected PVector m_pos;
     protected PVector m_len;
 
-    protected float m_spacer = 50;
+    protected float m_spacer = 65;
 
     GUISection(PVector pos, PVector len){
         m_pos = pos;
@@ -97,7 +97,7 @@ class MenuSection extends GUISection{
     protected void initializeControllers(){
         m_playButton = new PlayButton(m_pos.x + m_spacer, m_pos.y, m_spacer, m_spacer);
         m_skipButton = new Button(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
-        m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
+        m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer, "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
     }
 
@@ -161,9 +161,11 @@ class MenuSection extends GUISection{
 //====================================================================
 
 class InputSection extends GUISection{
-    Automation m_windowShape; 
-    Generator m_generator;
+    private Automation m_windowShape; 
+    private Generator m_generator;
     private Graph m_input;
+    private Knob m_generatorFrequencyKnob;
+    private Tabs m_generatorModeTabs;
 
     InputSection(PVector pos, PVector len){
         super(pos, len);
@@ -171,8 +173,16 @@ class InputSection extends GUISection{
 
     protected void initializeControllers(){
         m_windowShape = new Automation(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer, color(200, 75, 75), false);
+        
         m_input = new Graph(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer);
+
         m_generator = new Generator(50);
+
+        m_generatorFrequencyKnob = new Knob(m_pos.x, m_pos.y + m_spacer/2, m_spacer, m_spacer, "Frequency");
+        m_generatorFrequencyKnob.setRealValueRange(0.5, 25);
+
+        m_generatorModeTabs = new Tabs(m_pos.x + 5 * m_spacer/4, m_pos.y + m_spacer/2, m_len.x/3 - 1.5 * m_spacer, m_spacer * 0.4, new String[]{"0", "sin", "saw", "noise"});
+
     }
 
     protected void drawBackground(){
@@ -190,6 +200,9 @@ class InputSection extends GUISection{
     }
 
     protected void drawComponents(){
+        m_generatorFrequencyKnob.update();
+        m_generatorModeTabs.update();
+
         m_windowShape.drawBackground();
         
         m_input.draw(m_generator.getArray());
@@ -200,6 +213,8 @@ class InputSection extends GUISection{
     }
 
     public void advanceTime(){
+        //println((frameCount%2 == 0)? "tick" : "tack");
+        m_generator.setVariables(m_generatorFrequencyKnob.getRealValue(), m_generatorModeTabs.getValue());
         m_generator.advanceTime();
     }
 }

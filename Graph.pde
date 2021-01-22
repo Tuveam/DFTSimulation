@@ -21,6 +21,8 @@ class Graph{
     }
 }
 
+//==========================================================================================
+
 class Generator{
     float[] m_data; //goes from -1 to 1;
     int m_time = 0;
@@ -39,12 +41,16 @@ class Generator{
         switch(m_generationMode){
             case 0: //Zero
             m_data[getFirstIndex()] = 0;
+            break;
             case 1: //Sin
             m_data[getFirstIndex()] = sin(2 * PI * m_frequency * m_time / m_data.length);
+            break;
             case 2: //Saw
             m_data[getFirstIndex()] = (m_frequency * (2.0 * m_time) / m_data.length) % 2 - 1;
+            break;
             case 3: //Noise
             m_data[getFirstIndex()] = random(-1, 1);
+            break;
         }
         m_time++;
     }
@@ -60,6 +66,12 @@ class Generator{
 
     protected int getFirstIndex(){
         return m_time % m_data.length;
+    }
+
+    public void setVariables(float frequency, int mode){
+        m_frequency = frequency;
+        m_generationMode = mode;
+        //println(mode + " and " + m_generationMode);
     }
 
 }

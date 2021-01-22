@@ -114,11 +114,15 @@ class Knob extends Controller{
     private float m_maxRealValue = 1;
 
     private float m_sensitivity = 0.25f;
+
+    private String m_name;
     
 
-    Knob(float xPos, float yPos, float xLen, float yLen){
+    Knob(float xPos, float yPos, float xLen, float yLen, String name){
         super(new PVector(xPos, yPos), new PVector((xLen < yLen)? xLen : yLen, (xLen < yLen)? xLen : yLen));
         m_value = 0.8f;
+
+        m_name = name;
         
     }
 
@@ -166,31 +170,51 @@ class Knob extends Controller{
         colorMode(RGB, 255, 255, 255);
 
         pushMatrix();
-        translate(m_pos.x + m_len.x / 2, m_pos.y + m_len.y / 2);
+        translate(m_pos.x + m_len.x / 2, m_pos.y + getKnobLen() / 2);
 
         //Bar
         noStroke();
         fill(m_backgroundColor1);
-        arc(0, 0, m_len.x, m_len.y, PI * 3 / 4, PI * 9 / 4, PIE);
+        arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, PI * 9 / 4, PIE);
 
         //Fill
         float angle = map(m_value, 0, 1, PI * 3 / 4, PI * 9 / 4);
         noStroke();
         fill(m_fillColor);
-        arc(0, 0, m_len.x, m_len.y, PI * 3 / 4, angle, PIE);
+        arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, angle, PIE);
 
         
         //Cap
         noStroke();
         fill(m_backgroundColor2);
-        ellipse(0, 0, 0.8f * m_len.x, 0.8f * m_len.y);
+        ellipse(0, 0, 0.8f * getKnobLen(), 0.8f * getKnobLen());
 
         //indicator line
         stroke(m_fillColor);
         strokeWeight(3);
-        line(0.1f * m_len.x * cos(angle), 0.1f * m_len.y * sin(angle), 0.3f * m_len.x * cos(angle), 0.3f * m_len.y * sin(angle));
+        line(0.1f * getKnobLen() * cos(angle), 0.1f * getKnobLen() * sin(angle), 0.3f * getKnobLen() * cos(angle), 0.3f * getKnobLen() * sin(angle));
 
         popMatrix();
+
+        //name
+        textAlign(CENTER);
+        fill(m_backgroundColor1);
+        textSize(getTextLenY());
+        if(m_selected){
+            text(getRealValue(), m_pos.x + m_len.x/2, m_pos.y + getKnobLen() + getTextLenY()/2);
+        }else{
+            text(m_name, m_pos.x + m_len.x/2, m_pos.y + getKnobLen() + getTextLenY()/2);
+        }
+        
+        
+    }
+
+    private float getKnobLen(){
+        return (0.8f * m_len.x);
+    }
+
+    private float getTextLenY(){
+        return (m_len.y - getKnobLen());
     }
 
     public float getValue(){
@@ -868,12 +892,16 @@ class Tabs extends Controller{
 
     }
 
+    public int getValue(){
+        return m_value;
+    }
+
 }
 class GUISection{
     protected PVector m_pos;
     protected PVector m_len;
 
-    protected float m_spacer = 50;
+    protected float m_spacer = 65;
 
     GUISection(PVector pos, PVector len){
         m_pos = pos;
@@ -968,7 +996,7 @@ class MenuSection extends GUISection{
     protected void initializeControllers(){
         m_playButton = new PlayButton(m_pos.x + m_spacer, m_pos.y, m_spacer, m_spacer);
         m_skipButton = new Button(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
-        m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
+        m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer, "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
     }
 
@@ -1032,9 +1060,11 @@ class MenuSection extends GUISection{
 //====================================================================
 
 class InputSection extends GUISection{
-    Automation m_windowShape; 
-    Generator m_generator;
+    private Automation m_windowShape; 
+    private Generator m_generator;
     private Graph m_input;
+    private Knob m_generatorFrequencyKnob;
+    private Tabs m_generatorModeTabs;
 
     InputSection(PVector pos, PVector len){
         super(pos, len);
@@ -1042,8 +1072,16 @@ class InputSection extends GUISection{
 
     protected void initializeControllers(){
         m_windowShape = new Automation(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer, color(200, 75, 75), false);
+        
         m_input = new Graph(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer);
+
         m_generator = new Generator(50);
+
+        m_generatorFrequencyKnob = new Knob(m_pos.x, m_pos.y + m_spacer/2, m_spacer, m_spacer, "Frequency");
+        m_generatorFrequencyKnob.setRealValueRange(0.5f, 25);
+
+        m_generatorModeTabs = new Tabs(m_pos.x + 5 * m_spacer/4, m_pos.y + m_spacer/2, m_len.x/3 - 1.5f * m_spacer, m_spacer * 0.4f, new String[]{"0", "sin", "saw", "noise"});
+
     }
 
     protected void drawBackground(){
@@ -1061,6 +1099,9 @@ class InputSection extends GUISection{
     }
 
     protected void drawComponents(){
+        m_generatorFrequencyKnob.update();
+        m_generatorModeTabs.update();
+
         m_windowShape.drawBackground();
         
         m_input.draw(m_generator.getArray());
@@ -1071,6 +1112,8 @@ class InputSection extends GUISection{
     }
 
     public void advanceTime(){
+        //println((frameCount%2 == 0)? "tick" : "tack");
+        m_generator.setVariables(m_generatorFrequencyKnob.getRealValue(), m_generatorModeTabs.getValue());
         m_generator.advanceTime();
     }
 }
@@ -1146,6 +1189,8 @@ class Graph{
     }
 }
 
+//==========================================================================================
+
 class Generator{
     float[] m_data; //goes from -1 to 1;
     int m_time = 0;
@@ -1164,12 +1209,16 @@ class Generator{
         switch(m_generationMode){
             case 0: //Zero
             m_data[getFirstIndex()] = 0;
+            break;
             case 1: //Sin
             m_data[getFirstIndex()] = sin(2 * PI * m_frequency * m_time / m_data.length);
+            break;
             case 2: //Saw
             m_data[getFirstIndex()] = (m_frequency * (2.0f * m_time) / m_data.length) % 2 - 1;
+            break;
             case 3: //Noise
             m_data[getFirstIndex()] = random(-1, 1);
+            break;
         }
         m_time++;
     }
@@ -1185,6 +1234,12 @@ class Generator{
 
     protected int getFirstIndex(){
         return m_time % m_data.length;
+    }
+
+    public void setVariables(float frequency, int mode){
+        m_frequency = frequency;
+        m_generationMode = mode;
+        //println(mode + " and " + m_generationMode);
     }
 
 }

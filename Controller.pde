@@ -83,11 +83,15 @@ class Knob extends Controller{
     private float m_maxRealValue = 1;
 
     private float m_sensitivity = 0.25;
+
+    private String m_name;
     
 
-    Knob(float xPos, float yPos, float xLen, float yLen){
+    Knob(float xPos, float yPos, float xLen, float yLen, String name){
         super(new PVector(xPos, yPos), new PVector((xLen < yLen)? xLen : yLen, (xLen < yLen)? xLen : yLen));
         m_value = 0.8;
+
+        m_name = name;
         
     }
 
@@ -135,31 +139,51 @@ class Knob extends Controller{
         colorMode(RGB, 255, 255, 255);
 
         pushMatrix();
-        translate(m_pos.x + m_len.x / 2, m_pos.y + m_len.y / 2);
+        translate(m_pos.x + m_len.x / 2, m_pos.y + getKnobLen() / 2);
 
         //Bar
         noStroke();
         fill(m_backgroundColor1);
-        arc(0, 0, m_len.x, m_len.y, PI * 3 / 4, PI * 9 / 4, PIE);
+        arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, PI * 9 / 4, PIE);
 
         //Fill
         float angle = map(m_value, 0, 1, PI * 3 / 4, PI * 9 / 4);
         noStroke();
         fill(m_fillColor);
-        arc(0, 0, m_len.x, m_len.y, PI * 3 / 4, angle, PIE);
+        arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, angle, PIE);
 
         
         //Cap
         noStroke();
         fill(m_backgroundColor2);
-        ellipse(0, 0, 0.8 * m_len.x, 0.8 * m_len.y);
+        ellipse(0, 0, 0.8 * getKnobLen(), 0.8 * getKnobLen());
 
         //indicator line
         stroke(m_fillColor);
         strokeWeight(3);
-        line(0.1 * m_len.x * cos(angle), 0.1 * m_len.y * sin(angle), 0.3 * m_len.x * cos(angle), 0.3 * m_len.y * sin(angle));
+        line(0.1 * getKnobLen() * cos(angle), 0.1 * getKnobLen() * sin(angle), 0.3 * getKnobLen() * cos(angle), 0.3 * getKnobLen() * sin(angle));
 
         popMatrix();
+
+        //name
+        textAlign(CENTER);
+        fill(m_backgroundColor1);
+        textSize(getTextLenY());
+        if(m_selected){
+            text(getRealValue(), m_pos.x + m_len.x/2, m_pos.y + getKnobLen() + getTextLenY()/2);
+        }else{
+            text(m_name, m_pos.x + m_len.x/2, m_pos.y + getKnobLen() + getTextLenY()/2);
+        }
+        
+        
+    }
+
+    private float getKnobLen(){
+        return (0.8 * m_len.x);
+    }
+
+    private float getTextLenY(){
+        return (m_len.y - getKnobLen());
     }
 
     public float getValue(){
@@ -835,6 +859,10 @@ class Tabs extends Controller{
             text(m_tabName[i], m_pos.x + (i + 0.5) * m_len.x/m_tabName.length, m_pos.y + 5 * m_len.y/8);
         }
 
+    }
+
+    public int getValue(){
+        return m_value;
     }
 
 }
