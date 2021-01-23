@@ -24,8 +24,9 @@ class Graph{
 //==========================================================================================
 
 class Generator{
-    float[] m_data; //goes from -1 to 1;
+    float[] m_data; //goes from -1 to 1
     int m_time = 0;
+    float m_phase = 0; //goes from 0 to 1
     int m_generationMode = 3;
     float m_frequency = 1;
     
@@ -38,15 +39,17 @@ class Generator{
     }
 
     public void advanceTime(){
+        m_phase = (m_phase + m_frequency / m_data.length)%1;
+
         switch(m_generationMode){
             case 0: //Zero
             m_data[getFirstIndex()] = 0;
             break;
             case 1: //Sin
-            m_data[getFirstIndex()] = sin(2 * PI * m_frequency * m_time / m_data.length);
+            m_data[getFirstIndex()] = sin(2 * PI * m_phase);
             break;
             case 2: //Saw
-            m_data[getFirstIndex()] = (m_frequency * (2.0 * m_time) / m_data.length) % 2 - 1;
+            m_data[getFirstIndex()] = 2.0 * m_phase - 1;
             break;
             case 3: //Noise
             m_data[getFirstIndex()] = random(-1, 1);

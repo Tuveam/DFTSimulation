@@ -450,6 +450,7 @@ class Automation extends Controller{
 
     ArrayList<AutomationPoint> m_point = new ArrayList<AutomationPoint>();
     private boolean m_drawBackground = true;
+    private float m_baseValue = 0.5f;
 
     Automation(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
@@ -465,6 +466,10 @@ class Automation extends Controller{
 
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5f), m_fillColor) );
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5f), m_fillColor) );
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = baseValue;
     }
 
     private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
@@ -536,10 +541,19 @@ class Automation extends Controller{
             drawBackground();
         }
 
-        //points
+        //points and shape
+        beginShape();
+        vertex(m_pos.x, m_pos.y + m_len.y * m_baseValue);
         for(int i = 0; i < m_point.size(); i++){
             m_point.get(i).update(m_point, i);
+            PVector temp = m_point.get(i).getActualPosition();
+            vertex(temp.x, temp.y);
         }
+        vertex(m_pos.x + m_len.x, m_pos.y + m_len.y * m_baseValue);
+
+        noStroke();
+        fill(m_fillColor, 75);
+        endShape(CLOSE);
 
     }
 
@@ -569,6 +583,16 @@ class Automation extends Controller{
         }
 
         return m_point.get(m_point.size() - 1).getValue().y;
+    }
+
+    public float[] getArray(int index){
+        float[] temp = new float[index];
+
+        for(int i = 0; i < temp.length; i++){
+            temp[i] = mapXToY(i / temp.length);
+        }
+
+        return temp;
     }
 
 }
@@ -953,13 +977,18 @@ class DFTSection extends GUISection{
     MathSection m_mathSection;
     SpectrumSection m_spectrumSection;
 
+    float[][] m_testFrequency;
+
     DFTSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
     }
     
     protected void initializeSections(){
+        int totalWindowLength = 50;
+        m_testFrequency = new float[totalWindowLength][totalWindowLength];
+
         m_menuSection = new MenuSection(m_pos, new PVector(m_len.x, m_spacer));
-        m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
+        m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), totalWindowLength);
         m_mathSection = new MathSection(new PVector(m_pos.x, m_pos.y + (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
         m_spectrumSection = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
     }
@@ -1065,20 +1094,27 @@ class InputSection extends GUISection{
     private Graph m_input;
     private Knob m_generatorFrequencyKnob;
     private Tabs m_generatorModeTabs;
+    private Tickbox m_sectionTickbox;
 
-    InputSection(PVector pos, PVector len){
+    private int m_sampleNumber;
+
+    InputSection(PVector pos, PVector len, int sampleNumber){
         super(pos, len);
+
+        m_sampleNumber = sampleNumber;
+        m_generator = new Generator(m_sampleNumber);
+
+        m_generatorFrequencyKnob.setRealValueRange(0.5f, m_sampleNumber/2);
     }
 
     protected void initializeControllers(){
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
+
         m_windowShape = new Automation(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer, color(200, 75, 75), false);
         
         m_input = new Graph(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer);
 
-        m_generator = new Generator(50);
-
         m_generatorFrequencyKnob = new Knob(m_pos.x, m_pos.y + m_spacer/2, m_spacer, m_spacer, "Frequency");
-        m_generatorFrequencyKnob.setRealValueRange(0.5f, 25);
 
         m_generatorModeTabs = new Tabs(m_pos.x + 5 * m_spacer/4, m_pos.y + m_spacer/2, m_len.x/3 - 1.5f * m_spacer, m_spacer * 0.4f, new String[]{"0", "sin", "saw", "noise"});
 
@@ -1086,7 +1122,7 @@ class InputSection extends GUISection{
 
     protected void drawBackground(){
         noStroke();
-        fill(26, 75, 103);
+        fill(13, 37, 51);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
 
         pushMatrix();
@@ -1099,6 +1135,7 @@ class InputSection extends GUISection{
     }
 
     protected void drawComponents(){
+        m_sectionTickbox.update();
         m_generatorFrequencyKnob.update();
         m_generatorModeTabs.update();
 
@@ -1132,7 +1169,7 @@ class MathSection extends GUISection{
 
     protected void drawBackground(){
         noStroke();
-        fill(26, 75, 103);
+        fill(51, 13, 37);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
 
         pushMatrix();
@@ -1154,7 +1191,7 @@ class SpectrumSection extends GUISection{
 
     protected void drawBackground(){
         noStroke();
-        fill(26, 75, 103);
+        fill(37, 51, 13);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
 
         pushMatrix();
@@ -1192,8 +1229,9 @@ class Graph{
 //==========================================================================================
 
 class Generator{
-    float[] m_data; //goes from -1 to 1;
+    float[] m_data; //goes from -1 to 1
     int m_time = 0;
+    float m_phase = 0; //goes from 0 to 1
     int m_generationMode = 3;
     float m_frequency = 1;
     
@@ -1206,15 +1244,17 @@ class Generator{
     }
 
     public void advanceTime(){
+        m_phase = (m_phase + m_frequency / m_data.length)%1;
+
         switch(m_generationMode){
             case 0: //Zero
             m_data[getFirstIndex()] = 0;
             break;
             case 1: //Sin
-            m_data[getFirstIndex()] = sin(2 * PI * m_frequency * m_time / m_data.length);
+            m_data[getFirstIndex()] = sin(2 * PI * m_phase);
             break;
             case 2: //Saw
-            m_data[getFirstIndex()] = (m_frequency * (2.0f * m_time) / m_data.length) % 2 - 1;
+            m_data[getFirstIndex()] = 2.0f * m_phase - 1;
             break;
             case 3: //Noise
             m_data[getFirstIndex()] = random(-1, 1);

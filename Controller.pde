@@ -419,6 +419,7 @@ class Automation extends Controller{
 
     ArrayList<AutomationPoint> m_point = new ArrayList<AutomationPoint>();
     private boolean m_drawBackground = true;
+    private float m_baseValue = 0.5;
 
     Automation(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
@@ -434,6 +435,10 @@ class Automation extends Controller{
 
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5), m_fillColor) );
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5), m_fillColor) );
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = baseValue;
     }
 
     private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
@@ -505,10 +510,19 @@ class Automation extends Controller{
             drawBackground();
         }
 
-        //points
+        //points and shape
+        beginShape();
+        vertex(m_pos.x, m_pos.y + m_len.y * m_baseValue);
         for(int i = 0; i < m_point.size(); i++){
             m_point.get(i).update(m_point, i);
+            PVector temp = m_point.get(i).getActualPosition();
+            vertex(temp.x, temp.y);
         }
+        vertex(m_pos.x + m_len.x, m_pos.y + m_len.y * m_baseValue);
+
+        noStroke();
+        fill(m_fillColor, 75);
+        endShape(CLOSE);
 
     }
 
@@ -538,6 +552,16 @@ class Automation extends Controller{
         }
 
         return m_point.get(m_point.size() - 1).getValue().y;
+    }
+
+    public float[] getArray(int index){
+        float[] temp = new float[index];
+
+        for(int i = 0; i < temp.length; i++){
+            temp[i] = mapXToY(i / temp.length);
+        }
+
+        return temp;
     }
 
 }
