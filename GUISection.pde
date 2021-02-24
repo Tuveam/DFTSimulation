@@ -54,7 +54,8 @@ class DFTSection extends GUISection{
     MathSection m_mathSection;
     SpectrumSection m_spectrumSection;
 
-    float[][] m_testFrequency;
+    float[][] m_testSin;
+    float[][] m_testCos;
 
     DFTSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
@@ -62,7 +63,8 @@ class DFTSection extends GUISection{
     
     protected void initializeSections(){
         int totalWindowLength = 50;
-        m_testFrequency = new float[totalWindowLength][totalWindowLength];
+        m_testSin = new float[totalWindowLength][totalWindowLength];
+        m_testCos = new float[totalWindowLength][totalWindowLength];
 
         m_menuSection = new MenuSection(m_pos, new PVector(m_len.x, m_spacer));
         m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), totalWindowLength);
@@ -169,8 +171,6 @@ class InputSection extends GUISection{
     private Automation m_windowShape; 
     private Generator m_generator;
     private Graph m_input;
-    private Knob m_generatorFrequencyKnob;
-    private Tabs m_generatorModeTabs;
     private Tickbox m_sectionTickbox;
 
     private int m_sampleNumber;
@@ -179,21 +179,16 @@ class InputSection extends GUISection{
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
-        m_generator = new Generator(m_sampleNumber);
+        m_generator = new Generator(m_pos.x + m_spacer/2, m_pos.y + m_spacer / 2, 2 * m_len.x / 7, 5 * m_spacer / 3, m_spacer, m_sampleNumber);
 
-        m_generatorFrequencyKnob.setRealValueRange(0.5, m_sampleNumber/2);
     }
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
 
-        m_windowShape = new Automation(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer, color(200, 75, 75), false);
+        m_windowShape = new Automation(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, color(200, 75, 75), false);
         
-        m_input = new Graph(m_pos.x + m_len.x/3, m_pos.y + m_spacer/2, 3 * m_len.x/5, m_len.y - m_spacer);
-
-        m_generatorFrequencyKnob = new Knob(m_pos.x, m_pos.y + m_spacer/2, m_spacer, m_spacer, "Frequency");
-
-        m_generatorModeTabs = new Tabs(m_pos.x + 5 * m_spacer/4, m_pos.y + m_spacer/2, m_len.x/3 - 1.5 * m_spacer, m_spacer * 0.4, new String[]{"0", "sin", "saw", "noise"});
+        m_input = new Graph(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer);
 
     }
 
@@ -213,21 +208,24 @@ class InputSection extends GUISection{
 
     protected void drawComponents(){
         m_sectionTickbox.update();
-        m_generatorFrequencyKnob.update();
-        m_generatorModeTabs.update();
 
-        m_windowShape.drawBackground();
+        if(m_sectionTickbox.getValue()){
+            m_generator.update();
+            m_windowShape.drawBackground();
+            
+            if(m_generator.isOn()){
+                m_input.draw(m_generator.getArray());
+            }
+            //m_input.addData(sin(0.1 * m_time), m_time - 1);
+
+            m_windowShape.update();
+        }
         
-        m_input.draw(m_generator.getArray());
-        //m_input.addData(sin(0.1 * m_time), m_time - 1);
-
-        m_windowShape.update();
         
     }
 
     public void advanceTime(){
         //println((frameCount%2 == 0)? "tick" : "tack");
-        m_generator.setVariables(m_generatorFrequencyKnob.getRealValue(), m_generatorModeTabs.getValue());
         m_generator.advanceTime();
     }
 }
@@ -236,13 +234,16 @@ class InputSection extends GUISection{
 
 class MathSection extends GUISection{
     Tabs m_tabs;
+    private Tickbox m_sectionTickbox;
     MathSection(PVector pos, PVector len){
         super(pos, len);
     }
 
     protected void initializeControllers(){
-        m_tabs = new Tabs(m_pos.x, m_pos.y, m_len.x, m_len.y/8, new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"});
+        m_tabs = new Tabs(m_pos.x + m_spacer/2, m_pos.y, m_len.x - m_spacer/2, m_len.y/8, new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"});
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
     }
+
 
     protected void drawBackground(){
         noStroke();
@@ -257,13 +258,28 @@ class MathSection extends GUISection{
         text("Math", 0, 0);
         popMatrix();
     }
+
+    protected void drawComponents(){
+        m_sectionTickbox.update();
+
+        if(m_sectionTickbox.getValue()){
+            m_tabs.update();
+        }
+        
+        
+    }
 }
 
 //====================================================================
 
 class SpectrumSection extends GUISection{
+    private Tickbox m_sectionTickbox;
     SpectrumSection(PVector pos, PVector len){
         super(pos, len);
+    }
+
+    protected void initializeControllers(){
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
     }
 
     protected void drawBackground(){
@@ -278,5 +294,14 @@ class SpectrumSection extends GUISection{
         fill(255, 30);
         text("Spectrum", 0, 0);
         popMatrix();
+    }
+
+    protected void drawComponents(){
+        m_sectionTickbox.update();
+
+        if(m_sectionTickbox.getValue()){
+        }
+        
+        
     }
 }
