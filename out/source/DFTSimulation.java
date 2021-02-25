@@ -21,9 +21,9 @@ DFTSection m;
 
 
 public void setup(){
-    //size(800,800);
-
     
+
+    //fullScreen();
     m = new DFTSection(0, 0, width, height);
 }
 
@@ -1758,7 +1758,7 @@ class SinCosTabs extends Tabs{
 
 
 }
-  public void settings() {  fullScreen(); }
+  public void settings() {  size(800,800); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "DFTSimulation" };
     if (passedArgs != null) {
