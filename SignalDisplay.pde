@@ -1,4 +1,4 @@
-class XYDisplay{
+class SignalDisplay{
     private PVector m_pos;
     private PVector m_len;
     
@@ -11,7 +11,7 @@ class XYDisplay{
     private Graph m_input;
     private Graph[] m_testFreq;
 
-    XYDisplay(float posX, float posY, float lenX, float lenY, int testSineAmount, int resolution){
+    SignalDisplay(float posX, float posY, float lenX, float lenY, int testSineAmount, int resolution){
         m_pos = new PVector(posX, posY);
         m_len = new PVector(lenX, lenY);
 
@@ -25,12 +25,12 @@ class XYDisplay{
         for(int i = 0; i < m_testFreq.length; i++){
             m_testFreq[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
         }
-        setDataForTestSines();
+        setDataForTestFreqs();
 
         
     }
 
-    private void setDataForTestSines(){
+    private void setDataForTestFreqs(){
         for(int i = 0; i < m_testFreq.length; i++){
             float[] temp = new float[m_testFreq[0].getLength()];
 
@@ -105,7 +105,7 @@ class XYDisplay{
     public float getMultipliedArrayAdded(int withTestFreq){
         float ret = 0;
 
-        float[] temp = getMultipliedArray();
+        float[] temp = getMultipliedArray(withTestFreq);
 
         for(int i = 0; i < temp.length; i++){
             ret += temp[i];

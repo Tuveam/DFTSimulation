@@ -21,6 +21,8 @@ DFTSection m;
 
 
 public void setup(){
+    //size(800,800);
+
     
     m = new DFTSection(0, 0, width, height);
 }
@@ -909,7 +911,7 @@ class DFTSection extends GUISection{
         m_menuSection = new MenuSection(m_pos, new PVector(m_len.x, m_spacer));
         m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), testFreqAmount, totalWindowLength);
         m_mathSection = new MathSection(new PVector(m_pos.x, m_pos.y + (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), testFreqAmount, totalWindowLength);
-        m_spectrumSection = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
+        m_spectrumSection = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), testFreqAmount/2);
     }
 
     protected void drawSections(){
@@ -919,6 +921,14 @@ class DFTSection extends GUISection{
 
         if(m_mathSection.hasChangedTestFreq()){
             m_inputSection.setTestFreq(m_mathSection.getTestFreq());
+        }
+
+        if(true){
+            m_mathSection.setData(m_inputSection.getMultiplicationData());
+        }
+
+        if(true){
+            m_spectrumSection.setData(m_inputSection.getSpectrum());
         }
 
         m_menuSection.update();
@@ -1019,22 +1029,21 @@ class InputSection extends GUISection{
 
     private int m_sampleNumber;
 
-    XYDisplay m_xyDisplay;
+    SignalDisplay m_signalDisplay;
+
+    boolean multiplicationChanged = true;
+    boolean spectrumChanged = true;
 
     InputSection(PVector pos, PVector len, int testFreqAmount, int sampleNumber){
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
         m_generator = new Generator(m_pos.x + m_spacer/2, m_pos.y + m_spacer / 2, 2 * m_len.x / 7, 5 * m_spacer / 3, m_spacer, m_sampleNumber);
-        m_xyDisplay = new XYDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount, m_sampleNumber);
+        m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount, m_sampleNumber);
     }
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
-
-        //m_windowShape = new Automation(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, color(200, 75, 75), false);
-        
-        //m_input = new Graph(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer);
 
         
     }
@@ -1058,7 +1067,7 @@ class InputSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
             m_generator.update();
-            m_xyDisplay.setInputVisibility(m_generator.isOn());
+            m_signalDisplay.setInputVisibility(m_generator.isOn());
             //m_windowShape.drawBackground();
             
             //if(m_generator.isOn()){
@@ -1066,7 +1075,7 @@ class InputSection extends GUISection{
             //}
             //m_input.addData(sin(0.1 * m_time), m_time - 1);
 
-            m_xyDisplay.draw();
+            m_signalDisplay.draw();
 
             //m_windowShape.update();
         }
@@ -1078,11 +1087,19 @@ class InputSection extends GUISection{
         //println((frameCount%2 == 0)? "tick" : "tack");
         m_generator.advanceTime();
 
-        m_xyDisplay.setDataForInput(m_generator.getArray());
+        m_signalDisplay.setDataForInput(m_generator.getArray());
     }
 
     public void setTestFreq(int testFreq){
-        m_xyDisplay.setTestFreq(testFreq);
+        m_signalDisplay.setTestFreq(testFreq);
+    }
+
+    public float[] getMultiplicationData(){
+        return m_signalDisplay.getMultipliedArray();
+    }
+
+    public float[] getSpectrum(){
+        return m_signalDisplay.getSpectrum();
     }
 }
 
@@ -1092,6 +1109,7 @@ class MathSection extends GUISection{
     private SinCosTabs m_tabs;
     private int m_testFreq = 0;
     private Tickbox m_sectionTickbox;
+    OneGraphDisplay m_mult;
 
 
     MathSection(PVector pos, PVector len, int testFreqAmount, int sampleNumber){
@@ -1104,6 +1122,8 @@ class MathSection extends GUISection{
         }
 
         m_tabs = new SinCosTabs(m_pos.x + m_spacer/2, m_pos.y, m_len.x - m_spacer/2, m_spacer/2, temp);
+
+        m_mult = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, sampleNumber);
     }
 
     protected void initializeControllers(){
@@ -1131,6 +1151,8 @@ class MathSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
             m_tabs.update();
+
+            m_mult.draw();
         }
         
         
@@ -1145,14 +1167,23 @@ class MathSection extends GUISection{
     public int getTestFreq(){
         return m_tabs.getValue();
     }
+
+    public void setData(float[] data){
+        m_mult.setData(data);
+    }
 }
 
 //====================================================================
 
 class SpectrumSection extends GUISection{
     private Tickbox m_sectionTickbox;
-    SpectrumSection(PVector pos, PVector len){
+
+    private OneGraphDisplay m_spectrum;
+
+    SpectrumSection(PVector pos, PVector len, int testFreqAmount){
         super(pos, len);
+
+        m_spectrum = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount);
     }
 
     protected void initializeControllers(){
@@ -1177,9 +1208,14 @@ class SpectrumSection extends GUISection{
         m_sectionTickbox.update();
 
         if(m_sectionTickbox.getValue()){
+            m_spectrum.draw();
         }
         
         
+    }
+
+    public void setData(float[] data){
+        m_spectrum.setData(data);
     }
 }
 class Generator{
@@ -1336,6 +1372,193 @@ class Graph{
 
 //==========================================================================================
 
+class OneGraphDisplay{
+    private PVector m_pos;
+    private PVector m_len;
+
+    private Graph m_graph;
+
+    OneGraphDisplay(float posX, float posY, float lenX, float lenY, int resolution){
+        m_pos = new PVector(posX, posY);
+        m_len = new PVector(lenX, lenY);
+
+        m_graph = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+        m_graph.setColor(color(75, 140, 140));
+    }
+
+    public void setData(float[] data){
+        m_graph.setData(data);
+    }
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+
+        m_graph.draw();
+    }
+
+
+
+}
+class SignalDisplay{
+    private PVector m_pos;
+    private PVector m_len;
+    
+    boolean m_automationIsVisible = true;
+    boolean m_inputIsVisible = true;
+    boolean m_testFreqVisible = true;
+    int m_testFreqIndex = 0;
+
+    private Automation m_automation;
+    private Graph m_input;
+    private Graph[] m_testFreq;
+
+    SignalDisplay(float posX, float posY, float lenX, float lenY, int testSineAmount, int resolution){
+        m_pos = new PVector(posX, posY);
+        m_len = new PVector(lenX, lenY);
+
+        m_automation = new Automation(m_pos.x, m_pos.y, m_len.x, m_len.y,
+                                        color(200, 75, 75), false);
+
+        m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+        m_input.setColor(color(75, 75, 170));
+
+        m_testFreq = new Graph[testSineAmount];
+        for(int i = 0; i < m_testFreq.length; i++){
+            m_testFreq[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+        }
+        setDataForTestFreqs();
+
+        
+    }
+
+    private void setDataForTestFreqs(){
+        for(int i = 0; i < m_testFreq.length; i++){
+            float[] temp = new float[m_testFreq[0].getLength()];
+
+            if(i < m_testFreq.length/2){
+                for(int x = 0; x < temp.length; x++){
+                    temp[x] = sin(i * TWO_PI * x / temp.length);
+                }
+            }else{
+                for(int x = 0; x < temp.length; x++){
+                    temp[x] = cos((i % (m_testFreq.length/2) ) * TWO_PI * x / temp.length);
+                }
+            }
+
+            m_testFreq[i].setData(temp);
+        }
+    }
+
+    public void setDataForInput(float[] data){
+        m_input.setData(data);
+    }
+
+    public void setInputVisibility(boolean isVisible){
+        m_inputIsVisible = isVisible;
+    }
+
+    public void setTestFreqVisibility(int testFreqIndex, boolean isVisible){
+        setTestFreq(testFreqIndex);
+        m_testFreqVisible = isVisible;
+    }
+
+    public void setTestFreq(int testFreqIndex){
+        m_testFreqIndex = testFreqIndex;
+    }
+
+    public void setAutomationVisibility(boolean isVisible){
+        m_automationIsVisible = isVisible;
+    }
+
+    public float[] getMultipliedArray(int withTestFreq){
+        float[] temp = new float[m_testFreq[0].getLength()];
+
+        for(int i = 0; i < temp.length; i++){
+            if(m_automationIsVisible){
+                temp[i] = m_automation.mapXToY(i / (1.0f * temp.length));
+            }else{
+                temp[i] = 1;
+            }
+            
+        }
+
+        if(m_inputIsVisible){
+            float[] t = m_input.getData();
+            for(int i = 0; i < temp.length; i++){
+                temp[i] *= t[i];
+            }
+        }
+
+        if(m_testFreqVisible){
+            float[] t = m_testFreq[withTestFreq].getData();
+            for(int i = 0; i < temp.length; i++){
+                temp[i] *= t[i];
+            }
+        }
+
+        return temp;
+    }
+
+    public float[] getMultipliedArray(){
+        return getMultipliedArray(m_testFreqIndex);
+    }
+
+    public float getMultipliedArrayAdded(int withTestFreq){
+        float ret = 0;
+
+        float[] temp = getMultipliedArray(withTestFreq);
+
+        for(int i = 0; i < temp.length; i++){
+            ret += temp[i];
+        }
+
+        return ret / temp.length;
+    }
+
+    public float getMultipliedArrayAdded(){
+        return getMultipliedArrayAdded(m_testFreqIndex);
+    }
+
+    public float[] getSpectrum(){
+        int freqAmount = m_testFreq.length / 2;
+        float[] temp = new float[freqAmount];
+
+        for(int i = 0; i < freqAmount; i++){
+            temp[i] = sqrt(getMultipliedArrayAdded(i) * getMultipliedArrayAdded(i)
+                        + getMultipliedArrayAdded(i + freqAmount) * getMultipliedArrayAdded(i + freqAmount));
+        }
+
+        return temp;
+    }
+
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+
+        
+
+        if(m_testFreqVisible){
+            //println("Yes" + m_testFreq[i].getData());
+            m_testFreq[m_testFreqIndex].draw();
+        }
+
+        if(m_inputIsVisible){
+            m_input.draw();
+        }
+        
+        if(m_automationIsVisible){
+            m_automation.update();
+        }
+        
+    }
+
+}
 class Tabs extends Controller{
 
     protected int m_value;
@@ -1535,164 +1758,7 @@ class SinCosTabs extends Tabs{
 
 
 }
-class XYDisplay{
-    private PVector m_pos;
-    private PVector m_len;
-    
-    boolean m_automationIsVisible = true;
-    boolean m_inputIsVisible = true;
-    boolean m_testFreqVisible = true;
-    int m_testFreqIndex = 0;
-
-    private Automation m_automation;
-    private Graph m_input;
-    private Graph[] m_testFreq;
-
-    XYDisplay(float posX, float posY, float lenX, float lenY, int testSineAmount, int resolution){
-        m_pos = new PVector(posX, posY);
-        m_len = new PVector(lenX, lenY);
-
-        m_automation = new Automation(m_pos.x, m_pos.y, m_len.x, m_len.y,
-                                        color(200, 75, 75), false);
-
-        m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
-        m_input.setColor(color(75, 75, 170));
-
-        m_testFreq = new Graph[testSineAmount];
-        for(int i = 0; i < m_testFreq.length; i++){
-            m_testFreq[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
-        }
-        setDataForTestSines();
-
-        
-    }
-
-    private void setDataForTestSines(){
-        for(int i = 0; i < m_testFreq.length; i++){
-            float[] temp = new float[m_testFreq[0].getLength()];
-
-            if(i < m_testFreq.length/2){
-                for(int x = 0; x < temp.length; x++){
-                    temp[x] = sin(i * TWO_PI * x / temp.length);
-                }
-            }else{
-                for(int x = 0; x < temp.length; x++){
-                    temp[x] = cos((i % (m_testFreq.length/2) ) * TWO_PI * x / temp.length);
-                }
-            }
-
-            m_testFreq[i].setData(temp);
-        }
-    }
-
-    public void setDataForInput(float[] data){
-        m_input.setData(data);
-    }
-
-    public void setInputVisibility(boolean isVisible){
-        m_inputIsVisible = isVisible;
-    }
-
-    public void setTestFreqVisibility(int testFreqIndex, boolean isVisible){
-        setTestFreq(testFreqIndex);
-        m_testFreqVisible = isVisible;
-    }
-
-    public void setTestFreq(int testFreqIndex){
-        m_testFreqIndex = testFreqIndex;
-    }
-
-    public void setAutomationVisibility(boolean isVisible){
-        m_automationIsVisible = isVisible;
-    }
-
-    public float[] getMultipliedArray(int withTestFreq){
-        float[] temp = new float[m_testFreq[0].getLength()];
-
-        for(int i = 0; i < temp.length; i++){
-            if(m_automationIsVisible){
-                temp[i] = m_automation.mapXToY(i / (1.0f * temp.length));
-            }else{
-                temp[i] = 1;
-            }
-            
-        }
-
-        if(m_inputIsVisible){
-            float[] t = m_input.getData();
-            for(int i = 0; i < temp.length; i++){
-                temp[i] *= t[i];
-            }
-        }
-
-        if(m_testFreqVisible){
-            float[] t = m_testFreq[withTestFreq].getData();
-            for(int i = 0; i < temp.length; i++){
-                temp[i] *= t[i];
-            }
-        }
-
-        return temp;
-    }
-
-    public float[] getMultipliedArray(){
-        return getMultipliedArray(m_testFreqIndex);
-    }
-
-    public float getMultipliedArrayAdded(int withTestFreq){
-        float ret = 0;
-
-        float[] temp = getMultipliedArray();
-
-        for(int i = 0; i < temp.length; i++){
-            ret += temp[i];
-        }
-
-        return ret / temp.length;
-    }
-
-    public float getMultipliedArrayAdded(){
-        return getMultipliedArrayAdded(m_testFreqIndex);
-    }
-
-    public float[] getSpectrum(){
-        int freqAmount = m_testFreq.length / 2;
-        float[] temp = new float[freqAmount];
-
-        for(int i = 0; i < freqAmount; i++){
-            temp[i] = sqrt(getMultipliedArrayAdded(i) * getMultipliedArrayAdded(i)
-                        + getMultipliedArrayAdded(i + freqAmount) * getMultipliedArrayAdded(i + freqAmount));
-        }
-
-        return temp;
-    }
-
-
-    public void draw(){
-        stroke(color(100, 100, 100));
-        strokeWeight(2);
-        fill(color(50, 50, 50));
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
-
-        
-
-        if(m_testFreqVisible){
-            //println("Yes" + m_testFreq[i].getData());
-            m_testFreq[m_testFreqIndex].draw();
-        }
-
-        if(m_inputIsVisible){
-            m_input.draw();
-        }
-        
-        if(m_automationIsVisible){
-            m_automation.update();
-        }
-        
-    }
-
-}
-  public void settings() {  size(800,800); }
+  public void settings() {  fullScreen(); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "DFTSimulation" };
     if (passedArgs != null) {

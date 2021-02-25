@@ -6,6 +6,8 @@ DFTSection m;
 
 void setup(){
     size(800,800);
+
+    //fullScreen();
     m = new DFTSection(0, 0, width, height);
 }
 
