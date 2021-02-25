@@ -29,6 +29,401 @@ public void draw(){
     m.update();
 
 }
+class Automation extends Controller{
+
+    ArrayList<AutomationPoint> m_point = new ArrayList<AutomationPoint>();
+    private boolean m_drawBackground = true;
+    private float m_baseValue = 0.5f;
+
+    Automation(float xPos, float yPos, float xLen, float yLen){
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5f), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5f), m_fillColor) );
+    }
+
+    Automation(float xPos, float yPos, float xLen, float yLen, int fillColor, boolean drawBackground){
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+        m_fillColor = fillColor;
+        m_drawBackground = drawBackground;
+
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5f), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5f), m_fillColor) );
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = baseValue;
+    }
+
+    private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
+        toSort.add(new AutomationPoint( new PVector(0, 0), new PVector(0, 0), new PVector(0, 0), m_fillColor));
+
+        for(int i = toSort.size() - 2; i >= index; i--){
+            toSort.set(i + 1, toSort.get(i));
+        }
+
+        toSort.set(index, insert);
+    }
+
+    protected void click(){
+        if(mousePressed && m_firstClick && mouseButton == RIGHT){
+            m_firstClick = false;
+
+            boolean createPoint = true;
+
+            for(int i = 1; i < m_point.size() - 1 && createPoint; i++){
+                if(m_point.get(i).checkHitbox()){
+                    createPoint  = false;
+                    m_point.remove(i);
+                }
+
+                if(m_point.get(i).checkCurveHandleHitbox(m_point, i)){
+                    createPoint  = false;
+                    m_point.get(i).resetCurve();
+                }
+            }
+
+            if(createPoint){
+                if( mouseX >= m_pos.x && 
+                    mouseX <= m_pos.x + m_len.x && 
+                    mouseY >= m_pos.y && 
+                    mouseY <= m_pos.y + m_len.y){
+
+                    m_mouseClicked.x = mouseX;
+                    m_mouseClicked.y = mouseY;
+
+                    m_selected = true;
+
+                    int index = m_point.size()-1;
+
+                    for(int i = m_point.size()-2; i >= 0; i--){
+                        if(m_point.get(i).getActualPosition().x < mouseX){
+                            break;
+                        }
+                        index = i;
+                    }
+
+                    PVector temp = new PVector( (mouseX - m_pos.x) / m_len.x, 1 - (mouseY - m_pos.y) / m_len.y);
+
+                    insertPointAtIndex(new AutomationPoint(m_pos, m_len, temp, m_fillColor), m_point, index);
+
+                }
+            }
+        }
+        
+        if(!mousePressed){
+            m_selected = false;
+            m_firstClick = true;
+        }
+        
+    }
+
+    public void draw(){
+        
+        if(m_drawBackground){//background
+            drawBackground();
+        }
+
+        //points and shape
+        beginShape();
+        vertex(m_pos.x, m_pos.y + m_len.y * m_baseValue);
+        for(int i = 0; i < m_point.size(); i++){
+            m_point.get(i).update(m_point, i);
+            PVector temp = m_point.get(i).getActualPosition();
+            vertex(temp.x, temp.y);
+        }
+        vertex(m_pos.x + m_len.x, m_pos.y + m_len.y * m_baseValue);
+
+        noStroke();
+        fill(m_fillColor, 75);
+        endShape(CLOSE);
+
+    }
+
+    public void drawBackground(){
+        pushMatrix();
+        translate(m_pos.x, m_pos.y);
+        fill(m_backgroundColor2);
+        stroke(m_backgroundColor1);
+        strokeWeight(2);
+        rect(0, 0, m_len.x, m_len.y);
+        popMatrix();
+    }
+
+    public float mapXToY(float x){
+        if(x < 0){
+            return m_point.get(0).getValue().y;
+        }
+
+        int index = 0;
+
+        for(int i = 0; i < m_point.size(); i++){
+            if(x <= m_point.get(i).getValue().x){
+                return m_point.get(index).mapXToY(x, m_point, index);
+            }
+
+            index = i;
+        }
+
+        return m_point.get(m_point.size() - 1).getValue().y;
+    }
+
+    public float[] getArray(int index){
+        float[] temp = new float[index];
+
+        for(int i = 0; i < temp.length; i++){
+            temp[i] = mapXToY(i / temp.length);
+        }
+
+        return temp;
+    }
+
+}
+
+class AutomationPoint extends Controller{
+
+    private PVector m_value;
+
+    private float m_curve;
+    private float m_previousCurve;
+    private int m_displayIncrement = 10;
+    private boolean m_selectedCurveHandle = false;
+    private float m_curveHandleSensitivity = 1;
+
+    private float m_radius = 6;
+
+    AutomationPoint(PVector windowPos, PVector windowLen, PVector value){
+        super(windowPos, windowLen);
+
+        m_value = value;
+        m_curve = 0.5f;
+        m_previousCurve = m_curve;
+    }
+
+    AutomationPoint(PVector windowPos, PVector windowLen, PVector value, int fillColor){
+        super(windowPos, windowLen);
+
+        m_value = value;
+        m_curve = 0.5f;
+        m_previousCurve = m_curve;
+
+        setColor(m_backgroundColor1, m_backgroundColor2, fillColor);
+    }
+
+    public PVector getActualPosition(){
+        return new PVector(m_pos.x + m_value.x * m_len.x, m_pos.y + (1 - m_value.y) * m_len.y);
+    }
+
+    private void setActualPosition(float x, float y){
+        m_value.x = (x - m_pos.x) / m_len.x;
+        m_value.y = 1 - (y - m_pos.y) / m_len.y;
+    }
+
+    public void update(ArrayList<AutomationPoint> others, int myIndex){
+        click(others, myIndex);
+        adjust(others, myIndex);
+        draw(others, myIndex);
+    }
+
+    protected void click(ArrayList<AutomationPoint> others, int myIndex){
+        if(mousePressed && m_firstClick){
+            m_firstClick = false;
+            if(checkHitbox()){
+
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+
+                m_selected = true;
+
+                
+            }else if(checkCurveHandleHitbox(others, myIndex)){
+                
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+
+                m_selectedCurveHandle = true;
+                m_previousCurve = m_curve;
+
+            }
+        }
+        
+        if(!mousePressed){
+            m_selected = false;
+            m_selectedCurveHandle = false;
+            m_firstClick = true;
+            
+        }
+        
+    }
+
+    public PVector getValue(){
+        return m_value;
+    }
+
+    protected void adjust(ArrayList<AutomationPoint> others, int myIndex){
+        
+        if(m_selected){
+            
+            setActualPosition(mouseX, mouseY);
+
+            if(myIndex == 0){
+                m_value.x = 0;
+            }else if(myIndex == others.size() - 1){
+                m_value.x = 1;
+            }else{
+                if(m_value.x < others.get(myIndex - 1).getValue().x){
+                    m_value.x = others.get(myIndex - 1).getValue().x;
+                }
+
+                if(m_value.x > others.get(myIndex + 1).getValue().x){
+                    m_value.x = others.get(myIndex + 1).getValue().x;
+                }
+            }
+
+            if(m_value.y < 0){
+                m_value.y = 0;
+            }
+
+            if(m_value.y > 1){
+                m_value.y = 1;
+            }
+
+            //println(m_value);
+        }else if(m_selectedCurveHandle){
+
+            //println(m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y);
+            if(myIndex < others.size() - 1){
+                if(others.get(myIndex + 1).getValue().y > getValue().y){
+                    m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
+                }else{
+                    m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
+                }
+                if(m_curve < 0){
+                    m_curve = 0;
+                }
+                
+                if(m_curve > 1){
+                    m_curve = 1;
+                }
+            }
+            
+        }
+    }
+
+    public void draw(ArrayList<AutomationPoint> others, int myIndex){
+        pushMatrix();
+        translate(getActualPosition().x, getActualPosition().y);
+
+        //Point
+        noFill();
+        stroke(m_fillColor);
+        strokeWeight(2);
+        if(m_selected){
+            ellipse(0, 0, 3 * m_radius, 3 * m_radius);
+        }else{
+            ellipse(0, 0, 2 * m_radius, 2 * m_radius);
+        }
+
+        popMatrix();
+
+        //Curve
+        if(myIndex < others.size() - 1){
+            if(m_curve == 0.5f || getActualPosition().x == others.get(myIndex + 1).getActualPosition().x){
+                strokeWeight(2);
+                stroke(m_fillColor);
+                line(getActualPosition().x, getActualPosition().y, others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
+            }else{
+                beginShape();
+                for(int i = PApplet.parseInt(getActualPosition().x); i < others.get(myIndex + 1).getActualPosition().x; i += m_displayIncrement){
+                    float x = map(i, getActualPosition().x, others.get(myIndex + 1).getActualPosition().x, 0, 1);
+                    float actualY = map(getY(x), 0, 1, getActualPosition().y, others.get(myIndex + 1).getActualPosition().y);
+
+                    vertex(i, actualY);
+                }
+                vertex(others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
+                endShape();
+            }
+        }
+
+        //CurveHandle
+        
+        if(myIndex < others.size() - 1){
+            if(!(getActualPosition().x == others.get(myIndex + 1).getActualPosition().x)){
+                pushMatrix();
+
+                translate(getCurveHandlePosition(others, myIndex).x, getCurveHandlePosition(others, myIndex).y);
+
+                noFill();
+                stroke(m_fillColor);
+                strokeWeight(2);
+
+                if(m_selectedCurveHandle){
+                    rect(-m_radius, -m_radius, 2 * m_radius, 2 * m_radius);
+                }else{
+                    rect(-0.5f * m_radius, -0.5f * m_radius, m_radius, m_radius);
+                }
+                popMatrix();
+            }
+        }
+        
+        
+        
+        
+        
+
+    }
+
+    private PVector getCurveHandlePosition(ArrayList<AutomationPoint> others, int myIndex){
+        if(myIndex < others.size() - 1){
+            float actualX = map(0.5f, 0, 1, getActualPosition().x, others.get(myIndex + 1).getActualPosition().x);
+            float actualY = map(getY(0.5f), 0, 1, getActualPosition().y, others.get(myIndex + 1).getActualPosition().y);
+
+            return new PVector(actualX, actualY);
+        }else{
+            return new PVector(0, 0);
+        }
+    }
+
+    private float getY(float x){
+        float s = map(m_curve, 0, 1, 0.001f, 0.999f)/(1-map(m_curve, 0, 1, 0.001f, 0.999f));
+        float y;
+        if(s == 1){
+            y = x;
+        }else{
+            y = 1 - 1/((s-2+1/s) * x + 1 - 1/s) + 1/(s-1);
+        }
+        
+        return y;
+    }
+
+    public float mapXToY(float windowX, ArrayList<AutomationPoint> others, int myIndex){
+        if(windowX == m_value.x){
+            return m_value.y;
+        }
+
+        float curveX = map(windowX, m_value.x, others.get(myIndex + 1).getValue().x, 0, 1);
+        float curveY = getY(curveX);
+
+        return map(curveY, 0, 1, m_value.y, others.get(myIndex + 1).getValue().y);
+    }
+
+    public boolean checkHitbox(){
+        return ( (mouseX - getActualPosition().x) * (mouseX - getActualPosition().x)
+                 + (mouseY - getActualPosition().y) * (mouseY - getActualPosition().y) )
+                 < (m_radius * m_radius);
+    }
+
+    public boolean checkCurveHandleHitbox(ArrayList<AutomationPoint> others, int myIndex){
+        return ( (mouseX - getCurveHandlePosition(others, myIndex).x) * (mouseX - getCurveHandlePosition(others, myIndex).x)
+                 + (mouseY - getCurveHandlePosition(others, myIndex).y) * (mouseY - getCurveHandlePosition(others, myIndex).y) )
+                 < (m_radius * m_radius);
+    }
+
+    public void resetCurve(){
+        m_curve = 0.5f;
+    }
+
+}
 class Controller{
     //private float/boolean m_value = 0;
     
@@ -444,483 +839,8 @@ class PlayButton extends Tickbox{
     }
 }
 
-//====================================================================
 
-class Automation extends Controller{
 
-    ArrayList<AutomationPoint> m_point = new ArrayList<AutomationPoint>();
-    private boolean m_drawBackground = true;
-    private float m_baseValue = 0.5f;
-
-    Automation(float xPos, float yPos, float xLen, float yLen){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
-
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5f), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5f), m_fillColor) );
-    }
-
-    Automation(float xPos, float yPos, float xLen, float yLen, int fillColor, boolean drawBackground){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
-        m_fillColor = fillColor;
-        m_drawBackground = drawBackground;
-
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5f), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5f), m_fillColor) );
-    }
-
-    public void setBaseValue(float baseValue){
-        m_baseValue = baseValue;
-    }
-
-    private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
-        toSort.add(new AutomationPoint( new PVector(0, 0), new PVector(0, 0), new PVector(0, 0), m_fillColor));
-
-        for(int i = toSort.size() - 2; i >= index; i--){
-            toSort.set(i + 1, toSort.get(i));
-        }
-
-        toSort.set(index, insert);
-    }
-
-    protected void click(){
-        if(mousePressed && m_firstClick && mouseButton == RIGHT){
-            m_firstClick = false;
-
-            boolean createPoint = true;
-
-            for(int i = 1; i < m_point.size() - 1 && createPoint; i++){
-                if(m_point.get(i).checkHitbox()){
-                    createPoint  = false;
-                    m_point.remove(i);
-                }
-
-                if(m_point.get(i).checkCurveHandleHitbox(m_point, i)){
-                    createPoint  = false;
-                    m_point.get(i).resetCurve();
-                }
-            }
-
-            if(createPoint){
-                if( mouseX >= m_pos.x && 
-                    mouseX <= m_pos.x + m_len.x && 
-                    mouseY >= m_pos.y && 
-                    mouseY <= m_pos.y + m_len.y){
-
-                    m_mouseClicked.x = mouseX;
-                    m_mouseClicked.y = mouseY;
-
-                    m_selected = true;
-
-                    int index = m_point.size()-1;
-
-                    for(int i = m_point.size()-2; i >= 0; i--){
-                        if(m_point.get(i).getActualPosition().x < mouseX){
-                            break;
-                        }
-                        index = i;
-                    }
-
-                    PVector temp = new PVector( (mouseX - m_pos.x) / m_len.x, 1 - (mouseY - m_pos.y) / m_len.y);
-
-                    insertPointAtIndex(new AutomationPoint(m_pos, m_len, temp, m_fillColor), m_point, index);
-
-                }
-            }
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
-    }
-
-    public void draw(){
-        
-        if(m_drawBackground){//background
-            drawBackground();
-        }
-
-        //points and shape
-        beginShape();
-        vertex(m_pos.x, m_pos.y + m_len.y * m_baseValue);
-        for(int i = 0; i < m_point.size(); i++){
-            m_point.get(i).update(m_point, i);
-            PVector temp = m_point.get(i).getActualPosition();
-            vertex(temp.x, temp.y);
-        }
-        vertex(m_pos.x + m_len.x, m_pos.y + m_len.y * m_baseValue);
-
-        noStroke();
-        fill(m_fillColor, 75);
-        endShape(CLOSE);
-
-    }
-
-    public void drawBackground(){
-        pushMatrix();
-        translate(m_pos.x, m_pos.y);
-        fill(m_backgroundColor2);
-        stroke(m_backgroundColor1);
-        strokeWeight(2);
-        rect(0, 0, m_len.x, m_len.y);
-        popMatrix();
-    }
-
-    public float mapXToY(float x){
-        if(x < 0){
-            return m_point.get(0).getValue().y;
-        }
-
-        int index = 0;
-
-        for(int i = 0; i < m_point.size(); i++){
-            if(x <= m_point.get(i).getValue().x){
-                return m_point.get(index).mapXToY(x, m_point, index);
-            }
-
-            index = i;
-        }
-
-        return m_point.get(m_point.size() - 1).getValue().y;
-    }
-
-    public float[] getArray(int index){
-        float[] temp = new float[index];
-
-        for(int i = 0; i < temp.length; i++){
-            temp[i] = mapXToY(i / temp.length);
-        }
-
-        return temp;
-    }
-
-}
-
-class AutomationPoint extends Controller{
-
-    private PVector m_value;
-
-    private float m_curve;
-    private float m_previousCurve;
-    private int m_displayIncrement = 10;
-    private boolean m_selectedCurveHandle = false;
-    private float m_curveHandleSensitivity = 1;
-
-    private float m_radius = 6;
-
-    AutomationPoint(PVector windowPos, PVector windowLen, PVector value){
-        super(windowPos, windowLen);
-
-        m_value = value;
-        m_curve = 0.5f;
-        m_previousCurve = m_curve;
-    }
-
-    AutomationPoint(PVector windowPos, PVector windowLen, PVector value, int fillColor){
-        super(windowPos, windowLen);
-
-        m_value = value;
-        m_curve = 0.5f;
-        m_previousCurve = m_curve;
-
-        setColor(m_backgroundColor1, m_backgroundColor2, fillColor);
-    }
-
-    public PVector getActualPosition(){
-        return new PVector(m_pos.x + m_value.x * m_len.x, m_pos.y + (1 - m_value.y) * m_len.y);
-    }
-
-    private void setActualPosition(float x, float y){
-        m_value.x = (x - m_pos.x) / m_len.x;
-        m_value.y = 1 - (y - m_pos.y) / m_len.y;
-    }
-
-    public void update(ArrayList<AutomationPoint> others, int myIndex){
-        click(others, myIndex);
-        adjust(others, myIndex);
-        draw(others, myIndex);
-    }
-
-    protected void click(ArrayList<AutomationPoint> others, int myIndex){
-        if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if(checkHitbox()){
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-
-                
-            }else if(checkCurveHandleHitbox(others, myIndex)){
-                
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selectedCurveHandle = true;
-                m_previousCurve = m_curve;
-
-            }
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_selectedCurveHandle = false;
-            m_firstClick = true;
-            
-        }
-        
-    }
-
-    public PVector getValue(){
-        return m_value;
-    }
-
-    protected void adjust(ArrayList<AutomationPoint> others, int myIndex){
-        
-        if(m_selected){
-            
-            setActualPosition(mouseX, mouseY);
-
-            if(myIndex == 0){
-                m_value.x = 0;
-            }else if(myIndex == others.size() - 1){
-                m_value.x = 1;
-            }else{
-                if(m_value.x < others.get(myIndex - 1).getValue().x){
-                    m_value.x = others.get(myIndex - 1).getValue().x;
-                }
-
-                if(m_value.x > others.get(myIndex + 1).getValue().x){
-                    m_value.x = others.get(myIndex + 1).getValue().x;
-                }
-            }
-
-            if(m_value.y < 0){
-                m_value.y = 0;
-            }
-
-            if(m_value.y > 1){
-                m_value.y = 1;
-            }
-
-            //println(m_value);
-        }else if(m_selectedCurveHandle){
-
-            //println(m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y);
-            if(myIndex < others.size() - 1){
-                if(others.get(myIndex + 1).getValue().y > getValue().y){
-                    m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
-                }else{
-                    m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
-                }
-                if(m_curve < 0){
-                    m_curve = 0;
-                }
-                
-                if(m_curve > 1){
-                    m_curve = 1;
-                }
-            }
-            
-        }
-    }
-
-    public void draw(ArrayList<AutomationPoint> others, int myIndex){
-        pushMatrix();
-        translate(getActualPosition().x, getActualPosition().y);
-
-        //Point
-        noFill();
-        stroke(m_fillColor);
-        strokeWeight(2);
-        if(m_selected){
-            ellipse(0, 0, 3 * m_radius, 3 * m_radius);
-        }else{
-            ellipse(0, 0, 2 * m_radius, 2 * m_radius);
-        }
-
-        popMatrix();
-
-        //Curve
-        if(myIndex < others.size() - 1){
-            if(m_curve == 0.5f || getActualPosition().x == others.get(myIndex + 1).getActualPosition().x){
-                strokeWeight(2);
-                stroke(m_fillColor);
-                line(getActualPosition().x, getActualPosition().y, others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
-            }else{
-                beginShape();
-                for(int i = PApplet.parseInt(getActualPosition().x); i < others.get(myIndex + 1).getActualPosition().x; i += m_displayIncrement){
-                    float x = map(i, getActualPosition().x, others.get(myIndex + 1).getActualPosition().x, 0, 1);
-                    float actualY = map(getY(x), 0, 1, getActualPosition().y, others.get(myIndex + 1).getActualPosition().y);
-
-                    vertex(i, actualY);
-                }
-                vertex(others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
-                endShape();
-            }
-        }
-
-        //CurveHandle
-        
-        if(myIndex < others.size() - 1){
-            if(!(getActualPosition().x == others.get(myIndex + 1).getActualPosition().x)){
-                pushMatrix();
-
-                translate(getCurveHandlePosition(others, myIndex).x, getCurveHandlePosition(others, myIndex).y);
-
-                noFill();
-                stroke(m_fillColor);
-                strokeWeight(2);
-
-                if(m_selectedCurveHandle){
-                    rect(-m_radius, -m_radius, 2 * m_radius, 2 * m_radius);
-                }else{
-                    rect(-0.5f * m_radius, -0.5f * m_radius, m_radius, m_radius);
-                }
-                popMatrix();
-            }
-        }
-        
-        
-        
-        
-        
-
-    }
-
-    private PVector getCurveHandlePosition(ArrayList<AutomationPoint> others, int myIndex){
-        if(myIndex < others.size() - 1){
-            float actualX = map(0.5f, 0, 1, getActualPosition().x, others.get(myIndex + 1).getActualPosition().x);
-            float actualY = map(getY(0.5f), 0, 1, getActualPosition().y, others.get(myIndex + 1).getActualPosition().y);
-
-            return new PVector(actualX, actualY);
-        }else{
-            return new PVector(0, 0);
-        }
-    }
-
-    private float getY(float x){
-        float s = map(m_curve, 0, 1, 0.001f, 0.999f)/(1-map(m_curve, 0, 1, 0.001f, 0.999f));
-        float y;
-        if(s == 1){
-            y = x;
-        }else{
-            y = 1 - 1/((s-2+1/s) * x + 1 - 1/s) + 1/(s-1);
-        }
-        
-        return y;
-    }
-
-    public float mapXToY(float windowX, ArrayList<AutomationPoint> others, int myIndex){
-        if(windowX == m_value.x){
-            return m_value.y;
-        }
-
-        float curveX = map(windowX, m_value.x, others.get(myIndex + 1).getValue().x, 0, 1);
-        float curveY = getY(curveX);
-
-        return map(curveY, 0, 1, m_value.y, others.get(myIndex + 1).getValue().y);
-    }
-
-    public boolean checkHitbox(){
-        return ( (mouseX - getActualPosition().x) * (mouseX - getActualPosition().x)
-                 + (mouseY - getActualPosition().y) * (mouseY - getActualPosition().y) )
-                 < (m_radius * m_radius);
-    }
-
-    public boolean checkCurveHandleHitbox(ArrayList<AutomationPoint> others, int myIndex){
-        return ( (mouseX - getCurveHandlePosition(others, myIndex).x) * (mouseX - getCurveHandlePosition(others, myIndex).x)
-                 + (mouseY - getCurveHandlePosition(others, myIndex).y) * (mouseY - getCurveHandlePosition(others, myIndex).y) )
-                 < (m_radius * m_radius);
-    }
-
-    public void resetCurve(){
-        m_curve = 0.5f;
-    }
-
-}
-
-//====================================================================
-
-class Tabs extends Controller{
-
-    private int m_value;
-    private String[] m_tabName;
-
-    Tabs(float xPos, float yPos, float xLen, float yLen, String[] tabName){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
-
-        m_value = 0;
-
-        m_tabName = tabName;
-    }
-
-    protected void click(){
-        if(mousePressed && (m_firstClick || m_selected)){
-            m_firstClick = false;
-
-            for(int i = 0; i < m_tabName.length; i++){
-                if( mouseX >= (m_pos.x + i * m_len.x/m_tabName.length) &&
-                    mouseX <= (m_pos.x + (i + 1) * m_len.x/m_tabName.length) &&
-                    mouseY >= m_pos.y && 
-                    mouseY <= m_pos.y + m_len.y){
-
-                        m_mouseClicked.x = mouseX;
-                        m_mouseClicked.y = mouseY;
-
-                        m_selected = true;
-
-                        m_value = i;
-                    }
-            }
-
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
-    }
-
-    protected void draw(){
-        noStroke();
-        fill(m_backgroundColor2);
-        rect(m_pos.x, m_pos.y, m_len.x, 4 * m_len.y/5, 10);
-
-        if(m_value > 0){
-            rect(m_pos.x, m_pos.y, m_value * m_len.x/m_tabName.length, m_len.y, 10);
-        }
-
-        if(m_value < (m_tabName.length - 1)){
-            rect(m_pos.x + (m_value + 1) * m_len.x/m_tabName.length, m_pos.y, (m_tabName.length - (m_value + 1)) * m_len.x/m_tabName.length, m_len.y, m_len.y/5);
-        }
-
-        fill(m_fillColor);
-        rect(m_pos.x + m_value * m_len.x/m_tabName.length, m_pos.y, m_len.x/m_tabName.length, 4 * m_len.y/5);
-
-        stroke(m_backgroundColor1);
-        strokeWeight(2);
-        for(int i = 1; i < m_tabName.length; i++){
-            line(m_pos.x + i * m_len.x/m_tabName.length, m_pos.y + m_len.y/5, m_pos.x + i * m_len.x/m_tabName.length, m_pos.y + 4 * m_len.y/5);
-        }
-
-        fill(m_backgroundColor1);
-        textAlign(CENTER);
-        textSize(m_len.y/2);
-        for(int i = 0; i < m_tabName.length; i++){
-            text(m_tabName[i], m_pos.x + (i + 0.5f) * m_len.x/m_tabName.length, m_pos.y + 5 * m_len.y/8);
-        }
-
-    }
-
-    public int getValue(){
-        return m_value;
-    }
-
-}
 class GUISection{
     protected PVector m_pos;
     protected PVector m_len;
@@ -977,8 +897,6 @@ class DFTSection extends GUISection{
     MathSection m_mathSection;
     SpectrumSection m_spectrumSection;
 
-    float[][] m_testSin;
-    float[][] m_testCos;
 
     DFTSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
@@ -986,18 +904,21 @@ class DFTSection extends GUISection{
     
     protected void initializeSections(){
         int totalWindowLength = 50;
-        m_testSin = new float[totalWindowLength][totalWindowLength];
-        m_testCos = new float[totalWindowLength][totalWindowLength];
+        int testFreqAmount = totalWindowLength;
 
         m_menuSection = new MenuSection(m_pos, new PVector(m_len.x, m_spacer));
-        m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), totalWindowLength);
-        m_mathSection = new MathSection(new PVector(m_pos.x, m_pos.y + (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
+        m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), testFreqAmount, totalWindowLength);
+        m_mathSection = new MathSection(new PVector(m_pos.x, m_pos.y + (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), testFreqAmount, totalWindowLength);
         m_spectrumSection = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3));
     }
 
     protected void drawSections(){
         if(m_menuSection.isTimeAdvancing()){
             m_inputSection.advanceTime();
+        }
+
+        if(m_mathSection.hasChangedTestFreq()){
+            m_inputSection.setTestFreq(m_mathSection.getTestFreq());
         }
 
         m_menuSection.update();
@@ -1091,28 +1012,31 @@ class MenuSection extends GUISection{
 //====================================================================
 
 class InputSection extends GUISection{
-    private Automation m_windowShape; 
+    //private Automation m_windowShape; 
     private Generator m_generator;
-    private Graph m_input;
+    //private Graph m_input;
     private Tickbox m_sectionTickbox;
 
     private int m_sampleNumber;
 
-    InputSection(PVector pos, PVector len, int sampleNumber){
+    XYDisplay m_xyDisplay;
+
+    InputSection(PVector pos, PVector len, int testFreqAmount, int sampleNumber){
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
         m_generator = new Generator(m_pos.x + m_spacer/2, m_pos.y + m_spacer / 2, 2 * m_len.x / 7, 5 * m_spacer / 3, m_spacer, m_sampleNumber);
-
+        m_xyDisplay = new XYDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount, m_sampleNumber);
     }
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
 
-        m_windowShape = new Automation(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, color(200, 75, 75), false);
+        //m_windowShape = new Automation(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, color(200, 75, 75), false);
         
-        m_input = new Graph(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer);
+        //m_input = new Graph(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer);
 
+        
     }
 
     protected void drawBackground(){
@@ -1134,14 +1058,17 @@ class InputSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
             m_generator.update();
-            m_windowShape.drawBackground();
+            m_xyDisplay.setInputVisibility(m_generator.isOn());
+            //m_windowShape.drawBackground();
             
-            if(m_generator.isOn()){
-                m_input.draw(m_generator.getArray());
-            }
+            //if(m_generator.isOn()){
+            //    m_input.draw(m_generator.getArray());
+            //}
             //m_input.addData(sin(0.1 * m_time), m_time - 1);
 
-            m_windowShape.update();
+            m_xyDisplay.draw();
+
+            //m_windowShape.update();
         }
         
         
@@ -1150,20 +1077,37 @@ class InputSection extends GUISection{
     public void advanceTime(){
         //println((frameCount%2 == 0)? "tick" : "tack");
         m_generator.advanceTime();
+
+        m_xyDisplay.setDataForInput(m_generator.getArray());
+    }
+
+    public void setTestFreq(int testFreq){
+        m_xyDisplay.setTestFreq(testFreq);
     }
 }
 
 //====================================================================
 
 class MathSection extends GUISection{
-    Tabs m_tabs;
+    private SinCosTabs m_tabs;
+    private int m_testFreq = 0;
     private Tickbox m_sectionTickbox;
-    MathSection(PVector pos, PVector len){
+
+
+    MathSection(PVector pos, PVector len, int testFreqAmount, int sampleNumber){
         super(pos, len);
+
+        String[] temp = new String[testFreqAmount];
+
+        for(int i = 0; i < temp.length; i++){
+            temp[i] = ("i" + (i % (temp.length/2) )).substring(1);
+        }
+
+        m_tabs = new SinCosTabs(m_pos.x + m_spacer/2, m_pos.y, m_len.x - m_spacer/2, m_spacer/2, temp);
     }
 
     protected void initializeControllers(){
-        m_tabs = new Tabs(m_pos.x + m_spacer/2, m_pos.y, m_len.x - m_spacer/2, m_len.y/8, new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"});
+        
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
     }
 
@@ -1190,6 +1134,16 @@ class MathSection extends GUISection{
         }
         
         
+    }
+
+    public boolean hasChangedTestFreq(){
+        boolean temp = (m_testFreq == m_tabs.getValue());
+        m_testFreq = m_tabs.getValue();
+        return temp;
+    }
+
+    public int getTestFreq(){
+        return m_tabs.getValue();
     }
 }
 
@@ -1337,26 +1291,407 @@ class Graph{
     private PVector m_len;
     private int m_color;
 
-    Graph(float xPos, float yPos, float xLen, float yLen){
+    private float[] m_data;
+
+    Graph(float xPos, float yPos, float xLen, float yLen, int resolution){
         m_pos = new PVector(xPos, yPos);
         m_len = new PVector(xLen, yLen);
 
         m_color = color(75, 170, 75);
+
+        m_data = new float[resolution];
+        for(int i = 0; i < m_data.length; i++){
+            m_data[i] = 0;
+        }
     }
 
-    public void draw(float[] data){
-        for(int i = 0; i < data.length; i++){
+    public void setData(float[] data){
+        if(data.length == m_data.length){
+            m_data = data;
+        }
+    }
+
+    public void setColor(int c){
+        m_color = c;
+    }
+
+    public float[] getData(){
+        return m_data;
+    }
+
+    public void draw(){
+        for(int i = 0; i < m_data.length; i++){
             noFill();
             stroke(m_color);
             strokeWeight(2);
-            ellipse(m_pos.x + i * m_len.x / data.length, m_pos.y + m_len.y * (1 - data[i])/2, 10, 10);
-            line(m_pos.x + i * m_len.x / data.length, m_pos.y + m_len.y * (1 - data[i])/2, m_pos.x + i * m_len.x / data.length, m_pos.y + m_len.y/2);
+            ellipse(m_pos.x + i * m_len.x / m_data.length, m_pos.y + m_len.y * (1 - m_data[i])/2, 10, 10);
+            line(m_pos.x + i * m_len.x / m_data.length, m_pos.y + m_len.y * (1 - m_data[i])/2, m_pos.x + i * m_len.x / m_data.length, m_pos.y + m_len.y/2);
         }
+    }
+
+    public int getLength(){
+        return m_data.length;
     }
 }
 
 //==========================================================================================
 
+class Tabs extends Controller{
+
+    protected int m_value;
+    protected String[] m_tabName;
+
+    Tabs(float xPos, float yPos, float xLen, float yLen, String[] tabName){
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+
+        m_value = 0;
+
+        m_tabName = tabName;
+    }
+
+    protected void click(){
+        if(mousePressed && (m_firstClick || m_selected)){
+            m_firstClick = false;
+
+            if(mouseX >= m_pos.x &&
+                mouseX <= m_pos.x + m_len.x &&
+                mouseY >= m_pos.y && 
+                mouseY <= m_pos.y + m_len.y){
+
+                int xPartitions = m_tabName.length;
+
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+
+                m_selected = true;
+
+                m_value = constrain(floor(xPartitions * (mouseX - m_pos.x)/m_len.x), 0, m_tabName.length - 1);
+
+            }
+
+        }
+        
+        if(!mousePressed){
+            m_selected = false;
+            m_firstClick = true;
+        }
+        
+    }
+
+    protected void draw(){
+        noStroke();
+        fill(m_backgroundColor2);
+        rect(m_pos.x, m_pos.y, m_len.x, 4 * m_len.y/5, 10);
+
+        if(m_value > 0){
+            rect(m_pos.x, m_pos.y, m_value * m_len.x/m_tabName.length, m_len.y, 10);
+        }
+
+        if(m_value < (m_tabName.length - 1)){
+            rect(m_pos.x + (m_value + 1) * m_len.x/m_tabName.length, m_pos.y, (m_tabName.length - (m_value + 1)) * m_len.x/m_tabName.length, m_len.y, m_len.y/5);
+        }
+
+        fill(m_fillColor);
+        rect(m_pos.x + m_value * m_len.x/m_tabName.length, m_pos.y, m_len.x/m_tabName.length, 4 * m_len.y/5);
+
+        stroke(m_backgroundColor1);
+        strokeWeight(2);
+        for(int i = 1; i < m_tabName.length; i++){
+            line(m_pos.x + i * m_len.x/m_tabName.length, m_pos.y + m_len.y/5, m_pos.x + i * m_len.x/m_tabName.length, m_pos.y + 4 * m_len.y/5);
+        }
+
+        fill(m_backgroundColor1);
+        textAlign(CENTER);
+        textSize(m_len.y/2);
+        for(int i = 0; i < m_tabName.length; i++){
+            text(m_tabName[i], m_pos.x + (i + 0.5f) * m_len.x/m_tabName.length, m_pos.y + 5 * m_len.y/8);
+        }
+
+    }
+
+    public int getValue(){
+        return m_value;
+    }
+
+}
+
+//====================================================================
+
+class SinCosTabs extends Tabs{
+
+    SinCosTabs(float xPos, float yPos, float xLen, float yLen, String[] tabName){
+        super(xPos, yPos, xLen, yLen, tabName);
+    }
+
+    public void draw(){
+        int xPartitions = (m_tabName.length % 2 == 0)? m_tabName.length/2 : m_tabName.length/2 + 1;
+
+        //Background
+        noStroke();
+        fill(m_backgroundColor2);
+        rect(m_pos.x,
+            m_pos.y + m_len.y/10,
+            m_len.x,
+            4 * m_len.y / 5);
+        
+        //Unmarked Tabs
+        if(m_value < xPartitions){
+            //Upper Deck
+            if(m_value > 0){//Left
+                rect(m_pos.x, m_pos.y,
+                    m_value * m_len.x / xPartitions,
+                    m_len.y/2, m_len.y/10);
+            }
+
+            if(m_value < xPartitions - 1){//Right
+                rect(m_pos.x + (m_value + 1) * m_len.x / xPartitions,
+                    m_pos.y,
+                    (xPartitions - m_value) * m_len.x / xPartitions,
+                    m_len.y/2, m_len.y/10);
+            }
+
+            //Lower Deck
+            rect(m_pos.x, m_pos.y + m_len.y/2, m_len.x, m_len.y/2, m_len.y/10);
+        }else{
+            //Upper Deck
+            rect(m_pos.x, m_pos.y, m_len.x, m_len.y/2, m_len.y/10);
+
+            //Lower Deck
+            if((m_value % xPartitions) > 0){//Left
+                rect(m_pos.x,
+                    m_pos.y + m_len.y/2,
+                    (m_value % xPartitions) * m_len.x / xPartitions,
+                    m_len.y/2, m_len.y/10);
+            }
+
+            if((m_value % xPartitions) < xPartitions - 1){
+                rect(m_pos.x + ((m_value % xPartitions) + 1) * m_len.x / xPartitions,
+                    m_pos.y + m_len.y/2,
+                    (xPartitions - (m_value % xPartitions)) * m_len.x / xPartitions,
+                    m_len.y/2, m_len.y/10);
+            }
+        }
+        
+        //Marked Tab
+        noStroke();
+        fill(m_fillColor);
+        rect(m_pos.x + (m_value % xPartitions) * m_len.x / xPartitions,
+            m_pos.y + m_len.y/10 + (m_value / xPartitions) * m_len.y * 2 / 5,
+            m_len.x / xPartitions,
+            m_len.y * 2 / 5);
+
+        //Lines
+        stroke(m_backgroundColor1);
+        strokeWeight(2);
+        //line(m_pos.x, m_pos.y + m_len.y/2, m_pos.x + m_len.x, m_pos.y + m_len.y/2);
+
+        for(int i = 1; i < xPartitions; i++){
+            line(m_pos.x + i * m_len.x / xPartitions,
+                m_pos.y + m_len.y/10,
+                m_pos.x + i * m_len.x / xPartitions,
+                m_pos.y + 9 * m_len.y/10);
+        }
+
+        //Tabnames
+        fill(m_backgroundColor1);
+        textAlign(CENTER);
+        textSize(m_len.y/2);
+        for(int i = 0; i < m_tabName.length; i++){
+            text(m_tabName[i],
+                m_pos.x + ((i % xPartitions) + 0.5f) * m_len.x/xPartitions,
+                m_pos.y + 5 * m_len.y/12 + (i / xPartitions) * m_len.y/2);
+        }
+    }
+
+    protected void click(){
+        if(mousePressed && (m_firstClick || m_selected)){
+            
+            m_firstClick = false;
+
+            if(mouseX >= m_pos.x &&
+                mouseX <= m_pos.x + m_len.x &&
+                mouseY >= m_pos.y && 
+                mouseY <= m_pos.y + m_len.y){
+
+                int xPartitions = (m_tabName.length % 2 == 0)? m_tabName.length/2 : m_tabName.length/2 + 1;
+
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+
+                m_selected = true;
+
+                m_value = constrain(xPartitions * round((mouseY - m_pos.y)/m_len.y) + floor(xPartitions * (mouseX - m_pos.x)/m_len.x), 0, m_tabName.length - 1);
+
+            }
+
+        }
+        
+        if(!mousePressed){
+            m_selected = false;
+            m_firstClick = true;
+        }
+        
+    }
+
+
+}
+class XYDisplay{
+    private PVector m_pos;
+    private PVector m_len;
+    
+    boolean m_automationIsVisible = true;
+    boolean m_inputIsVisible = true;
+    boolean m_testFreqVisible = true;
+    int m_testFreqIndex = 0;
+
+    private Automation m_automation;
+    private Graph m_input;
+    private Graph[] m_testFreq;
+
+    XYDisplay(float posX, float posY, float lenX, float lenY, int testSineAmount, int resolution){
+        m_pos = new PVector(posX, posY);
+        m_len = new PVector(lenX, lenY);
+
+        m_automation = new Automation(m_pos.x, m_pos.y, m_len.x, m_len.y,
+                                        color(200, 75, 75), false);
+
+        m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+        m_input.setColor(color(75, 75, 170));
+
+        m_testFreq = new Graph[testSineAmount];
+        for(int i = 0; i < m_testFreq.length; i++){
+            m_testFreq[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+        }
+        setDataForTestSines();
+
+        
+    }
+
+    private void setDataForTestSines(){
+        for(int i = 0; i < m_testFreq.length; i++){
+            float[] temp = new float[m_testFreq[0].getLength()];
+
+            if(i < m_testFreq.length/2){
+                for(int x = 0; x < temp.length; x++){
+                    temp[x] = sin(i * TWO_PI * x / temp.length);
+                }
+            }else{
+                for(int x = 0; x < temp.length; x++){
+                    temp[x] = cos((i % (m_testFreq.length/2) ) * TWO_PI * x / temp.length);
+                }
+            }
+
+            m_testFreq[i].setData(temp);
+        }
+    }
+
+    public void setDataForInput(float[] data){
+        m_input.setData(data);
+    }
+
+    public void setInputVisibility(boolean isVisible){
+        m_inputIsVisible = isVisible;
+    }
+
+    public void setTestFreqVisibility(int testFreqIndex, boolean isVisible){
+        setTestFreq(testFreqIndex);
+        m_testFreqVisible = isVisible;
+    }
+
+    public void setTestFreq(int testFreqIndex){
+        m_testFreqIndex = testFreqIndex;
+    }
+
+    public void setAutomationVisibility(boolean isVisible){
+        m_automationIsVisible = isVisible;
+    }
+
+    public float[] getMultipliedArray(int withTestFreq){
+        float[] temp = new float[m_testFreq[0].getLength()];
+
+        for(int i = 0; i < temp.length; i++){
+            if(m_automationIsVisible){
+                temp[i] = m_automation.mapXToY(i / (1.0f * temp.length));
+            }else{
+                temp[i] = 1;
+            }
+            
+        }
+
+        if(m_inputIsVisible){
+            float[] t = m_input.getData();
+            for(int i = 0; i < temp.length; i++){
+                temp[i] *= t[i];
+            }
+        }
+
+        if(m_testFreqVisible){
+            float[] t = m_testFreq[withTestFreq].getData();
+            for(int i = 0; i < temp.length; i++){
+                temp[i] *= t[i];
+            }
+        }
+
+        return temp;
+    }
+
+    public float[] getMultipliedArray(){
+        return getMultipliedArray(m_testFreqIndex);
+    }
+
+    public float getMultipliedArrayAdded(int withTestFreq){
+        float ret = 0;
+
+        float[] temp = getMultipliedArray();
+
+        for(int i = 0; i < temp.length; i++){
+            ret += temp[i];
+        }
+
+        return ret / temp.length;
+    }
+
+    public float getMultipliedArrayAdded(){
+        return getMultipliedArrayAdded(m_testFreqIndex);
+    }
+
+    public float[] getSpectrum(){
+        int freqAmount = m_testFreq.length / 2;
+        float[] temp = new float[freqAmount];
+
+        for(int i = 0; i < freqAmount; i++){
+            temp[i] = sqrt(getMultipliedArrayAdded(i) * getMultipliedArrayAdded(i)
+                        + getMultipliedArrayAdded(i + freqAmount) * getMultipliedArrayAdded(i + freqAmount));
+        }
+
+        return temp;
+    }
+
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+
+        
+
+        if(m_testFreqVisible){
+            //println("Yes" + m_testFreq[i].getData());
+            m_testFreq[m_testFreqIndex].draw();
+        }
+
+        if(m_inputIsVisible){
+            m_input.draw();
+        }
+        
+        if(m_automationIsVisible){
+            m_automation.update();
+        }
+        
+    }
+
+}
   public void settings() {  size(800,800); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "DFTSimulation" };
