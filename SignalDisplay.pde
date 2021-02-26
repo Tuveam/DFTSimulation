@@ -17,6 +17,7 @@ class SignalDisplay{
 
         m_automation = new Automation(m_pos.x, m_pos.y, m_len.x, m_len.y,
                                         color(200, 75, 75), false);
+        m_automation.setRealValueRange(-1, 1);
 
         m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
         m_input.setColor(color(75, 75, 170));
@@ -50,14 +51,14 @@ class SignalDisplay{
 
     public void setDataForInput(float[] data){
         m_input.setData(data);
+        //println("SignalDisplay.setDataForInput(): " + data[data.length - 1]);
     }
 
     public void setInputVisibility(boolean isVisible){
         m_inputIsVisible = isVisible;
     }
 
-    public void setTestFreqVisibility(int testFreqIndex, boolean isVisible){
-        setTestFreq(testFreqIndex);
+    public void setTestFreqVisibility(boolean isVisible){
         m_testFreqVisible = isVisible;
     }
 
@@ -70,29 +71,29 @@ class SignalDisplay{
     }
 
     public float[] getMultipliedArray(int withTestFreq){
-        float[] temp = new float[m_testFreq[0].getLength()];
+        float[] temp = new float[m_input.getData().length];
 
-        for(int i = 0; i < temp.length; i++){
-            if(m_automationIsVisible){
-                temp[i] = m_automation.mapXToY(i / (1.0f * temp.length));
-            }else{
-                temp[i] = 1;
-            }
-            
-        }
+        float[] ip = m_input.getData();
 
-        if(m_inputIsVisible){
-            float[] t = m_input.getData();
-            for(int i = 0; i < temp.length; i++){
-                temp[i] *= t[i];
-            }
-        }
+        float[] tf = new float[m_input.getData().length];
 
         if(m_testFreqVisible){
-            float[] t = m_testFreq[withTestFreq].getData();
-            for(int i = 0; i < temp.length; i++){
-                temp[i] *= t[i];
+            tf = m_testFreq[withTestFreq].getData();
+        }
+        
+
+        for(int i = 0; i < temp.length; i++){
+            temp[i] = ip[i];
+
+            if(m_automationIsVisible){
+                temp[i] *= m_automation.mapXToRealY(i / (1.0f * temp.length));
             }
+
+            if(m_testFreqVisible){
+                
+                temp[i] *= tf[i];
+            }
+            
         }
 
         return temp;

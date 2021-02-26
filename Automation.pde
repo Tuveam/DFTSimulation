@@ -4,10 +4,15 @@ class Automation extends Controller{
     private boolean m_drawBackground = true;
     private float m_baseValue = 0.5;
 
+    private float m_minRealValue = 0;
+    private float m_maxRealValue = 1;
+
     Automation(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.001, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.999, 1), m_fillColor) );
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5), m_fillColor) );
     }
 
@@ -17,11 +22,18 @@ class Automation extends Controller{
         m_drawBackground = drawBackground;
 
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.001, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.999, 1), m_fillColor) );
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5), m_fillColor) );
     }
 
     public void setBaseValue(float baseValue){
         m_baseValue = baseValue;
+    }
+
+    public void setRealValueRange(float minRealValue, float maxRealValue){
+        m_minRealValue = minRealValue;
+        m_maxRealValue = maxRealValue;
     }
 
     private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
@@ -135,6 +147,10 @@ class Automation extends Controller{
         }
 
         return m_point.get(m_point.size() - 1).getValue().y;
+    }
+
+    public float mapXToRealY(float x){
+        return map(mapXToY(x), 0, 1, m_minRealValue, m_maxRealValue);
     }
 
     public float[] getArray(int index){

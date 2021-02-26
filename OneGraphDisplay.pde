@@ -12,6 +12,12 @@ class OneGraphDisplay{
         m_graph.setColor(color(75, 140, 140));
     }
 
+    public void setAsSpectrumDisplay(){
+        m_graph.setBaseValue(0);
+        m_graph.setInputValueRange(0, 0.6);
+        m_graph.setDisplayMode(1);
+    }
+
     public void setData(float[] data){
         m_graph.setData(data);
     }

@@ -140,9 +140,7 @@ class MenuSection extends GUISection{
 
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
-        textSize(26);
-        fill(255, 30);
-        text("Menu", 0, 0);
+
         popMatrix();
 
         blink();
@@ -177,10 +175,12 @@ class MenuSection extends GUISection{
 //====================================================================
 
 class InputSection extends GUISection{
-    //private Automation m_windowShape; 
-    private Generator m_generator;
-    //private Graph m_input;
     private Tickbox m_sectionTickbox;
+    private Generator m_generator;
+
+    private Tickbox m_testFreqTickbox;
+    private Tickbox m_windowShapeTickbox;
+    
 
     private int m_sampleNumber;
 
@@ -193,13 +193,29 @@ class InputSection extends GUISection{
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
-        m_generator = new Generator(m_pos.x + m_spacer/2, m_pos.y + m_spacer / 2, 2 * m_len.x / 7, 5 * m_spacer / 3, m_spacer, m_sampleNumber);
-        m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount, m_sampleNumber);
+        m_generator = new Generator(m_pos.x + m_spacer/2,
+                                    m_pos.y + m_spacer / 2,
+                                    2 * m_len.x / 7,
+                                    5 * m_spacer / 3,
+                                    m_spacer, m_sampleNumber);
+        m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
+                                            m_pos.y + m_spacer/2,
+                                            m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
+                                            m_len.y - m_spacer,
+                                            testFreqAmount,
+                                            m_sampleNumber);
     }
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
-
+        m_testFreqTickbox = new Tickbox(m_pos.x + m_spacer/2,
+                                        m_pos.y + 5 * m_spacer / 2,
+                                        m_spacer/3,
+                                        m_spacer/3);
+        m_windowShapeTickbox = new Tickbox(m_pos.x + m_spacer/2,
+                                        m_pos.y + 19 * m_spacer / 6,
+                                        m_spacer/3,
+                                        m_spacer/3);
         
     }
 
@@ -211,9 +227,6 @@ class InputSection extends GUISection{
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
 
-        textSize(26);
-        fill(255, 30);
-        text("Input", 0, 0);
         popMatrix();
     }
 
@@ -222,13 +235,42 @@ class InputSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
             m_generator.update();
-            m_signalDisplay.setInputVisibility(m_generator.isOn());
-            //m_windowShape.drawBackground();
+
+            noStroke();
+            fill(100, 128);
+            rect(m_pos.x + m_spacer/2,
+                m_pos.y + 5 * m_spacer / 2 - m_spacer / 12,
+                2 * m_len.x / 7,
+                m_spacer/2,
+                m_spacer/8);
             
-            //if(m_generator.isOn()){
-            //    m_input.draw(m_generator.getArray());
-            //}
-            //m_input.addData(sin(0.1 * m_time), m_time - 1);
+            fill(150);
+            textSize(m_spacer /5);
+            textAlign(LEFT);
+            text("Test Frequency",
+                m_pos.x + m_spacer,
+                m_pos.y + 5 * m_spacer / 2 + m_spacer / 4);
+            m_testFreqTickbox.update();
+
+            noStroke();
+            fill(100, 128);
+            rect(m_pos.x + m_spacer/2,
+                m_pos.y + 19 * m_spacer / 6 - m_spacer / 12,
+                2 * m_len.x / 7,
+                m_spacer/2,
+                m_spacer/8);
+            
+            fill(150);
+            textSize(m_spacer /5);
+            textAlign(LEFT);
+            text("Window Shape",
+                m_pos.x + m_spacer,
+                m_pos.y + 19 * m_spacer / 6 + m_spacer / 4);
+            m_windowShapeTickbox.update();
+
+            m_signalDisplay.setInputVisibility(m_generator.isOn());
+            m_signalDisplay.setTestFreqVisibility(m_testFreqTickbox.getValue());
+            m_signalDisplay.setAutomationVisibility(m_windowShapeTickbox.getValue());
 
             m_signalDisplay.draw();
 
@@ -295,9 +337,6 @@ class MathSection extends GUISection{
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
 
-        textSize(26);
-        fill(255, 30);
-        text("Math", 0, 0);
         popMatrix();
     }
 
@@ -339,6 +378,7 @@ class SpectrumSection extends GUISection{
         super(pos, len);
 
         m_spectrum = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount);
+        m_spectrum.setAsSpectrumDisplay();
     }
 
     protected void initializeControllers(){
@@ -353,9 +393,6 @@ class SpectrumSection extends GUISection{
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
 
-        textSize(26);
-        fill(255, 30);
-        text("Spectrum", 0, 0);
         popMatrix();
     }
 

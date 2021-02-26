@@ -37,10 +37,15 @@ class Automation extends Controller{
     private boolean m_drawBackground = true;
     private float m_baseValue = 0.5f;
 
+    private float m_minRealValue = 0;
+    private float m_maxRealValue = 1;
+
     Automation(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5f), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.001f, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.999f, 1), m_fillColor) );
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5f), m_fillColor) );
     }
 
@@ -50,11 +55,18 @@ class Automation extends Controller{
         m_drawBackground = drawBackground;
 
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5f), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.001f, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.999f, 1), m_fillColor) );
         m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5f), m_fillColor) );
     }
 
     public void setBaseValue(float baseValue){
         m_baseValue = baseValue;
+    }
+
+    public void setRealValueRange(float minRealValue, float maxRealValue){
+        m_minRealValue = minRealValue;
+        m_maxRealValue = maxRealValue;
     }
 
     private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
@@ -168,6 +180,10 @@ class Automation extends Controller{
         }
 
         return m_point.get(m_point.size() - 1).getValue().y;
+    }
+
+    public float mapXToRealY(float x){
+        return map(mapXToY(x), 0, 1, m_minRealValue, m_maxRealValue);
     }
 
     public float[] getArray(int index){
@@ -985,9 +1001,7 @@ class MenuSection extends GUISection{
 
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
-        textSize(26);
-        fill(255, 30);
-        text("Menu", 0, 0);
+
         popMatrix();
 
         blink();
@@ -1022,10 +1036,12 @@ class MenuSection extends GUISection{
 //====================================================================
 
 class InputSection extends GUISection{
-    //private Automation m_windowShape; 
-    private Generator m_generator;
-    //private Graph m_input;
     private Tickbox m_sectionTickbox;
+    private Generator m_generator;
+
+    private Tickbox m_testFreqTickbox;
+    private Tickbox m_windowShapeTickbox;
+    
 
     private int m_sampleNumber;
 
@@ -1038,13 +1054,29 @@ class InputSection extends GUISection{
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
-        m_generator = new Generator(m_pos.x + m_spacer/2, m_pos.y + m_spacer / 2, 2 * m_len.x / 7, 5 * m_spacer / 3, m_spacer, m_sampleNumber);
-        m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount, m_sampleNumber);
+        m_generator = new Generator(m_pos.x + m_spacer/2,
+                                    m_pos.y + m_spacer / 2,
+                                    2 * m_len.x / 7,
+                                    5 * m_spacer / 3,
+                                    m_spacer, m_sampleNumber);
+        m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
+                                            m_pos.y + m_spacer/2,
+                                            m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
+                                            m_len.y - m_spacer,
+                                            testFreqAmount,
+                                            m_sampleNumber);
     }
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
-
+        m_testFreqTickbox = new Tickbox(m_pos.x + m_spacer/2,
+                                        m_pos.y + 5 * m_spacer / 2,
+                                        m_spacer/3,
+                                        m_spacer/3);
+        m_windowShapeTickbox = new Tickbox(m_pos.x + m_spacer/2,
+                                        m_pos.y + 19 * m_spacer / 6,
+                                        m_spacer/3,
+                                        m_spacer/3);
         
     }
 
@@ -1056,9 +1088,6 @@ class InputSection extends GUISection{
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
 
-        textSize(26);
-        fill(255, 30);
-        text("Input", 0, 0);
         popMatrix();
     }
 
@@ -1067,13 +1096,42 @@ class InputSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
             m_generator.update();
-            m_signalDisplay.setInputVisibility(m_generator.isOn());
-            //m_windowShape.drawBackground();
+
+            noStroke();
+            fill(100, 128);
+            rect(m_pos.x + m_spacer/2,
+                m_pos.y + 5 * m_spacer / 2 - m_spacer / 12,
+                2 * m_len.x / 7,
+                m_spacer/2,
+                m_spacer/8);
             
-            //if(m_generator.isOn()){
-            //    m_input.draw(m_generator.getArray());
-            //}
-            //m_input.addData(sin(0.1 * m_time), m_time - 1);
+            fill(150);
+            textSize(m_spacer /5);
+            textAlign(LEFT);
+            text("Test Frequency",
+                m_pos.x + m_spacer,
+                m_pos.y + 5 * m_spacer / 2 + m_spacer / 4);
+            m_testFreqTickbox.update();
+
+            noStroke();
+            fill(100, 128);
+            rect(m_pos.x + m_spacer/2,
+                m_pos.y + 19 * m_spacer / 6 - m_spacer / 12,
+                2 * m_len.x / 7,
+                m_spacer/2,
+                m_spacer/8);
+            
+            fill(150);
+            textSize(m_spacer /5);
+            textAlign(LEFT);
+            text("Window Shape",
+                m_pos.x + m_spacer,
+                m_pos.y + 19 * m_spacer / 6 + m_spacer / 4);
+            m_windowShapeTickbox.update();
+
+            m_signalDisplay.setInputVisibility(m_generator.isOn());
+            m_signalDisplay.setTestFreqVisibility(m_testFreqTickbox.getValue());
+            m_signalDisplay.setAutomationVisibility(m_windowShapeTickbox.getValue());
 
             m_signalDisplay.draw();
 
@@ -1140,9 +1198,6 @@ class MathSection extends GUISection{
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
 
-        textSize(26);
-        fill(255, 30);
-        text("Math", 0, 0);
         popMatrix();
     }
 
@@ -1184,6 +1239,7 @@ class SpectrumSection extends GUISection{
         super(pos, len);
 
         m_spectrum = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, testFreqAmount);
+        m_spectrum.setAsSpectrumDisplay();
     }
 
     protected void initializeControllers(){
@@ -1198,9 +1254,6 @@ class SpectrumSection extends GUISection{
         pushMatrix();
         translate(m_pos.x + m_len.x/2, m_pos.y + m_len.y/2);
 
-        textSize(26);
-        fill(255, 30);
-        text("Spectrum", 0, 0);
         popMatrix();
     }
 
@@ -1328,6 +1381,11 @@ class Graph{
     private int m_color;
 
     private float[] m_data;
+    private float m_baseValue = 0.5f;
+    private float m_minInputValue = -1;
+    private float m_maxInputValue = 1;
+
+    private int m_displayMode = 0;
 
     Graph(float xPos, float yPos, float xLen, float yLen, int resolution){
         m_pos = new PVector(xPos, yPos);
@@ -1341,7 +1399,17 @@ class Graph{
         }
     }
 
+    public void setBaseValue(float baseValue){
+        m_baseValue = baseValue;
+    }
+
+    public void setInputValueRange(float minInputValue, float maxInputValue){
+        m_minInputValue = minInputValue;
+        m_maxInputValue = maxInputValue;
+    }
+
     public void setData(float[] data){
+        //println("Graph.setData(): " + data[data.length - 1]);
         if(data.length == m_data.length){
             m_data = data;
         }
@@ -1351,18 +1419,60 @@ class Graph{
         m_color = c;
     }
 
+    public void setDisplayMode(int mode){
+        m_displayMode = mode;
+    }
+
     public float[] getData(){
         return m_data;
     }
 
     public void draw(){
-        for(int i = 0; i < m_data.length; i++){
-            noFill();
-            stroke(m_color);
-            strokeWeight(2);
-            ellipse(m_pos.x + i * m_len.x / m_data.length, m_pos.y + m_len.y * (1 - m_data[i])/2, 10, 10);
-            line(m_pos.x + i * m_len.x / m_data.length, m_pos.y + m_len.y * (1 - m_data[i])/2, m_pos.x + i * m_len.x / m_data.length, m_pos.y + m_len.y/2);
+        switch(m_displayMode){
+            case 0:
+            drawPointsAndLines();
+            break;
+
+            case 1:
+            drawShapeAndLines();
+            break;
         }
+        
+    }
+
+    private void drawPointsAndLines(){
+        noFill();
+        stroke(m_color);
+        strokeWeight(2);
+        for(int i = 0; i < m_data.length; i++){
+            
+            ellipse(m_pos.x + i * m_len.x / m_data.length,
+                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                10, 10);
+            line(m_pos.x + i * m_len.x / m_data.length,
+                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                m_pos.x + i * m_len.x / m_data.length,
+                m_pos.y + (1 - m_baseValue) * m_len.y);
+        }
+    }
+
+    private void drawShapeAndLines(){
+        noFill();
+        stroke(m_color);
+        strokeWeight(2);
+        beginShape();
+
+        for(int i = 0; i < m_data.length; i++){
+            vertex(m_pos.x + i * m_len.x / m_data.length,
+                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
+            line(m_pos.x + i * m_len.x / m_data.length,
+                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                m_pos.x + i * m_len.x / m_data.length,
+                m_pos.y + (1 - m_baseValue) * m_len.y);
+        }
+
+        
+        endShape();
     }
 
     public int getLength(){
@@ -1384,6 +1494,12 @@ class OneGraphDisplay{
 
         m_graph = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
         m_graph.setColor(color(75, 140, 140));
+    }
+
+    public void setAsSpectrumDisplay(){
+        m_graph.setBaseValue(0);
+        m_graph.setInputValueRange(0, 0.6f);
+        m_graph.setDisplayMode(1);
     }
 
     public void setData(float[] data){
@@ -1421,6 +1537,7 @@ class SignalDisplay{
 
         m_automation = new Automation(m_pos.x, m_pos.y, m_len.x, m_len.y,
                                         color(200, 75, 75), false);
+        m_automation.setRealValueRange(-1, 1);
 
         m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
         m_input.setColor(color(75, 75, 170));
@@ -1454,14 +1571,14 @@ class SignalDisplay{
 
     public void setDataForInput(float[] data){
         m_input.setData(data);
+        //println("SignalDisplay.setDataForInput(): " + data[data.length - 1]);
     }
 
     public void setInputVisibility(boolean isVisible){
         m_inputIsVisible = isVisible;
     }
 
-    public void setTestFreqVisibility(int testFreqIndex, boolean isVisible){
-        setTestFreq(testFreqIndex);
+    public void setTestFreqVisibility(boolean isVisible){
         m_testFreqVisible = isVisible;
     }
 
@@ -1474,29 +1591,29 @@ class SignalDisplay{
     }
 
     public float[] getMultipliedArray(int withTestFreq){
-        float[] temp = new float[m_testFreq[0].getLength()];
+        float[] temp = new float[m_input.getData().length];
 
-        for(int i = 0; i < temp.length; i++){
-            if(m_automationIsVisible){
-                temp[i] = m_automation.mapXToY(i / (1.0f * temp.length));
-            }else{
-                temp[i] = 1;
-            }
-            
-        }
+        float[] ip = m_input.getData();
 
-        if(m_inputIsVisible){
-            float[] t = m_input.getData();
-            for(int i = 0; i < temp.length; i++){
-                temp[i] *= t[i];
-            }
-        }
+        float[] tf = new float[m_input.getData().length];
 
         if(m_testFreqVisible){
-            float[] t = m_testFreq[withTestFreq].getData();
-            for(int i = 0; i < temp.length; i++){
-                temp[i] *= t[i];
+            tf = m_testFreq[withTestFreq].getData();
+        }
+        
+
+        for(int i = 0; i < temp.length; i++){
+            temp[i] = ip[i];
+
+            if(m_automationIsVisible){
+                temp[i] *= m_automation.mapXToRealY(i / (1.0f * temp.length));
             }
+
+            if(m_testFreqVisible){
+                
+                temp[i] *= tf[i];
+            }
+            
         }
 
         return temp;
