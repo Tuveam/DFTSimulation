@@ -12,6 +12,7 @@ class Controller{
     protected color m_fillColor;
     protected color m_backgroundColor1;
     protected color m_backgroundColor2;
+    protected color m_textColor;
 
     Controller(PVector pos, PVector len){
         m_pos = pos;
@@ -20,6 +21,7 @@ class Controller{
         m_fillColor = color(75, 170, 75);
         m_backgroundColor1 = color(100, 100, 100);
         m_backgroundColor2 = color(50, 50, 50);
+        m_textColor = color(200, 200, 200);
         
         m_mouseClicked = new PVector(mouseX, mouseY);
     }
@@ -167,7 +169,7 @@ class Knob extends Controller{
 
         //name
         textAlign(CENTER);
-        fill(m_backgroundColor1);
+        fill(m_textColor);
         textSize(getTextLenY());
         if(m_selected){
             text(getRealValue(), m_pos.x + m_len.x/2, m_pos.y + getKnobLen() + getTextLenY()/2);

@@ -67,14 +67,15 @@ class Graph{
         noFill();
         stroke(m_color);
         strokeWeight(2);
+        float spacing = m_len.x / (m_data.length - 1);
         for(int i = 0; i < m_data.length; i++){
             
-            ellipse(m_pos.x + i * m_len.x / m_data.length,
+            ellipse(m_pos.x + i * spacing,
                 map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 10, 10);
-            line(m_pos.x + i * m_len.x / m_data.length,
+            line(m_pos.x + i * spacing,
                 map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
-                m_pos.x + i * m_len.x / m_data.length,
+                m_pos.x + i * spacing,
                 m_pos.y + (1 - m_baseValue) * m_len.y);
         }
     }
@@ -84,13 +85,13 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-
+        float spacing = m_len.x / (m_data.length);
         for(int i = 0; i < m_data.length; i++){
-            vertex(m_pos.x + i * m_len.x / m_data.length,
+            vertex(m_pos.x + spacing/2 + i * spacing,
                 map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
-            line(m_pos.x + i * m_len.x / m_data.length,
+            line(m_pos.x + spacing/2 + i * spacing,
                 map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
-                m_pos.x + i * m_len.x / m_data.length,
+                m_pos.x + spacing/2 + i * spacing,
                 m_pos.y + (1 - m_baseValue) * m_len.y);
         }
 
