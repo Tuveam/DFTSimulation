@@ -29,7 +29,7 @@ class Generator{
         m_knob = new Knob[3];
 
         m_knob[0] = new Knob(m_pos.x, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Frequency");
-        m_knob[0].setRealValueRange(0.5, m_data.length/2);
+        m_knob[0].setRealValueRange(0.5, m_data.length);
 
         m_knob[1] = new Knob(m_pos.x + 1 * m_len.x / 3, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Phase");
         m_knob[1].setRealValueRange(0, TWO_PI);
