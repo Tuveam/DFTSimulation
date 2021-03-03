@@ -14,7 +14,7 @@ class MainSection extends GUISection{
     }
 
     protected void initializeSections(){
-        m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 76);
+        m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 80);
         m_aliasingSection = new AliasingSection(m_pos.x + m_spacer,
                                                 m_pos.y + m_spacer,
                                                 m_len.x - m_spacer,

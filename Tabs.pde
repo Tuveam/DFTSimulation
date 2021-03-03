@@ -64,7 +64,7 @@ class Tabs extends Controller{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_len.y/2);
+        textSize(m_textSize);
         for(int i = 0; i < m_tabName.length; i++){
             text(m_tabName[i], m_pos.x + (i + 0.5) * m_len.x/m_tabName.length, m_pos.y + 5 * m_len.y/8);
         }
@@ -167,7 +167,7 @@ class SinCosTabs extends Tabs{
         //Tabnames
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_len.y/3);
+        textSize(m_textSize);
         for(int i = 0; i < m_tabName.length; i++){
             text(m_tabName[i],
                 m_pos.x + ((i % xPartitions) + 0.5) * m_len.x/xPartitions,
@@ -228,7 +228,7 @@ class HoverTabs extends Tabs{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(10);
+        textSize(m_textSize);
         text(m_tabName[m_value], m_pos.x + m_value * spacing + spacing/2, m_pos.y + spacing);
 
         //m_hoverValue-Rectangle
@@ -238,7 +238,7 @@ class HoverTabs extends Tabs{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(10);
+        textSize(m_textSize);
         text(m_tabName[m_hoverValue], m_pos.x + m_hoverValue * spacing + spacing/2, m_pos.y + spacing);
     }
 
@@ -346,7 +346,7 @@ class VerticalTabs extends Tabs{
         //Text
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_len.x/2);
+        textSize(m_textSize);
         for(int i = 0; i < m_tabName.length; i++){
             pushMatrix();
             translate(m_pos.x + 5 * m_len.x/8, m_pos.y + (i + 0.5) * m_len.y/m_tabName.length);

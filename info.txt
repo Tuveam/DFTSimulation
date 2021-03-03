@@ -1,0 +1,19 @@
+https://www.youtube.com/channel/UCp2nS43h4WGIEQmuvKihn9Q
+https://github.com/Tuveam/DFTSimulation
+https://youtu.be/dQw4w9WgXcQ
+
+DFT-Simulation
+Made by Victor Keilhack
+
+This Program aims at simulating a Discrete Fourier Transform
+of a signal of your choice. The samplerate is much lower in
+order to make the calculations much more accessible/visible.
+Try around turning knobs and pressing buttons in the software
+and discover the DFT aswell as the harmonic series, aliasing,
+constructive and destructive interference, signal multiplica-
+tion and more. If you want a more guided approach, press the 
+(soon to be implemented) question mark in the upper left corner.
+
+Also check out the (soon to be coming) video on YouTube about
+this program. If you want to modify or look at the code, this
+project is (soon) available on GitHub.

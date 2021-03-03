@@ -44,6 +44,9 @@ class DFTSection extends GUISection{
     protected void updateSelectedFrequency(){
         m_mathSection.setSelectedFrequency(m_selectedFrequency);
         m_spectrumSection.setSelectedFrequency(m_selectedFrequency);
+        if(m_mathSection.hasChangedSelectedFrequency()){
+            m_inputSection.setSelectedFrequency(m_selectedFrequency);
+        }
     }
 
     protected void drawSections(){
@@ -51,16 +54,14 @@ class DFTSection extends GUISection{
             m_inputSection.advanceTime();
         }
 
-        if(m_mathSection.hasChangedTestFreq()){
-            m_inputSection.setTestFreq(m_mathSection.getTestFreq());
-        }
-
         if(true){
             m_mathSection.setData(m_inputSection.getMultiplicationData());
         }
 
         if(true){
-            m_spectrumSection.setData(m_inputSection.getSpectrum());
+            m_spectrumSection.setFullSpectrum(m_inputSection.getFullSpectrum());
+            m_spectrumSection.setSinSpectrum(m_inputSection.getSinSpectrum());
+            m_spectrumSection.setCosSpectrum(m_inputSection.getCosSpectrum());
         }
 
         m_menuSection.update();
@@ -75,7 +76,7 @@ class DFTSection extends GUISection{
 
 class MenuSection extends GUISection{
     PlayButton m_playButton;
-    Button m_skipButton;
+    SkipButton m_skipButton;
     Knob m_sampleRateKnob;
 
     int m_iterateTime = 0;
@@ -89,7 +90,7 @@ class MenuSection extends GUISection{
 
     protected void initializeControllers(){
         m_playButton = new PlayButton(m_pos.x + m_spacer, m_pos.y, m_spacer, m_spacer);
-        m_skipButton = new Button(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
+        m_skipButton = new SkipButton(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
         m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer, "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
     }
@@ -148,7 +149,7 @@ class MenuSection extends GUISection{
 
 class InputSection extends GUISection{
     private Tickbox m_sectionTickbox;
-    private Generator m_generator;
+    private DFTGenerator m_generator;
 
     private Tickbox m_testFreqTickbox;
     private Tickbox m_windowShapeTickbox;
@@ -165,11 +166,12 @@ class InputSection extends GUISection{
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
-        m_generator = new Generator(m_pos.x + m_spacer/2,
+        m_generator = new DFTGenerator(m_pos.x + m_spacer/2,
                                     m_pos.y + m_spacer / 2,
                                     2 * m_len.x / 7,
                                     5 * m_spacer / 3,
-                                    m_spacer, m_sampleNumber);
+                                    m_spacer,
+                                    m_sampleNumber);
         m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,
                                             m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
@@ -179,15 +181,15 @@ class InputSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input Signal");
         m_testFreqTickbox = new Tickbox(m_pos.x + m_spacer/2,
                                         m_pos.y + 5 * m_spacer / 2,
                                         m_spacer/3,
-                                        m_spacer/3);
+                                        m_spacer/3, "Test Frequency");
         m_windowShapeTickbox = new Tickbox(m_pos.x + m_spacer/2,
                                         m_pos.y + 19 * m_spacer / 6,
                                         m_spacer/3,
-                                        m_spacer/3);
+                                        m_spacer/3, "Window Shape");
         
     }
 
@@ -211,12 +213,6 @@ class InputSection extends GUISection{
                 m_spacer/2,
                 m_spacer/8);
             
-            fill(150);
-            textSize(m_spacer /5);
-            textAlign(LEFT);
-            text("Test Frequency",
-                m_pos.x + m_spacer,
-                m_pos.y + 5 * m_spacer / 2 + m_spacer / 4);
             m_testFreqTickbox.update();
 
             noStroke();
@@ -227,12 +223,6 @@ class InputSection extends GUISection{
                 m_spacer/2,
                 m_spacer/8);
             
-            fill(150);
-            textSize(m_spacer /5);
-            textAlign(LEFT);
-            text("Window Shape",
-                m_pos.x + m_spacer,
-                m_pos.y + 19 * m_spacer / 6 + m_spacer / 4);
             m_windowShapeTickbox.update();
 
             m_signalDisplay.setInputVisibility(m_generator.isOn());
@@ -251,10 +241,10 @@ class InputSection extends GUISection{
         //println((frameCount%2 == 0)? "tick" : "tack");
         m_generator.advanceTime();
 
-        m_signalDisplay.setDataForInput(m_generator.getArray());
+        m_signalDisplay.setLatestValueForInput(m_generator.getLatestValue());
     }
 
-    public void setTestFreq(int testFreq){
+    public void setSelectedFrequency(int testFreq){
         m_signalDisplay.setTestFreq(testFreq);
     }
 
@@ -262,8 +252,16 @@ class InputSection extends GUISection{
         return m_signalDisplay.getMultipliedArray();
     }
 
-    public float[] getSpectrum(){
+    public float[] getFullSpectrum(){
         return m_signalDisplay.getSpectrum();
+    }
+
+    public float[] getSinSpectrum(){
+        return m_signalDisplay.getSinSpectrum();
+    }
+
+    public float[] getCosSpectrum(){
+        return m_signalDisplay.getCosSpectrum();
     }
 }
 
@@ -271,7 +269,7 @@ class InputSection extends GUISection{
 
 class MathSection extends GUISection{
     private SinCosTabs m_tabs;
-    private int m_testFreq = 0;
+    private int m_selectedFrequency = 0;
     private Tickbox m_sectionTickbox;
     OneGraphDisplay m_mult;
 
@@ -292,17 +290,16 @@ class MathSection extends GUISection{
 
     protected void initializeControllers(){
         
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Multiplication");
     }
 
     protected int getSelectedFrequency(){
-        return ( m_tabs.getValue() % (m_tabs.getMaxValue() / 2) );
+        return m_tabs.getValue();
     }
 
     protected void setSelectedFrequency(int selectedFrequency){
 
-        int maxValue = m_tabs.getMaxValue() / 2;
-        m_tabs.setValue( (m_tabs.getValue() / maxValue) * maxValue + selectedFrequency);
+        m_tabs.setValue(selectedFrequency);
     }
 
 
@@ -317,6 +314,15 @@ class MathSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
             m_tabs.update();
+            fill(150);
+            textSize(m_spacer /5);
+            textAlign(LEFT);
+            text("Sin",
+            m_pos.x + 2 * m_spacer,
+            m_pos.y + m_len.y - m_spacer/2 + 2 * m_spacer/9);
+            text("Cos",
+            m_pos.x + 2 * m_spacer,
+            m_pos.y + m_len.y - m_spacer/4 + 2 * m_spacer/9);
 
             m_mult.draw();
         }
@@ -324,14 +330,10 @@ class MathSection extends GUISection{
         
     }
 
-    public boolean hasChangedTestFreq(){
-        boolean temp = (m_testFreq == m_tabs.getValue());
-        m_testFreq = m_tabs.getValue();
+    public boolean hasChangedSelectedFrequency(){
+        boolean temp = (m_selectedFrequency == m_tabs.getValue());
+        m_selectedFrequency = m_tabs.getValue();
         return temp;
-    }
-
-    public int getTestFreq(){
-        return m_tabs.getValue();
     }
 
     public void setData(float[] data){
@@ -344,7 +346,13 @@ class MathSection extends GUISection{
 class SpectrumSection extends GUISection{
     private Tickbox m_sectionTickbox;
 
+    private Tickbox m_sinTickbox;
+    private Tickbox m_cosTickbox;
+    private Tickbox m_spectrumTickbox;
+
     private SpectrumDisplay m_spectrum;
+
+    private int m_selectedFrequency;
 
     SpectrumSection(PVector pos, PVector len, int testFreqAmount){
         super(pos, len);
@@ -354,15 +362,36 @@ class SpectrumSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Spectrum");
+
+        m_sinTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_pos.y + 4 * m_spacer/6, 
+                                    m_spacer/3, 
+                                    m_spacer/3, "Sine");
+        m_cosTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_pos.y + 4 * m_spacer/6 + m_spacer/2, 
+                                    m_spacer/3, 
+                                    m_spacer/3, "Cos");
+        m_spectrumTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_pos.y + 4 * m_spacer/6 + m_spacer, 
+                                    m_spacer/3, 
+                                    m_spacer/3, "Spectrum");
+
     }
 
     protected int getSelectedFrequency(){
-        return m_spectrum.getSelectedFrequency();
+        int maxFrequency = m_spectrum.getMaxFrequency();
+        int spectrumSelectedFrequency = m_spectrum.getSelectedFrequency();
+
+        if( (m_selectedFrequency % maxFrequency) != spectrumSelectedFrequency){
+            m_selectedFrequency = (m_selectedFrequency / maxFrequency) * maxFrequency + spectrumSelectedFrequency;
+        }
+        return m_selectedFrequency;
     }
 
     protected void setSelectedFrequency(int selectedFrequency){
-        m_spectrum.setSelectedFrequency(selectedFrequency);
+        m_selectedFrequency = selectedFrequency;
+        m_spectrum.setSelectedFrequency(m_selectedFrequency % m_spectrum.getMaxFrequency());
     }
 
     protected void drawBackground(){
@@ -375,13 +404,28 @@ class SpectrumSection extends GUISection{
         m_sectionTickbox.update();
 
         if(m_sectionTickbox.getValue()){
+            m_sinTickbox.update();
+            m_cosTickbox.update();
+            m_spectrumTickbox.update();
+
+            m_spectrum.setFullSpectrumVisibility(m_spectrumTickbox.getValue());
+            m_spectrum.setSinVisibility(m_sinTickbox.getValue());
+            m_spectrum.setCosVisibility(m_cosTickbox.getValue());
             m_spectrum.draw();
         }
         
         
     }
 
-    public void setData(float[] data){
+    public void setFullSpectrum(float[] data){
         m_spectrum.setData(data);
+    }
+
+    public void setSinSpectrum(float[] data){
+        m_spectrum.setSinSpectrum(data);
+    }
+
+    public void setCosSpectrum(float[] data){
+        m_spectrum.setCosSpectrum(data);
     }
 }

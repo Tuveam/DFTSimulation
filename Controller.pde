@@ -14,6 +14,8 @@ class Controller{
     protected color m_backgroundColor2;
     protected color m_textColor;
 
+    protected float m_textSize = 13;
+
     Controller(PVector pos, PVector len){
         m_pos = pos;
         m_len = len;
@@ -79,12 +81,11 @@ class Controller{
 class Knob extends Controller{
 
     private float m_value;
-    private float m_previousValue;
 
     private float m_minRealValue = 0;
     private float m_maxRealValue = 1;
 
-    private float m_sensitivity = 0.25;
+    private float m_sensitivity = 4;
 
     private String m_name;
     
@@ -109,7 +110,6 @@ class Knob extends Controller{
                 m_mouseClicked.y = mouseY;
 
                 m_selected = true;
-                m_previousValue = m_value;
             }
         }
         
@@ -121,9 +121,18 @@ class Knob extends Controller{
 
     protected void adjust(){
         if(m_selected){
-            m_value = m_previousValue + m_sensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
+            float actualSensitivity = m_sensitivity;
 
-            
+            if(keyPressed && key == CODED){
+                if(keyCode == ALT){
+                    actualSensitivity = 10 * m_sensitivity;
+                }
+            }
+
+            m_value = m_value + (m_mouseClicked.y - mouseY) / (m_len.y * actualSensitivity);
+
+            m_mouseClicked.x = mouseX;
+            m_mouseClicked.y = mouseY;
 
             if(m_value < 0){
                 m_value = 0;
@@ -185,7 +194,7 @@ class Knob extends Controller{
     }
 
     private float getTextLenY(){
-        return (m_len.y - getKnobLen());
+        return m_textSize /*(m_len.y - getKnobLen())*/;
     }
 
     public float getValue(){
@@ -200,6 +209,14 @@ class Knob extends Controller{
         m_minRealValue = minRealValue;
         m_maxRealValue = maxRealValue;
     }
+
+    public void setRealValue(float realValue){
+        m_value = map(realValue, m_minRealValue, m_maxRealValue, 0, 1);
+    }
+
+    public float getMaxRealValue(){
+        return m_maxRealValue;
+    }
 }
 
 //====================================================================
@@ -210,14 +227,18 @@ class Tickbox extends Controller{
 
     protected boolean m_pressed = false;
 
+    protected String m_name;
 
-    Tickbox(float xPos, float yPos, float xLen, float yLen){
+
+    Tickbox(float xPos, float yPos, float xLen, float yLen, String name){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
         m_backgroundColor1 = color(100, 100, 100);
         m_backgroundColor2 = color(50, 50, 50);
 
         m_value = true;
+
+        m_name = name;
     }
 
     protected void click(){
@@ -267,6 +288,11 @@ class Tickbox extends Controller{
 
         drawTick(indent, rounding);
 
+        fill(m_textColor);
+        textAlign(LEFT);
+        textSize(m_textSize);
+        text(m_name, 4 * m_len.x/3, m_len.y/2 + m_textSize/3);
+
         popMatrix();
     }
 
@@ -302,12 +328,14 @@ class Tickbox extends Controller{
     }
 }
 
+//======================================================================
+
 class Button extends Tickbox{
     protected int m_cooldown = 20;
     protected int m_tickCooldown = m_cooldown;
 
     Button(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen);
+        super(xPos, yPos, xLen, yLen, "");
     }
 
     protected void adjust(){
@@ -321,6 +349,7 @@ class Button extends Tickbox{
 
         if(!m_selected && m_pressed){
             m_value = true;
+            doTask();
             m_pressed = false;
             m_tickCooldown = 0;
         }
@@ -334,6 +363,10 @@ class Button extends Tickbox{
         }
     }
 
+    protected void doTask(){
+
+    }
+
     protected void drawTick(float indent, float rounding){
         noStroke();
         fill(m_backgroundColor1);
@@ -342,6 +375,26 @@ class Button extends Tickbox{
         fill(m_fillColor, map(m_tickCooldown, 0, 20, 255, 0));
         rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
 
+        drawTickSymbol(indent, rounding);
+
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
+        if(m_pressed){
+            fill(255,100);
+            rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+        }
+    }
+}
+
+//===========================================================
+
+class SkipButton extends Button{
+    SkipButton(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen);
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
         fill(m_backgroundColor2);
         rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
         beginShape();
@@ -362,10 +415,12 @@ class Button extends Tickbox{
     }
 }
 
+//===========================================================
+
 class PlayButton extends Tickbox{
 
     PlayButton(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen);
+        super(xPos, yPos, xLen, yLen, "");
 
         m_value = false;
     }
@@ -411,6 +466,59 @@ class PlayButton extends Tickbox{
                 vertex(m_len.x - m_len.x * 3 * indent, m_len.y/2);
                 endShape();
             }
+        }
+    }
+}
+
+//===========================================================
+
+class LinkButton extends Button{
+    String m_link;
+
+    LinkButton(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen);
+    }
+
+    public void setLink(String link){
+        m_link = link;
+    }
+
+    protected void doTask(){
+        if(m_link != null){
+            link(m_link);
+        }
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
+        strokeWeight(m_len.x * indent);
+        stroke(m_backgroundColor2);
+        line(3 * indent * m_len.x,
+            m_len.y - 3 * indent * m_len.y,
+            m_len.x - 3 * indent * m_len.x,
+            3 * indent * m_len.y);
+        line(m_len.x / 2,
+            3 * indent * m_len.y,
+            m_len.x - 3 * indent * m_len.x,
+            3 * indent * m_len.y);
+        line(m_len.x - 3 * indent * m_len.x,
+            3 * indent * m_len.y,
+            m_len.x - 3 * indent * m_len.x,
+            m_len.y / 2);
+
+        if(m_pressed){
+            stroke(255,100);
+            line(3 * indent * m_len.x,
+                m_len.y - 3 * indent * m_len.y,
+                m_len.x - 3 * indent * m_len.x,
+                3 * indent * m_len.y);
+            line(m_len.x / 2,
+                3 * indent * m_len.y,
+                m_len.x - 3 * indent * m_len.x,
+                3 * indent * m_len.y);
+            line(m_len.x - 3 * indent * m_len.x,
+                3 * indent * m_len.y,
+                m_len.x - 3 * indent * m_len.x,
+                m_len.y / 2);
         }
     }
 }

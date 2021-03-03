@@ -54,6 +54,11 @@ class SignalDisplay{
         //println("SignalDisplay.setDataForInput(): " + data[data.length - 1]);
     }
 
+    public void setLatestValueForInput(float value){
+        m_input.setLatestValue(value);
+        //println("SignalDisplay.setDataForInput(): " + data[data.length - 1]);
+    }
+
     public void setInputVisibility(boolean isVisible){
         m_inputIsVisible = isVisible;
     }
@@ -83,15 +88,14 @@ class SignalDisplay{
         
 
         for(int i = 0; i < temp.length; i++){
-            temp[i] = ip[i];
+            temp[i] = ip[m_input.getDrawIndex(i)];
 
             if(m_automationIsVisible){
                 temp[i] *= m_automation.mapXToRealY(i / (1.0f * temp.length));
             }
 
             if(m_testFreqVisible){
-                
-                temp[i] *= tf[i];
+                temp[i] *= tf[m_testFreq[withTestFreq].getDrawIndex(i)];
             }
             
         }
@@ -117,6 +121,28 @@ class SignalDisplay{
 
     public float getMultipliedArrayAdded(){
         return getMultipliedArrayAdded(m_testFreqIndex);
+    }
+
+    public float[] getSinSpectrum(){
+        int freqAmount = m_testFreq.length / 2;
+        float[] temp = new float[freqAmount];
+
+        for(int i = 0; i < freqAmount; i++){
+            temp[i] = abs(getMultipliedArrayAdded(i));
+        }
+
+        return temp;
+    }
+
+    public float[] getCosSpectrum(){
+        int freqAmount = m_testFreq.length / 2;
+        float[] temp = new float[freqAmount];
+
+        for(int i = 0; i < freqAmount; i++){
+            temp[i] = abs(getMultipliedArrayAdded(i + freqAmount));
+        }
+
+        return temp;
     }
 
     public float[] getSpectrum(){

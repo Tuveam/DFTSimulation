@@ -511,6 +511,8 @@ class Controller{
     protected int m_backgroundColor2;
     protected int m_textColor;
 
+    protected float m_textSize = 13;
+
     Controller(PVector pos, PVector len){
         m_pos = pos;
         m_len = len;
@@ -576,12 +578,11 @@ class Controller{
 class Knob extends Controller{
 
     private float m_value;
-    private float m_previousValue;
 
     private float m_minRealValue = 0;
     private float m_maxRealValue = 1;
 
-    private float m_sensitivity = 0.25f;
+    private float m_sensitivity = 4;
 
     private String m_name;
     
@@ -606,7 +607,6 @@ class Knob extends Controller{
                 m_mouseClicked.y = mouseY;
 
                 m_selected = true;
-                m_previousValue = m_value;
             }
         }
         
@@ -618,9 +618,18 @@ class Knob extends Controller{
 
     protected void adjust(){
         if(m_selected){
-            m_value = m_previousValue + m_sensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
+            float actualSensitivity = m_sensitivity;
 
-            
+            if(keyPressed && key == CODED){
+                if(keyCode == ALT){
+                    actualSensitivity = 10 * m_sensitivity;
+                }
+            }
+
+            m_value = m_value + (m_mouseClicked.y - mouseY) / (m_len.y * actualSensitivity);
+
+            m_mouseClicked.x = mouseX;
+            m_mouseClicked.y = mouseY;
 
             if(m_value < 0){
                 m_value = 0;
@@ -682,7 +691,7 @@ class Knob extends Controller{
     }
 
     private float getTextLenY(){
-        return (m_len.y - getKnobLen());
+        return m_textSize /*(m_len.y - getKnobLen())*/;
     }
 
     public float getValue(){
@@ -697,6 +706,14 @@ class Knob extends Controller{
         m_minRealValue = minRealValue;
         m_maxRealValue = maxRealValue;
     }
+
+    public void setRealValue(float realValue){
+        m_value = map(realValue, m_minRealValue, m_maxRealValue, 0, 1);
+    }
+
+    public float getMaxRealValue(){
+        return m_maxRealValue;
+    }
 }
 
 //====================================================================
@@ -707,14 +724,18 @@ class Tickbox extends Controller{
 
     protected boolean m_pressed = false;
 
+    protected String m_name;
 
-    Tickbox(float xPos, float yPos, float xLen, float yLen){
+
+    Tickbox(float xPos, float yPos, float xLen, float yLen, String name){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
         m_backgroundColor1 = color(100, 100, 100);
         m_backgroundColor2 = color(50, 50, 50);
 
         m_value = true;
+
+        m_name = name;
     }
 
     protected void click(){
@@ -764,6 +785,11 @@ class Tickbox extends Controller{
 
         drawTick(indent, rounding);
 
+        fill(m_textColor);
+        textAlign(LEFT);
+        textSize(m_textSize);
+        text(m_name, 4 * m_len.x/3, m_len.y/2 + m_textSize/3);
+
         popMatrix();
     }
 
@@ -799,12 +825,14 @@ class Tickbox extends Controller{
     }
 }
 
+//======================================================================
+
 class Button extends Tickbox{
     protected int m_cooldown = 20;
     protected int m_tickCooldown = m_cooldown;
 
     Button(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen);
+        super(xPos, yPos, xLen, yLen, "");
     }
 
     protected void adjust(){
@@ -818,6 +846,7 @@ class Button extends Tickbox{
 
         if(!m_selected && m_pressed){
             m_value = true;
+            doTask();
             m_pressed = false;
             m_tickCooldown = 0;
         }
@@ -831,6 +860,10 @@ class Button extends Tickbox{
         }
     }
 
+    protected void doTask(){
+
+    }
+
     protected void drawTick(float indent, float rounding){
         noStroke();
         fill(m_backgroundColor1);
@@ -839,6 +872,26 @@ class Button extends Tickbox{
         fill(m_fillColor, map(m_tickCooldown, 0, 20, 255, 0));
         rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
 
+        drawTickSymbol(indent, rounding);
+
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
+        if(m_pressed){
+            fill(255,100);
+            rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+        }
+    }
+}
+
+//===========================================================
+
+class SkipButton extends Button{
+    SkipButton(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen);
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
         fill(m_backgroundColor2);
         rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
         beginShape();
@@ -859,10 +912,12 @@ class Button extends Tickbox{
     }
 }
 
+//===========================================================
+
 class PlayButton extends Tickbox{
 
     PlayButton(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen);
+        super(xPos, yPos, xLen, yLen, "");
 
         m_value = false;
     }
@@ -908,6 +963,59 @@ class PlayButton extends Tickbox{
                 vertex(m_len.x - m_len.x * 3 * indent, m_len.y/2);
                 endShape();
             }
+        }
+    }
+}
+
+//===========================================================
+
+class LinkButton extends Button{
+    String m_link;
+
+    LinkButton(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen);
+    }
+
+    public void setLink(String link){
+        m_link = link;
+    }
+
+    protected void doTask(){
+        if(m_link != null){
+            link(m_link);
+        }
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
+        strokeWeight(m_len.x * indent);
+        stroke(m_backgroundColor2);
+        line(3 * indent * m_len.x,
+            m_len.y - 3 * indent * m_len.y,
+            m_len.x - 3 * indent * m_len.x,
+            3 * indent * m_len.y);
+        line(m_len.x / 2,
+            3 * indent * m_len.y,
+            m_len.x - 3 * indent * m_len.x,
+            3 * indent * m_len.y);
+        line(m_len.x - 3 * indent * m_len.x,
+            3 * indent * m_len.y,
+            m_len.x - 3 * indent * m_len.x,
+            m_len.y / 2);
+
+        if(m_pressed){
+            stroke(255,100);
+            line(3 * indent * m_len.x,
+                m_len.y - 3 * indent * m_len.y,
+                m_len.x - 3 * indent * m_len.x,
+                3 * indent * m_len.y);
+            line(m_len.x / 2,
+                3 * indent * m_len.y,
+                m_len.x - 3 * indent * m_len.x,
+                3 * indent * m_len.y);
+            line(m_len.x - 3 * indent * m_len.x,
+                3 * indent * m_len.y,
+                m_len.x - 3 * indent * m_len.x,
+                m_len.y / 2);
         }
     }
 }
@@ -960,6 +1068,9 @@ class DFTSection extends GUISection{
     protected void updateSelectedFrequency(){
         m_mathSection.setSelectedFrequency(m_selectedFrequency);
         m_spectrumSection.setSelectedFrequency(m_selectedFrequency);
+        if(m_mathSection.hasChangedSelectedFrequency()){
+            m_inputSection.setSelectedFrequency(m_selectedFrequency);
+        }
     }
 
     protected void drawSections(){
@@ -967,16 +1078,14 @@ class DFTSection extends GUISection{
             m_inputSection.advanceTime();
         }
 
-        if(m_mathSection.hasChangedTestFreq()){
-            m_inputSection.setTestFreq(m_mathSection.getTestFreq());
-        }
-
         if(true){
             m_mathSection.setData(m_inputSection.getMultiplicationData());
         }
 
         if(true){
-            m_spectrumSection.setData(m_inputSection.getSpectrum());
+            m_spectrumSection.setFullSpectrum(m_inputSection.getFullSpectrum());
+            m_spectrumSection.setSinSpectrum(m_inputSection.getSinSpectrum());
+            m_spectrumSection.setCosSpectrum(m_inputSection.getCosSpectrum());
         }
 
         m_menuSection.update();
@@ -991,7 +1100,7 @@ class DFTSection extends GUISection{
 
 class MenuSection extends GUISection{
     PlayButton m_playButton;
-    Button m_skipButton;
+    SkipButton m_skipButton;
     Knob m_sampleRateKnob;
 
     int m_iterateTime = 0;
@@ -1005,7 +1114,7 @@ class MenuSection extends GUISection{
 
     protected void initializeControllers(){
         m_playButton = new PlayButton(m_pos.x + m_spacer, m_pos.y, m_spacer, m_spacer);
-        m_skipButton = new Button(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
+        m_skipButton = new SkipButton(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
         m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer, "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
     }
@@ -1064,7 +1173,7 @@ class MenuSection extends GUISection{
 
 class InputSection extends GUISection{
     private Tickbox m_sectionTickbox;
-    private Generator m_generator;
+    private DFTGenerator m_generator;
 
     private Tickbox m_testFreqTickbox;
     private Tickbox m_windowShapeTickbox;
@@ -1081,11 +1190,12 @@ class InputSection extends GUISection{
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
-        m_generator = new Generator(m_pos.x + m_spacer/2,
+        m_generator = new DFTGenerator(m_pos.x + m_spacer/2,
                                     m_pos.y + m_spacer / 2,
                                     2 * m_len.x / 7,
                                     5 * m_spacer / 3,
-                                    m_spacer, m_sampleNumber);
+                                    m_spacer,
+                                    m_sampleNumber);
         m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,
                                             m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
@@ -1095,15 +1205,15 @@ class InputSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input Signal");
         m_testFreqTickbox = new Tickbox(m_pos.x + m_spacer/2,
                                         m_pos.y + 5 * m_spacer / 2,
                                         m_spacer/3,
-                                        m_spacer/3);
+                                        m_spacer/3, "Test Frequency");
         m_windowShapeTickbox = new Tickbox(m_pos.x + m_spacer/2,
                                         m_pos.y + 19 * m_spacer / 6,
                                         m_spacer/3,
-                                        m_spacer/3);
+                                        m_spacer/3, "Window Shape");
         
     }
 
@@ -1127,12 +1237,6 @@ class InputSection extends GUISection{
                 m_spacer/2,
                 m_spacer/8);
             
-            fill(150);
-            textSize(m_spacer /5);
-            textAlign(LEFT);
-            text("Test Frequency",
-                m_pos.x + m_spacer,
-                m_pos.y + 5 * m_spacer / 2 + m_spacer / 4);
             m_testFreqTickbox.update();
 
             noStroke();
@@ -1143,12 +1247,6 @@ class InputSection extends GUISection{
                 m_spacer/2,
                 m_spacer/8);
             
-            fill(150);
-            textSize(m_spacer /5);
-            textAlign(LEFT);
-            text("Window Shape",
-                m_pos.x + m_spacer,
-                m_pos.y + 19 * m_spacer / 6 + m_spacer / 4);
             m_windowShapeTickbox.update();
 
             m_signalDisplay.setInputVisibility(m_generator.isOn());
@@ -1167,10 +1265,10 @@ class InputSection extends GUISection{
         //println((frameCount%2 == 0)? "tick" : "tack");
         m_generator.advanceTime();
 
-        m_signalDisplay.setDataForInput(m_generator.getArray());
+        m_signalDisplay.setLatestValueForInput(m_generator.getLatestValue());
     }
 
-    public void setTestFreq(int testFreq){
+    public void setSelectedFrequency(int testFreq){
         m_signalDisplay.setTestFreq(testFreq);
     }
 
@@ -1178,8 +1276,16 @@ class InputSection extends GUISection{
         return m_signalDisplay.getMultipliedArray();
     }
 
-    public float[] getSpectrum(){
+    public float[] getFullSpectrum(){
         return m_signalDisplay.getSpectrum();
+    }
+
+    public float[] getSinSpectrum(){
+        return m_signalDisplay.getSinSpectrum();
+    }
+
+    public float[] getCosSpectrum(){
+        return m_signalDisplay.getCosSpectrum();
     }
 }
 
@@ -1187,7 +1293,7 @@ class InputSection extends GUISection{
 
 class MathSection extends GUISection{
     private SinCosTabs m_tabs;
-    private int m_testFreq = 0;
+    private int m_selectedFrequency = 0;
     private Tickbox m_sectionTickbox;
     OneGraphDisplay m_mult;
 
@@ -1208,17 +1314,16 @@ class MathSection extends GUISection{
 
     protected void initializeControllers(){
         
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Multiplication");
     }
 
     protected int getSelectedFrequency(){
-        return ( m_tabs.getValue() % (m_tabs.getMaxValue() / 2) );
+        return m_tabs.getValue();
     }
 
     protected void setSelectedFrequency(int selectedFrequency){
 
-        int maxValue = m_tabs.getMaxValue() / 2;
-        m_tabs.setValue( (m_tabs.getValue() / maxValue) * maxValue + selectedFrequency);
+        m_tabs.setValue(selectedFrequency);
     }
 
 
@@ -1233,6 +1338,15 @@ class MathSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
             m_tabs.update();
+            fill(150);
+            textSize(m_spacer /5);
+            textAlign(LEFT);
+            text("Sin",
+            m_pos.x + 2 * m_spacer,
+            m_pos.y + m_len.y - m_spacer/2 + 2 * m_spacer/9);
+            text("Cos",
+            m_pos.x + 2 * m_spacer,
+            m_pos.y + m_len.y - m_spacer/4 + 2 * m_spacer/9);
 
             m_mult.draw();
         }
@@ -1240,14 +1354,10 @@ class MathSection extends GUISection{
         
     }
 
-    public boolean hasChangedTestFreq(){
-        boolean temp = (m_testFreq == m_tabs.getValue());
-        m_testFreq = m_tabs.getValue();
+    public boolean hasChangedSelectedFrequency(){
+        boolean temp = (m_selectedFrequency == m_tabs.getValue());
+        m_selectedFrequency = m_tabs.getValue();
         return temp;
-    }
-
-    public int getTestFreq(){
-        return m_tabs.getValue();
     }
 
     public void setData(float[] data){
@@ -1260,7 +1370,13 @@ class MathSection extends GUISection{
 class SpectrumSection extends GUISection{
     private Tickbox m_sectionTickbox;
 
+    private Tickbox m_sinTickbox;
+    private Tickbox m_cosTickbox;
+    private Tickbox m_spectrumTickbox;
+
     private SpectrumDisplay m_spectrum;
+
+    private int m_selectedFrequency;
 
     SpectrumSection(PVector pos, PVector len, int testFreqAmount){
         super(pos, len);
@@ -1270,15 +1386,36 @@ class SpectrumSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2);
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Spectrum");
+
+        m_sinTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_pos.y + 4 * m_spacer/6, 
+                                    m_spacer/3, 
+                                    m_spacer/3, "Sine");
+        m_cosTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_pos.y + 4 * m_spacer/6 + m_spacer/2, 
+                                    m_spacer/3, 
+                                    m_spacer/3, "Cos");
+        m_spectrumTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_pos.y + 4 * m_spacer/6 + m_spacer, 
+                                    m_spacer/3, 
+                                    m_spacer/3, "Spectrum");
+
     }
 
     protected int getSelectedFrequency(){
-        return m_spectrum.getSelectedFrequency();
+        int maxFrequency = m_spectrum.getMaxFrequency();
+        int spectrumSelectedFrequency = m_spectrum.getSelectedFrequency();
+
+        if( (m_selectedFrequency % maxFrequency) != spectrumSelectedFrequency){
+            m_selectedFrequency = (m_selectedFrequency / maxFrequency) * maxFrequency + spectrumSelectedFrequency;
+        }
+        return m_selectedFrequency;
     }
 
     protected void setSelectedFrequency(int selectedFrequency){
-        m_spectrum.setSelectedFrequency(selectedFrequency);
+        m_selectedFrequency = selectedFrequency;
+        m_spectrum.setSelectedFrequency(m_selectedFrequency % m_spectrum.getMaxFrequency());
     }
 
     protected void drawBackground(){
@@ -1291,14 +1428,29 @@ class SpectrumSection extends GUISection{
         m_sectionTickbox.update();
 
         if(m_sectionTickbox.getValue()){
+            m_sinTickbox.update();
+            m_cosTickbox.update();
+            m_spectrumTickbox.update();
+
+            m_spectrum.setFullSpectrumVisibility(m_spectrumTickbox.getValue());
+            m_spectrum.setSinVisibility(m_sinTickbox.getValue());
+            m_spectrum.setCosVisibility(m_cosTickbox.getValue());
             m_spectrum.draw();
         }
         
         
     }
 
-    public void setData(float[] data){
+    public void setFullSpectrum(float[] data){
         m_spectrum.setData(data);
+    }
+
+    public void setSinSpectrum(float[] data){
+        m_spectrum.setSinSpectrum(data);
+    }
+
+    public void setCosSpectrum(float[] data){
+        m_spectrum.setCosSpectrum(data);
     }
 }
 class GUISection{
@@ -1365,7 +1517,7 @@ class Generator{
     float m_phase = 0; //goes from 0 to 1
 
     private Tickbox m_switch;
-    private Knob[] m_knob;
+    protected Knob[] m_knob;
     private Tabs m_tabs;
 
     
@@ -1381,30 +1533,34 @@ class Generator{
             m_data[i] = 0;
         }
 
-        m_switch = new Tickbox(m_pos.x, m_pos.y, (m_len.y - m_spacer) / 2, (m_len.y - m_spacer) / 2);
+        m_switch = new Tickbox(m_pos.x,
+                                m_pos.y,
+                                (m_len.y - m_spacer) / 2,
+                                (m_len.y - m_spacer) / 2,
+                                "Generator");
 
         m_knob = new Knob[3];
 
         m_knob[0] = new Knob(m_pos.x, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Frequency");
         m_knob[0].setRealValueRange(0.5f, m_data.length);
+        m_knob[0].setRealValue(1);
 
         m_knob[1] = new Knob(m_pos.x + 1 * m_len.x / 3, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Phase");
         m_knob[1].setRealValueRange(0, TWO_PI);
+        m_knob[1].setRealValue(0);
 
         m_knob[2] = new Knob(m_pos.x + 2 * m_len.x / 3, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Amplitude");
+        m_knob[2].setRealValue(1);
 
-        m_tabs = new Tabs(m_pos.x, m_pos.y + m_len.y / 2 + m_spacer / 2, m_len.x, m_len.y / 2 - m_spacer / 2, new String[]{"0", "sin", "saw", "noise"});
+        String[] tempSynthModes = new String[]{"0", "sin", "tria", "squ", "saw", "noise"};
+        m_tabs = new Tabs(m_pos.x, m_pos.y + m_len.y / 2 + m_spacer / 2, m_len.x, m_len.y / 2 - m_spacer / 2, tempSynthModes);
+        m_tabs.setValue(1);
     }
 
     public void update(){
         noStroke();
         fill(100, 128);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 5);
-
-        fill(150);
-        textSize((m_len.y - m_spacer) /3);
-        textAlign(LEFT);
-        text("Generator", m_pos.x + (m_len.y - m_spacer) / 2, m_pos.y + (m_len.y - m_spacer) / 3);
 
         m_switch.update();
 
@@ -1421,19 +1577,28 @@ class Generator{
 
     public void advanceTime(){
         if(m_switch.getValue()){
-            m_phase = (m_phase + m_knob[0].getRealValue() / m_data.length)%1;
+            //println(m_knob[0].getRealValue());
+            m_phase = (m_phase + (m_knob[0].getRealValue() / m_knob[0].getMaxRealValue() ))%1;
+
+            float newPhase = (m_phase + m_knob[1].getValue()) % 1;
 
             switch(m_tabs.getValue()){
                 case 0: //Zero
                 m_data[getFirstIndex()] = 0;
                 break;
                 case 1: //Sin
-                m_data[getFirstIndex()] = m_knob[2].getRealValue() * sin( 2 * PI * (m_phase + m_knob[1].getValue()) );
+                m_data[getFirstIndex()] = m_knob[2].getRealValue() * sin( 2 * PI * newPhase );
                 break;
-                case 2: //Saw
-                m_data[getFirstIndex()] = m_knob[2].getRealValue() * (2.0f * (m_phase + m_knob[1].getValue()) % 2 - 1);
+                case 2: //Triangle
+                m_data[getFirstIndex()] = m_knob[2].getRealValue() * ( ( newPhase < 0.5f )? 4.0f * newPhase - 1 : -4.0f * newPhase + 3)/*triangle*/;
                 break;
-                case 3: //Noise
+                case 3: //Square
+                m_data[getFirstIndex()] = m_knob[2].getRealValue() * ( ( newPhase < 0.5f )? 1 : -1)/*square*/;
+                break;
+                case 4: //Saw
+                m_data[getFirstIndex()] = m_knob[2].getRealValue() * (2.0f * newPhase - 1);
+                break;
+                case 5: //Noise
                 m_data[getFirstIndex()] = m_knob[2].getRealValue() * random(-1, 1);
                 break;
             }
@@ -1450,6 +1615,10 @@ class Generator{
         return temp;
     }
 
+    public float getLatestValue(){
+        return m_data[getFirstIndex()];
+    }
+
     protected int getFirstIndex(){
         return m_time % m_data.length;
     }
@@ -1459,12 +1628,24 @@ class Generator{
     }
 
 }
+
+//===========================================================================
+
+class DFTGenerator extends Generator{
+
+    DFTGenerator(float xPos, float yPos, float xLen, float yLen, float spacer, int arrayLength){
+        super(xPos, yPos, xLen, yLen, spacer, 1);
+        m_knob[0].setRealValueRange(0.5f, arrayLength);
+        m_knob[0].setRealValue(1);
+    }    
+}
 class Graph{
     private PVector m_pos;
     private PVector m_len;
     private int m_color;
 
     private float[] m_data;
+    private int m_firstIndex;
     private float m_baseValue = 0.5f;
     private float m_minInputValue = -1;
     private float m_maxInputValue = 1;
@@ -1481,6 +1662,8 @@ class Graph{
         for(int i = 0; i < m_data.length; i++){
             m_data[i] = 0;
         }
+
+        m_firstIndex = m_data.length - 1;
     }
 
     public void setBaseValue(float baseValue){
@@ -1497,6 +1680,22 @@ class Graph{
         if(data.length == m_data.length){
             m_data = data;
         }
+
+        m_firstIndex = m_data.length - 1;
+    }
+
+    public void setLatestValue(float value){
+        int lastIndex = getLastIndex();
+        m_data[lastIndex] = value;
+        m_firstIndex = lastIndex;
+    }
+
+    public int getFirstIndex(){
+        return m_firstIndex;
+    }
+
+    protected int getLastIndex(){
+        return (m_firstIndex + 1) % m_data.length;
     }
 
     public void setColor(int c){
@@ -1530,12 +1729,14 @@ class Graph{
         strokeWeight(2);
         float spacing = m_len.x / (m_data.length - 1);
         for(int i = 0; i < m_data.length; i++){
-            
+
+            float drawValue = getDrawValue(i);
+
             ellipse(m_pos.x + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 10, 10);
             line(m_pos.x + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 m_pos.x + i * spacing,
                 m_pos.y + (1 - m_baseValue) * m_len.y);
         }
@@ -1548,16 +1749,27 @@ class Graph{
         beginShape();
         float spacing = m_len.x / (m_data.length);
         for(int i = 0; i < m_data.length; i++){
+
+            float drawValue = getDrawValue(i);
+
             vertex(m_pos.x + spacing/2 + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
             line(m_pos.x + spacing/2 + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 m_pos.x + spacing/2 + i * spacing,
                 m_pos.y + (1 - m_baseValue) * m_len.y);
         }
 
         
         endShape();
+    }
+
+    protected float getDrawValue(int index){
+        return m_data[getDrawIndex(index)];
+    }
+
+    public int getDrawIndex(int index){
+        return (index + m_firstIndex + 1) % m_data.length;
     }
 
     public int getLength(){
@@ -1568,8 +1780,23 @@ class Graph{
 //==========================================================================================
 
 class InfoSection extends GUISection{
+    protected String[] m_infoText;
+
+    protected LinkButton[] m_linkButton;
+
     InfoSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+        m_infoText = loadStrings("info.txt");
+
+        m_linkButton = new LinkButton[3];
+
+        for(int i = 0; i < m_linkButton.length; i++){
+            m_linkButton[i] = new LinkButton(m_pos.x + m_len.x - 2 * m_spacer,
+                                            m_pos.y + m_spacer + i * 3 * m_spacer / 2,
+                                            m_spacer,
+                                            m_spacer);
+            m_linkButton[i].setLink(m_infoText[i]);
+        }
     }
 
     protected void drawBackground(){
@@ -1580,8 +1807,20 @@ class InfoSection extends GUISection{
         fill(200);
         textSize(15);
         textAlign(LEFT);
-        text("This is some test Text.\nDo we have a line break here? And what about here?\nAnyway lets see!", m_pos.x + m_spacer, m_pos.y + m_spacer);
+        for(int i = m_linkButton.length; i < m_infoText.length; i++){
+            text( m_infoText[i], m_pos.x + m_spacer, m_pos.y + m_spacer + i * 20);
+        }
+        
     }
+
+    protected void drawComponents(){
+
+        for(int i = 0; i < m_linkButton.length; i++){
+
+
+            m_linkButton[i].update();
+        }
+    } 
 
 
 }
@@ -1602,7 +1841,7 @@ class MainSection extends GUISection{
     }
 
     protected void initializeSections(){
-        m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 76);
+        m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 80);
         m_aliasingSection = new AliasingSection(m_pos.x + m_spacer,
                                                 m_pos.y + m_spacer,
                                                 m_len.x - m_spacer,
@@ -1645,12 +1884,6 @@ class OneGraphDisplay{
         m_graph.setColor(color(75, 140, 140));
     }
 
-    public void setAsSpectrumDisplay(){
-        m_graph.setBaseValue(0);
-        m_graph.setInputValueRange(0, 0.6f);
-        m_graph.setDisplayMode(1);
-    }
-
     public void setData(float[] data){
         m_graph.setData(data);
     }
@@ -1671,10 +1904,19 @@ class OneGraphDisplay{
 //=========================================================
 
 class SpectrumDisplay extends OneGraphDisplay{
+    private Graph m_sinSpectrum;
+    private Graph m_cosSpectrum;
+    boolean m_fullIsVisible = true;
+    boolean m_sinIsVisible = true;
+    boolean m_cosIsVisible = true;
+
     private HoverTabs m_spectrumTabs;
 
     SpectrumDisplay(float posX, float posY, float lenX, float lenY, int resolution){
         super(posX, posY, lenX, lenY, resolution);
+
+        m_sinSpectrum = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+        m_cosSpectrum = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
 
         setAsSpectrumDisplay();
 
@@ -1685,6 +1927,25 @@ class SpectrumDisplay extends OneGraphDisplay{
         m_spectrumTabs = new HoverTabs(m_pos.x, m_pos.y, m_len.x, m_len.y, temp);
     }
 
+    public void setAsSpectrumDisplay(){
+        float maxValue = 0.6f;
+
+        m_graph.setBaseValue(0);
+        m_graph.setInputValueRange(0, maxValue);
+        m_graph.setDisplayMode(1);
+        m_graph.setColor(color(255, 120, 9));
+
+        m_sinSpectrum.setBaseValue(0);
+        m_sinSpectrum.setInputValueRange(0, maxValue);
+        m_sinSpectrum.setDisplayMode(1);
+        m_sinSpectrum.setColor(color(105, 255, 9));
+
+        m_cosSpectrum.setBaseValue(0);
+        m_cosSpectrum.setInputValueRange(0, maxValue);
+        m_cosSpectrum.setDisplayMode(1);
+        m_cosSpectrum.setColor(color(180, 10, 198));
+    }
+
     public int getSelectedFrequency(){
         return m_spectrumTabs.getValue();
     }
@@ -1693,15 +1954,53 @@ class SpectrumDisplay extends OneGraphDisplay{
         m_spectrumTabs.setValue(selectedFrequency);
     }
 
+    public int getMaxFrequency(){
+        return m_spectrumTabs.getMaxValue();
+    }
+
     public void draw(){
         stroke(color(100, 100, 100));
         strokeWeight(2);
         fill(color(50, 50, 50));
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
 
-        m_graph.draw();
+        if(m_sinIsVisible){
+            m_sinSpectrum.draw();
+        }
+
+        if(m_cosIsVisible){
+            m_cosSpectrum.draw();
+        }
+
+        if(m_fullIsVisible){
+            m_graph.draw();
+        }
+
+        
         m_spectrumTabs.update();
     }
+
+    public void setSinSpectrum(float[] data){
+        m_sinSpectrum.setData(data);
+    }
+
+    public void setCosSpectrum(float[] data){
+        m_cosSpectrum.setData(data);
+    }
+
+    public void setFullSpectrumVisibility(boolean isVisible){
+        m_fullIsVisible = isVisible;
+    }
+
+    public void setSinVisibility(boolean isVisible){
+        m_sinIsVisible = isVisible;
+    }
+
+    public void setCosVisibility(boolean isVisible){
+        m_cosIsVisible = isVisible;
+    }
+
+
 }
 class SignalDisplay{
     private PVector m_pos;
@@ -1759,6 +2058,11 @@ class SignalDisplay{
         //println("SignalDisplay.setDataForInput(): " + data[data.length - 1]);
     }
 
+    public void setLatestValueForInput(float value){
+        m_input.setLatestValue(value);
+        //println("SignalDisplay.setDataForInput(): " + data[data.length - 1]);
+    }
+
     public void setInputVisibility(boolean isVisible){
         m_inputIsVisible = isVisible;
     }
@@ -1788,15 +2092,14 @@ class SignalDisplay{
         
 
         for(int i = 0; i < temp.length; i++){
-            temp[i] = ip[i];
+            temp[i] = ip[m_input.getDrawIndex(i)];
 
             if(m_automationIsVisible){
                 temp[i] *= m_automation.mapXToRealY(i / (1.0f * temp.length));
             }
 
             if(m_testFreqVisible){
-                
-                temp[i] *= tf[i];
+                temp[i] *= tf[m_testFreq[withTestFreq].getDrawIndex(i)];
             }
             
         }
@@ -1822,6 +2125,28 @@ class SignalDisplay{
 
     public float getMultipliedArrayAdded(){
         return getMultipliedArrayAdded(m_testFreqIndex);
+    }
+
+    public float[] getSinSpectrum(){
+        int freqAmount = m_testFreq.length / 2;
+        float[] temp = new float[freqAmount];
+
+        for(int i = 0; i < freqAmount; i++){
+            temp[i] = abs(getMultipliedArrayAdded(i));
+        }
+
+        return temp;
+    }
+
+    public float[] getCosSpectrum(){
+        int freqAmount = m_testFreq.length / 2;
+        float[] temp = new float[freqAmount];
+
+        for(int i = 0; i < freqAmount; i++){
+            temp[i] = abs(getMultipliedArrayAdded(i + freqAmount));
+        }
+
+        return temp;
     }
 
     public float[] getSpectrum(){
@@ -1927,7 +2252,7 @@ class Tabs extends Controller{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_len.y/2);
+        textSize(m_textSize);
         for(int i = 0; i < m_tabName.length; i++){
             text(m_tabName[i], m_pos.x + (i + 0.5f) * m_len.x/m_tabName.length, m_pos.y + 5 * m_len.y/8);
         }
@@ -2030,7 +2355,7 @@ class SinCosTabs extends Tabs{
         //Tabnames
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_len.y/3);
+        textSize(m_textSize);
         for(int i = 0; i < m_tabName.length; i++){
             text(m_tabName[i],
                 m_pos.x + ((i % xPartitions) + 0.5f) * m_len.x/xPartitions,
@@ -2091,7 +2416,7 @@ class HoverTabs extends Tabs{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(10);
+        textSize(m_textSize);
         text(m_tabName[m_value], m_pos.x + m_value * spacing + spacing/2, m_pos.y + spacing);
 
         //m_hoverValue-Rectangle
@@ -2101,7 +2426,7 @@ class HoverTabs extends Tabs{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(10);
+        textSize(m_textSize);
         text(m_tabName[m_hoverValue], m_pos.x + m_hoverValue * spacing + spacing/2, m_pos.y + spacing);
     }
 
@@ -2209,7 +2534,7 @@ class VerticalTabs extends Tabs{
         //Text
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_len.x/2);
+        textSize(m_textSize);
         for(int i = 0; i < m_tabName.length; i++){
             pushMatrix();
             translate(m_pos.x + 5 * m_len.x/8, m_pos.y + (i + 0.5f) * m_len.y/m_tabName.length);

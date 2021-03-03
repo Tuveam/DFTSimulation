@@ -4,6 +4,7 @@ class Graph{
     private color m_color;
 
     private float[] m_data;
+    private int m_firstIndex;
     private float m_baseValue = 0.5;
     private float m_minInputValue = -1;
     private float m_maxInputValue = 1;
@@ -20,6 +21,8 @@ class Graph{
         for(int i = 0; i < m_data.length; i++){
             m_data[i] = 0;
         }
+
+        m_firstIndex = m_data.length - 1;
     }
 
     public void setBaseValue(float baseValue){
@@ -36,6 +39,22 @@ class Graph{
         if(data.length == m_data.length){
             m_data = data;
         }
+
+        m_firstIndex = m_data.length - 1;
+    }
+
+    public void setLatestValue(float value){
+        int lastIndex = getLastIndex();
+        m_data[lastIndex] = value;
+        m_firstIndex = lastIndex;
+    }
+
+    public int getFirstIndex(){
+        return m_firstIndex;
+    }
+
+    protected int getLastIndex(){
+        return (m_firstIndex + 1) % m_data.length;
     }
 
     public void setColor(color c){
@@ -69,12 +88,14 @@ class Graph{
         strokeWeight(2);
         float spacing = m_len.x / (m_data.length - 1);
         for(int i = 0; i < m_data.length; i++){
-            
+
+            float drawValue = getDrawValue(i);
+
             ellipse(m_pos.x + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 10, 10);
             line(m_pos.x + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 m_pos.x + i * spacing,
                 m_pos.y + (1 - m_baseValue) * m_len.y);
         }
@@ -87,16 +108,27 @@ class Graph{
         beginShape();
         float spacing = m_len.x / (m_data.length);
         for(int i = 0; i < m_data.length; i++){
+
+            float drawValue = getDrawValue(i);
+
             vertex(m_pos.x + spacing/2 + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
             line(m_pos.x + spacing/2 + i * spacing,
-                map(m_data[i], m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 m_pos.x + spacing/2 + i * spacing,
                 m_pos.y + (1 - m_baseValue) * m_len.y);
         }
 
         
         endShape();
+    }
+
+    protected float getDrawValue(int index){
+        return m_data[getDrawIndex(index)];
+    }
+
+    public int getDrawIndex(int index){
+        return (index + m_firstIndex + 1) % m_data.length;
     }
 
     public int getLength(){

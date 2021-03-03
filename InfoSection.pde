@@ -1,6 +1,21 @@
 class InfoSection extends GUISection{
+    protected String[] m_infoText;
+
+    protected LinkButton[] m_linkButton;
+
     InfoSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+        m_infoText = loadStrings("info.txt");
+
+        m_linkButton = new LinkButton[3];
+
+        for(int i = 0; i < m_linkButton.length; i++){
+            m_linkButton[i] = new LinkButton(m_pos.x + m_len.x - 2 * m_spacer,
+                                            m_pos.y + m_spacer + i * 3 * m_spacer / 2,
+                                            m_spacer,
+                                            m_spacer);
+            m_linkButton[i].setLink(m_infoText[i]);
+        }
     }
 
     protected void drawBackground(){
@@ -11,8 +26,20 @@ class InfoSection extends GUISection{
         fill(200);
         textSize(15);
         textAlign(LEFT);
-        text("This is some test Text.\nDo we have a line break here? And what about here?\nAnyway lets see!", m_pos.x + m_spacer, m_pos.y + m_spacer);
+        for(int i = m_linkButton.length; i < m_infoText.length; i++){
+            text( m_infoText[i], m_pos.x + m_spacer, m_pos.y + m_spacer + i * 20);
+        }
+        
     }
+
+    protected void drawComponents(){
+
+        for(int i = 0; i < m_linkButton.length; i++){
+
+
+            m_linkButton[i].update();
+        }
+    } 
 
 
 }
