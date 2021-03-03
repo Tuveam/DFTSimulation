@@ -78,6 +78,10 @@ class Graph{
             case 1:
             drawShapeAndLines();
             break;
+
+            case 2:
+            drawShape();
+            break;
         }
         
     }
@@ -117,6 +121,24 @@ class Graph{
                 map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
                 m_pos.x + spacing/2 + i * spacing,
                 m_pos.y + (1 - m_baseValue) * m_len.y);
+        }
+
+        
+        endShape();
+    }
+
+    private void drawShape(){
+        noFill();
+        stroke(m_color);
+        strokeWeight(2);
+        beginShape();
+        float spacing = m_len.x / (m_data.length);
+        for(int i = 0; i < m_data.length; i++){
+
+            float drawValue = getDrawValue(i);
+
+            vertex(m_pos.x + spacing/2 + i * spacing,
+                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
         }
 
         

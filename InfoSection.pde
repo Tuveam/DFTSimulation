@@ -23,11 +23,12 @@ class InfoSection extends GUISection{
         fill(40);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
 
+        float textSize = 25;
         fill(200);
-        textSize(15);
+        textSize(textSize);
         textAlign(LEFT);
         for(int i = m_linkButton.length; i < m_infoText.length; i++){
-            text( m_infoText[i], m_pos.x + m_spacer, m_pos.y + m_spacer + i * 20);
+            text( m_infoText[i], m_pos.x + m_spacer, m_pos.y + m_spacer + i * textSize);
         }
         
     }

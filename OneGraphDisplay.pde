@@ -130,3 +130,39 @@ class SpectrumDisplay extends OneGraphDisplay{
 
 
 }
+
+//=======================================================
+
+class ContinuousGraphDisplay{
+    private PVector m_pos;
+    private PVector m_len;
+
+    private Graph[] m_graph;
+
+    ContinuousGraphDisplay(float xPos, float yPos, float xLen, float yLen, int resolution, int graphAmount){
+        m_pos = new PVector(xPos, yPos);
+        m_len = new PVector(xLen, yLen);
+        
+        m_graph = new Graph[graphAmount];
+
+        for(int i = 0; i < m_graph.length; i++){
+            m_graph[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+            m_graph[i].setDisplayMode(2);
+        }
+    }
+
+    public void setData(int graphNumber, float[] data){
+        m_graph[graphNumber].setData(data);
+    }
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        for(int i = 0; i < m_graph.length; i++){
+            m_graph[i].draw();
+        }
+    }
+
+}

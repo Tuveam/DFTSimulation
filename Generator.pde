@@ -7,9 +7,9 @@ class Generator{
     float[] m_data; //goes from -1 to 1
     float m_phase = 0; //goes from 0 to 1
 
-    private Tickbox m_switch;
+    protected Tickbox m_switch;
     protected Knob[] m_knob;
-    private Tabs m_tabs;
+    protected Tabs m_tabs;
 
     
     
@@ -41,6 +41,7 @@ class Generator{
         m_knob[1].setRealValue(0);
 
         m_knob[2] = new Knob(m_pos.x + 2 * m_len.x / 3, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Amplitude");
+        m_knob[2].setRealValueRange(-1, 1);
         m_knob[2].setRealValue(1);
 
         String[] tempSynthModes = new String[]{"0", "sin", "tria", "squ", "saw", "noise"};
@@ -129,4 +130,71 @@ class DFTGenerator extends Generator{
         m_knob[0].setRealValueRange(0.5, arrayLength);
         m_knob[0].setRealValue(1);
     }    
+}
+
+//===========================================================================
+
+class InstantGenerator extends Generator{
+    InstantGenerator(float xPos, float yPos, float xLen, float yLen, float spacer, int arrayLength){
+        super(xPos, yPos, xLen, yLen, spacer, arrayLength);
+        m_knob[0].setRealValueRange(0.5, arrayLength / 2);
+        m_knob[0].setRealValue(1);
+    } 
+
+    public void update(){
+        fillArray();
+
+        noStroke();
+        fill(100, 128);
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 5);
+
+        m_switch.update();
+
+        if(m_switch.getValue()){
+            for(int i = 0; i < m_knob.length; i++){
+                m_knob[i].update();
+            }
+
+            m_tabs.update();
+
+        }
+        
+    }
+
+    protected void fillArray(){
+        
+        if(m_switch.getValue()){
+            for(int i = 0; i < m_data.length; i++){
+
+                float newPhase = (m_knob[0].getRealValue() * ((i * 1.0f) / m_data.length) + m_knob[1].getValue()) % 1;
+
+                switch(m_tabs.getValue()){
+                    case 0: //Zero
+                    m_data[i] = 0;
+                    break;
+                    case 1: //Sin
+                    m_data[i] = m_knob[2].getRealValue() * sin( 2 * PI * newPhase );
+                    break;
+                    case 2: //Triangle
+                    m_data[i] = m_knob[2].getRealValue() * ( ( newPhase < 0.5 )? 4.0 * newPhase - 1 : -4.0 * newPhase + 3)/*triangle*/;
+                    break;
+                    case 3: //Square
+                    m_data[i] = m_knob[2].getRealValue() * ( ( newPhase < 0.5 )? 1 : -1)/*square*/;
+                    break;
+                    case 4: //Saw
+                    m_data[i] = m_knob[2].getRealValue() * (2.0 * newPhase - 1);
+                    break;
+                    case 5: //Noise
+                    m_data[i] = m_knob[2].getRealValue() * random(-1, 1);
+                    break;
+                }
+
+                //println(i + ": " + m_data[i]);
+            }
+        }
+    }
+
+    public float[] getArray(){
+        return m_data;
+    }
 }

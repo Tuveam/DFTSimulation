@@ -1,6 +1,7 @@
 class MainSection extends GUISection{
     protected VerticalTabs m_tabs;
 
+    protected InterferenceSection m_interferenceSection;
     protected AliasingSection m_aliasingSection;
     protected DFTSection m_dftSection;
     protected InfoSection m_infoSection;
@@ -14,6 +15,7 @@ class MainSection extends GUISection{
     }
 
     protected void initializeSections(){
+        m_interferenceSection = new InterferenceSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 150);
         m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 80);
         m_aliasingSection = new AliasingSection(m_pos.x + m_spacer,
                                                 m_pos.y + m_spacer,
@@ -27,6 +29,7 @@ class MainSection extends GUISection{
 
         switch(m_tabs.getValue()){
             case 0:
+            m_interferenceSection.update();
             break;
             case 1:
             m_aliasingSection.update();
