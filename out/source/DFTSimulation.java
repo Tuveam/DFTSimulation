@@ -1628,6 +1628,10 @@ class Generator{
         return m_switch.getValue();
     }
 
+    public int getArrayLength(){
+        return m_data.length;
+    }
+
 }
 
 //===========================================================================
@@ -1928,6 +1932,9 @@ class InterferenceSection extends GUISection{
     }
 
     protected void drawSections(){
+        m_inputSection.setOutputMode(m_outputSection.getMode());
+        m_outputSection.setData(m_inputSection.getOutput());
+
         m_inputSection.update();
         m_outputSection.update();
     }
@@ -1940,6 +1947,8 @@ class InterferenceInputSection extends GUISection{
     protected Tickbox m_sectionTickbox;
     protected InstantGenerator[] m_generator;
     protected ContinuousGraphDisplay m_graphDisplay;
+
+    protected int m_outputMode = 0;
 
     InterferenceInputSection(float xPos, float yPos, float xLen, float yLen, int resolution){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
@@ -1963,6 +1972,55 @@ class InterferenceInputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             resolution,
                                             m_generator.length);
+    }
+
+    public void setOutputMode(int mode){
+        m_outputMode = mode;
+    }
+
+    public float[] getOutput(){
+        float[] ret = new float[m_generator[0].getArrayLength()];
+
+        switch(m_outputMode){
+            case 0:
+            for(int i = 0; i < ret.length; i++){
+                ret[i] = 0;
+            }
+
+            int generatorCount = 0;
+
+            for(int i = 0; i < m_generator.length; i++){
+                if(m_generator[i].isOn()){
+                    float[] generatorData = m_generator[i].getArray();
+                    for(int j = 0; j < generatorData.length; j++){
+                        ret[j] += generatorData[j];
+                    }
+                    generatorCount++;
+                }
+            }
+
+            for(int i = 0; i < ret.length; i++){
+                ret[i] /= generatorCount;
+            }
+
+            break;
+            case 1:
+            for(int i = 0; i < ret.length; i++){
+                ret[i] = 1;
+            }
+
+            for(int i = 0; i < m_generator.length; i++){
+                if(m_generator[i].isOn()){
+                    float[] generatorData = m_generator[i].getArray();
+                    for(int j = 0; j < generatorData.length; j++){
+                        ret[j] *= generatorData[j];
+                    }
+                }
+            }
+            break;
+        }
+
+        return ret;
     }
 
     protected void drawBackground(){
@@ -1990,11 +2048,20 @@ class InterferenceInputSection extends GUISection{
 
 class InterferenceOutputSection extends GUISection{
     protected Tickbox m_sectionTickbox;
+    protected Tabs m_modeTabs;
     protected ContinuousGraphDisplay m_graphDisplay;
 
     InterferenceOutputSection(float xPos, float yPos, float xLen, float yLen, int resolution){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Output");
+        
+        String[] modeNames = new String[]{"Addition", "Multiplication"};
+        m_modeTabs = new Tabs(m_pos.x + m_spacer/2,
+                            m_pos.y + m_len.y/2 - m_spacer/4,
+                            2 * m_len.x / 7,
+                            m_spacer/2,
+                            modeNames);
+
         m_graphDisplay = new ContinuousGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,
                                             m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
@@ -2014,10 +2081,20 @@ class InterferenceOutputSection extends GUISection{
 
         if(m_sectionTickbox.getValue()){
 
+            m_modeTabs.update();
+
             m_graphDisplay.draw();
         }
         
     }  
+
+    public int getMode(){
+        return m_modeTabs.getValue();
+    }
+
+    public void setData(float[] data){
+        m_graphDisplay.setData(0, data);
+    }
 }
 class MainSection extends GUISection{
     protected VerticalTabs m_tabs;

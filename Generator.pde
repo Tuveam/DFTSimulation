@@ -119,6 +119,10 @@ class Generator{
         return m_switch.getValue();
     }
 
+    public int getArrayLength(){
+        return m_data.length;
+    }
+
 }
 
 //===========================================================================
