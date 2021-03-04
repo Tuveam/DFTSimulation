@@ -3,8 +3,9 @@ class Graph{
     private PVector m_len;
     private color m_color;
 
-    private float[] m_data;
-    private int m_firstIndex;
+    protected float[] m_data;
+    protected int m_dataLength;
+    protected int m_firstIndex;
     private float m_baseValue = 0.5;
     private float m_minInputValue = -1;
     private float m_maxInputValue = 1;
@@ -21,6 +22,7 @@ class Graph{
         for(int i = 0; i < m_data.length; i++){
             m_data[i] = 0;
         }
+        m_dataLength = m_data.length;
 
         m_firstIndex = m_data.length - 1;
     }
@@ -38,6 +40,8 @@ class Graph{
         //println("Graph.setData(): " + data[data.length - 1]);
         if(data.length == m_data.length){
             m_data = data;
+        }else{
+            println("Wrong Data size");
         }
 
         m_firstIndex = m_data.length - 1;
@@ -82,6 +86,11 @@ class Graph{
             case 2:
             drawShape();
             break;
+
+            case 3:
+            drawPointsAndLines();
+            drawShape();
+            break;
         }
         
     }
@@ -90,8 +99,8 @@ class Graph{
         noFill();
         stroke(m_color);
         strokeWeight(2);
-        float spacing = m_len.x / (m_data.length - 1);
-        for(int i = 0; i < m_data.length; i++){
+        float spacing = m_len.x / (m_dataLength - 1);
+        for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
@@ -110,8 +119,8 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_len.x / (m_data.length);
-        for(int i = 0; i < m_data.length; i++){
+        float spacing = m_len.x / (m_dataLength);
+        for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
@@ -132,12 +141,12 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_len.x / (m_data.length);
-        for(int i = 0; i < m_data.length; i++){
+        float spacing = m_len.x / (m_dataLength - 1);
+        for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
-            vertex(m_pos.x + spacing/2 + i * spacing,
+            vertex(m_pos.x + i * spacing,
                 map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
         }
 
@@ -150,13 +159,69 @@ class Graph{
     }
 
     public int getDrawIndex(int index){
-        return (index + m_firstIndex + 1) % m_data.length;
+        return (index + m_firstIndex + 1) % m_dataLength;
     }
 
     public int getLength(){
-        return m_data.length;
+        return m_dataLength;
     }
 }
 
 //==========================================================================================
 
+class SampledGraph extends Graph{
+    private float[] m_inputData;
+
+    SampledGraph(float xPos, float yPos, float xLen, float yLen, int maxResolution){
+        super(xPos, yPos, xLen, yLen, maxResolution);
+
+    }
+
+    public void setSampleRate(int samplerate){
+        m_dataLength = samplerate;
+    }
+
+    public void setData(float[] data){
+        //println("Graph.setData(): " + data[data.length - 1]);
+        m_inputData = data;
+
+        translateData();
+
+        m_firstIndex = m_data.length - 1;
+    }
+
+    protected void translateData(){
+        for(int i = 0; i < m_dataLength - 1; i++){
+            m_data[i] = m_inputData[i * m_inputData.length/(m_dataLength - 1) ];
+        }
+
+        m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
+    }
+
+    public int getDrawIndex(int index){
+        return index;
+    }
+
+    public float[] getData(){
+        return subset(m_data, 0, m_dataLength);
+    }
+
+}
+
+//==========================================================================================
+
+class InterpolationGraph extends Graph{
+    InterpolationGraph(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen, 1);
+        setDisplayMode(3);
+    }
+
+    public void setData(float[] data){
+        m_data = data;
+        m_dataLength = m_data.length;
+    }
+
+    public int getDrawIndex(int index){
+        return index;
+    }
+}

@@ -18,9 +18,9 @@ class MainSection extends GUISection{
         m_interferenceSection = new InterferenceSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 150);
         m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 80);
         m_aliasingSection = new AliasingSection(m_pos.x + m_spacer,
-                                                m_pos.y + m_spacer,
+                                                m_pos.y,
                                                 m_len.x - m_spacer,
-                                                2 * (m_len.y - m_spacer) / 3);
+                                                m_len.y);
         m_infoSection = new InfoSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y);
     }
 

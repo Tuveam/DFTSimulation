@@ -41,12 +41,14 @@ class AliasingSection extends GUISection{
     }
 
     protected void initializeSections(){
-        m_inputSection = new AliasInputSection(m_pos.x, m_pos.y, m_len.x, m_len.y/2);
-        m_interpolationSection = new InterpolationSection(m_pos.x, m_pos.y + m_len.y/2, m_len.x, m_len.y/2);
+        m_inputSection = new AliasInputSection(m_pos.x, m_pos.y + m_spacer, m_len.x, (m_len.y - m_spacer)/2);
+        m_interpolationSection = new InterpolationSection(m_pos.x, m_pos.y + m_spacer + (m_len.y - m_spacer)/2, m_len.x, (m_len.y - m_spacer)/2);
     }
 
 
     protected void drawSections(){
+        m_interpolationSection.setData(m_inputSection.getSampledData());
+
         m_inputSection.update();
         m_interpolationSection.update();
     }
@@ -56,9 +58,41 @@ class AliasingSection extends GUISection{
 //====================================================================
 
 class AliasInputSection extends GUISection{
+    protected Tickbox m_sectionTickbox;
+    protected InstantGenerator m_generator;
+    protected Knob m_sampleRate;
+    protected AliasGraphDisplay m_graphDisplay;
 
     AliasInputSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input");
+
+        int resolution = floor(m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7);
+
+        m_generator = new InstantGenerator(m_pos.x + m_spacer/2,
+                                            m_pos.y + m_spacer/2,
+                                            2 * m_len.x / 7,
+                                            (m_len.y - 3 * m_spacer/4) / 2 - m_spacer/4,
+                                            m_spacer,
+                                            resolution);
+        m_generator.setFrequencyRange(0.5f, 25);
+
+
+        int maxSamplerate = 150;
+        m_sampleRate = new Knob(m_pos.x + m_spacer/2,
+                                m_pos.y + m_len.y/2 + m_spacer/2,
+                                m_spacer,
+                                m_spacer,
+                                "Samplerate");
+        m_sampleRate.setRealValueRange(1, maxSamplerate);
+
+        m_graphDisplay = new AliasGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
+                                            m_pos.y + m_spacer/2,
+                                            resolution,
+                                            m_len.y - m_spacer,
+                                            resolution,
+                                            maxSamplerate);
     }
 
     protected void drawBackground(){
@@ -67,20 +101,62 @@ class AliasInputSection extends GUISection{
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
     }
 
+    protected void drawComponents(){
+        m_sectionTickbox.update();
+
+        if(m_sectionTickbox.getValue()){
+            m_generator.update();
+
+            m_sampleRate.update();
+
+            m_graphDisplay.setSampleRate(floor(m_sampleRate.getRealValue()));
+            m_graphDisplay.setData(m_generator.getArray());
+
+            m_graphDisplay.draw();
+        }
+        
+    }
+
+    public float[] getSampledData(){
+        return m_graphDisplay.getSampledData();
+    }
+
 }
 
 //====================================================================
 
 class InterpolationSection extends GUISection{
+    protected Tickbox m_sectionTickbox;
+    InterpolationGraphDisplay m_graphDisplay;
 
     InterpolationSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+
+        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Interpolated");
+        m_graphDisplay = new InterpolationGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
+                                            m_pos.y + m_spacer/2,
+                                            m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
+                                            m_len.y - m_spacer);
     }
 
     protected void drawBackground(){
         noStroke();
         fill(51, 13, 37);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+    }
+
+    protected void drawComponents(){
+        m_sectionTickbox.update();
+
+        if(m_sectionTickbox.getValue()){
+            
+            m_graphDisplay.draw();
+        }
+        
+    }
+
+    public void setData(float[] data){
+        m_graphDisplay.setData(data);
     }
 
 }
@@ -1632,6 +1708,10 @@ class Generator{
         return m_data.length;
     }
 
+    public void setFrequencyRange(float minFrequency, float maxFrequency){
+        m_knob[0].setRealValueRange(minFrequency, maxFrequency);
+    }
+
 }
 
 //===========================================================================
@@ -1716,8 +1796,9 @@ class Graph{
     private PVector m_len;
     private int m_color;
 
-    private float[] m_data;
-    private int m_firstIndex;
+    protected float[] m_data;
+    protected int m_dataLength;
+    protected int m_firstIndex;
     private float m_baseValue = 0.5f;
     private float m_minInputValue = -1;
     private float m_maxInputValue = 1;
@@ -1734,6 +1815,7 @@ class Graph{
         for(int i = 0; i < m_data.length; i++){
             m_data[i] = 0;
         }
+        m_dataLength = m_data.length;
 
         m_firstIndex = m_data.length - 1;
     }
@@ -1751,6 +1833,8 @@ class Graph{
         //println("Graph.setData(): " + data[data.length - 1]);
         if(data.length == m_data.length){
             m_data = data;
+        }else{
+            println("Wrong Data size");
         }
 
         m_firstIndex = m_data.length - 1;
@@ -1795,6 +1879,11 @@ class Graph{
             case 2:
             drawShape();
             break;
+
+            case 3:
+            drawPointsAndLines();
+            drawShape();
+            break;
         }
         
     }
@@ -1803,8 +1892,8 @@ class Graph{
         noFill();
         stroke(m_color);
         strokeWeight(2);
-        float spacing = m_len.x / (m_data.length - 1);
-        for(int i = 0; i < m_data.length; i++){
+        float spacing = m_len.x / (m_dataLength - 1);
+        for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
@@ -1823,8 +1912,8 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_len.x / (m_data.length);
-        for(int i = 0; i < m_data.length; i++){
+        float spacing = m_len.x / (m_dataLength);
+        for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
@@ -1845,12 +1934,12 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_len.x / (m_data.length);
-        for(int i = 0; i < m_data.length; i++){
+        float spacing = m_len.x / (m_dataLength - 1);
+        for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
-            vertex(m_pos.x + spacing/2 + i * spacing,
+            vertex(m_pos.x + i * spacing,
                 map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
         }
 
@@ -1863,16 +1952,72 @@ class Graph{
     }
 
     public int getDrawIndex(int index){
-        return (index + m_firstIndex + 1) % m_data.length;
+        return (index + m_firstIndex + 1) % m_dataLength;
     }
 
     public int getLength(){
-        return m_data.length;
+        return m_dataLength;
     }
 }
 
 //==========================================================================================
 
+class SampledGraph extends Graph{
+    private float[] m_inputData;
+
+    SampledGraph(float xPos, float yPos, float xLen, float yLen, int maxResolution){
+        super(xPos, yPos, xLen, yLen, maxResolution);
+
+    }
+
+    public void setSampleRate(int samplerate){
+        m_dataLength = samplerate;
+    }
+
+    public void setData(float[] data){
+        //println("Graph.setData(): " + data[data.length - 1]);
+        m_inputData = data;
+
+        translateData();
+
+        m_firstIndex = m_data.length - 1;
+    }
+
+    protected void translateData(){
+        for(int i = 0; i < m_dataLength - 1; i++){
+            m_data[i] = m_inputData[i * m_inputData.length/(m_dataLength - 1) ];
+        }
+
+        m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
+    }
+
+    public int getDrawIndex(int index){
+        return index;
+    }
+
+    public float[] getData(){
+        return subset(m_data, 0, m_dataLength);
+    }
+
+}
+
+//==========================================================================================
+
+class InterpolationGraph extends Graph{
+    InterpolationGraph(float xPos, float yPos, float xLen, float yLen){
+        super(xPos, yPos, xLen, yLen, 1);
+        setDisplayMode(3);
+    }
+
+    public void setData(float[] data){
+        m_data = data;
+        m_dataLength = m_data.length;
+    }
+
+    public int getDrawIndex(int index){
+        return index;
+    }
+}
 class InfoSection extends GUISection{
     protected String[] m_infoText;
 
@@ -1927,6 +2072,8 @@ class InterferenceSection extends GUISection{
     InterferenceSection(float xPos, float yPos, float xLen, float yLen, int resolution){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
+        resolution = floor(m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7);
+
         m_inputSection = new InterferenceInputSection(m_pos.x, m_pos.y + m_spacer, m_len.x, (m_len.y - m_spacer) / 2, resolution);
         m_outputSection = new InterferenceOutputSection(m_pos.x, m_pos.y + m_spacer + (m_len.y - m_spacer)/2, m_len.x, (m_len.y - m_spacer) / 2, resolution);
     }
@@ -1956,6 +2103,8 @@ class InterferenceInputSection extends GUISection{
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input");
 
         m_generator = new InstantGenerator[2];
+
+        
 
         for(int i = 0; i < m_generator.length; i++){
             m_generator[i] = new InstantGenerator(m_pos.x + m_spacer/2,
@@ -2035,6 +2184,7 @@ class InterferenceInputSection extends GUISection{
         if(m_sectionTickbox.getValue()){
             for(int i = 0; i < m_generator.length; i++){
                 m_generator[i].update();
+                m_graphDisplay.setVisibility(i, m_generator[i].isOn());
                 m_graphDisplay.setData(i, m_generator[i].getArray());
             }
 
@@ -2116,9 +2266,9 @@ class MainSection extends GUISection{
         m_interferenceSection = new InterferenceSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 150);
         m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 80);
         m_aliasingSection = new AliasingSection(m_pos.x + m_spacer,
-                                                m_pos.y + m_spacer,
+                                                m_pos.y,
                                                 m_len.x - m_spacer,
-                                                2 * (m_len.y - m_spacer) / 3);
+                                                m_len.y);
         m_infoSection = new InfoSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y);
     }
 
@@ -2284,21 +2434,32 @@ class ContinuousGraphDisplay{
     private PVector m_len;
 
     private Graph[] m_graph;
+    private boolean[] m_isVisible;
 
     ContinuousGraphDisplay(float xPos, float yPos, float xLen, float yLen, int resolution, int graphAmount){
         m_pos = new PVector(xPos, yPos);
         m_len = new PVector(xLen, yLen);
         
         m_graph = new Graph[graphAmount];
+        m_isVisible = new boolean[m_graph.length];
 
         for(int i = 0; i < m_graph.length; i++){
             m_graph[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
             m_graph[i].setDisplayMode(2);
+            m_isVisible[i] = true;
         }
     }
 
     public void setData(int graphNumber, float[] data){
         m_graph[graphNumber].setData(data);
+    }
+
+    public void setVisibility(int graphNumber, boolean isVisible){
+        m_isVisible[graphNumber] = isVisible;
+    }
+
+    public void setColor(int graphNumber, int c){
+        m_graph[graphNumber].setColor(c);
     }
 
     public void draw(){
@@ -2307,8 +2468,82 @@ class ContinuousGraphDisplay{
         fill(color(50, 50, 50));
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
         for(int i = 0; i < m_graph.length; i++){
-            m_graph[i].draw();
+
+            if(m_isVisible[i]){
+                m_graph[i].draw();
+            }
+            
         }
+    }
+
+}
+
+//=========================================================
+
+class AliasGraphDisplay extends OneGraphDisplay{
+
+    protected SampledGraph m_sampledGraph;
+
+    AliasGraphDisplay(float posX, float posY, float lenX, float lenY, int resolution, int sampledMaxResolution){
+        super(posX, posY, lenX, lenY, resolution);
+
+        m_graph.setDisplayMode(2);
+
+        m_sampledGraph = new SampledGraph(m_pos.x, m_pos.y, m_len.x, m_len.y, sampledMaxResolution);
+    }
+
+    public void setSampleRate(int samplerate){
+        m_sampledGraph.setSampleRate(samplerate);
+    }
+
+    public void setData(float[] data){
+        m_graph.setData(data);
+        m_sampledGraph.setData(data);
+    }
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+
+        m_graph.draw();
+        m_sampledGraph.draw();
+    }
+
+    public float[] getSampledData(){
+        return m_sampledGraph.getData();
+    }
+
+}
+
+//===========================================================
+
+class InterpolationGraphDisplay {
+    protected PVector m_pos;
+    protected PVector m_len;
+
+    protected InterpolationGraph m_graph;
+
+    InterpolationGraphDisplay(float posX, float posY, float lenX, float lenY){
+        m_pos = new PVector(posX, posY);
+        m_len = new PVector(lenX, lenY);
+
+        m_graph = new InterpolationGraph(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        m_graph.setColor(color(75, 140, 140));
+    }
+
+    public void setData(float[] data){
+        m_graph.setData(data);
+    }
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+
+        m_graph.draw();
     }
 
 }

@@ -6,6 +6,8 @@ class InterferenceSection extends GUISection{
     InterferenceSection(float xPos, float yPos, float xLen, float yLen, int resolution){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
+        resolution = floor(m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7);
+
         m_inputSection = new InterferenceInputSection(m_pos.x, m_pos.y + m_spacer, m_len.x, (m_len.y - m_spacer) / 2, resolution);
         m_outputSection = new InterferenceOutputSection(m_pos.x, m_pos.y + m_spacer + (m_len.y - m_spacer)/2, m_len.x, (m_len.y - m_spacer) / 2, resolution);
     }
@@ -35,6 +37,8 @@ class InterferenceInputSection extends GUISection{
         m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input");
 
         m_generator = new InstantGenerator[2];
+
+        
 
         for(int i = 0; i < m_generator.length; i++){
             m_generator[i] = new InstantGenerator(m_pos.x + m_spacer/2,
@@ -114,6 +118,7 @@ class InterferenceInputSection extends GUISection{
         if(m_sectionTickbox.getValue()){
             for(int i = 0; i < m_generator.length; i++){
                 m_generator[i].update();
+                m_graphDisplay.setVisibility(i, m_generator[i].isOn());
                 m_graphDisplay.setData(i, m_generator[i].getArray());
             }
 

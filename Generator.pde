@@ -123,6 +123,10 @@ class Generator{
         return m_data.length;
     }
 
+    public void setFrequencyRange(float minFrequency, float maxFrequency){
+        m_knob[0].setRealValueRange(minFrequency, maxFrequency);
+    }
+
 }
 
 //===========================================================================

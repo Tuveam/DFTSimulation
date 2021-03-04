@@ -138,21 +138,32 @@ class ContinuousGraphDisplay{
     private PVector m_len;
 
     private Graph[] m_graph;
+    private boolean[] m_isVisible;
 
     ContinuousGraphDisplay(float xPos, float yPos, float xLen, float yLen, int resolution, int graphAmount){
         m_pos = new PVector(xPos, yPos);
         m_len = new PVector(xLen, yLen);
         
         m_graph = new Graph[graphAmount];
+        m_isVisible = new boolean[m_graph.length];
 
         for(int i = 0; i < m_graph.length; i++){
             m_graph[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
             m_graph[i].setDisplayMode(2);
+            m_isVisible[i] = true;
         }
     }
 
     public void setData(int graphNumber, float[] data){
         m_graph[graphNumber].setData(data);
+    }
+
+    public void setVisibility(int graphNumber, boolean isVisible){
+        m_isVisible[graphNumber] = isVisible;
+    }
+
+    public void setColor(int graphNumber, color c){
+        m_graph[graphNumber].setColor(c);
     }
 
     public void draw(){
@@ -161,8 +172,82 @@ class ContinuousGraphDisplay{
         fill(color(50, 50, 50));
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
         for(int i = 0; i < m_graph.length; i++){
-            m_graph[i].draw();
+
+            if(m_isVisible[i]){
+                m_graph[i].draw();
+            }
+            
         }
+    }
+
+}
+
+//=========================================================
+
+class AliasGraphDisplay extends OneGraphDisplay{
+
+    protected SampledGraph m_sampledGraph;
+
+    AliasGraphDisplay(float posX, float posY, float lenX, float lenY, int resolution, int sampledMaxResolution){
+        super(posX, posY, lenX, lenY, resolution);
+
+        m_graph.setDisplayMode(2);
+
+        m_sampledGraph = new SampledGraph(m_pos.x, m_pos.y, m_len.x, m_len.y, sampledMaxResolution);
+    }
+
+    public void setSampleRate(int samplerate){
+        m_sampledGraph.setSampleRate(samplerate);
+    }
+
+    public void setData(float[] data){
+        m_graph.setData(data);
+        m_sampledGraph.setData(data);
+    }
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+
+        m_graph.draw();
+        m_sampledGraph.draw();
+    }
+
+    public float[] getSampledData(){
+        return m_sampledGraph.getData();
+    }
+
+}
+
+//===========================================================
+
+class InterpolationGraphDisplay {
+    protected PVector m_pos;
+    protected PVector m_len;
+
+    protected InterpolationGraph m_graph;
+
+    InterpolationGraphDisplay(float posX, float posY, float lenX, float lenY){
+        m_pos = new PVector(posX, posY);
+        m_len = new PVector(lenX, lenY);
+
+        m_graph = new InterpolationGraph(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        m_graph.setColor(color(75, 140, 140));
+    }
+
+    public void setData(float[] data){
+        m_graph.setData(data);
+    }
+
+    public void draw(){
+        stroke(color(100, 100, 100));
+        strokeWeight(2);
+        fill(color(50, 50, 50));
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+
+        m_graph.draw();
     }
 
 }
