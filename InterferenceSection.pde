@@ -55,6 +55,9 @@ class InterferenceInputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             resolution,
                                             m_generator.length);
+
+        m_graphDisplay.setColor(0, color(75, 75, 200));
+        m_graphDisplay.setColor(1, color(200, 75, 75));
     }
 
     public void setOutputMode(int mode){

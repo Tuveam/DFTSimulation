@@ -234,7 +234,6 @@ class InterpolationGraphDisplay {
         m_len = new PVector(lenX, lenY);
 
         m_graph = new InterpolationGraph(m_pos.x, m_pos.y, m_len.x, m_len.y);
-        m_graph.setColor(color(75, 140, 140));
     }
 
     public void setData(float[] data){

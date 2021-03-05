@@ -77,6 +77,7 @@ class AliasInputSection extends GUISection{
                                             m_spacer,
                                             resolution);
         m_generator.setFrequencyRange(0.5f, 25);
+        m_generator.setFrequency(1);
 
 
         int maxSamplerate = 150;
@@ -86,6 +87,7 @@ class AliasInputSection extends GUISection{
                                 m_spacer,
                                 "Samplerate");
         m_sampleRate.setRealValueRange(1, maxSamplerate);
+        m_sampleRate.setRealValue(20);
 
         m_graphDisplay = new AliasGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,
@@ -664,11 +666,23 @@ class Knob extends Controller{
     
 
     Knob(float xPos, float yPos, float xLen, float yLen, String name){
-        super(new PVector(xPos, yPos), new PVector((xLen < yLen)? xLen : yLen, (xLen < yLen)? xLen : yLen));
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+        fixDimensions();
+        
         m_value = 0.8f;
 
         m_name = name;
         
+    }
+
+    protected void fixDimensions(){
+        float actualLen = (m_len.x < m_len.y)? m_len.x : m_len.y;
+
+        m_pos.x = m_pos.x + m_len.x/2 - actualLen/2;
+        m_pos.y = m_pos.y + m_len.y/2 - actualLen/2;
+
+        m_len.x = actualLen;
+        m_len.y = actualLen;
     }
 
     protected void click(){
@@ -1712,6 +1726,10 @@ class Generator{
         m_knob[0].setRealValueRange(minFrequency, maxFrequency);
     }
 
+    public void setFrequency(float frequency){
+        m_knob[0].setRealValue(frequency);
+    }
+
 }
 
 //===========================================================================
@@ -2121,6 +2139,9 @@ class InterferenceInputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             resolution,
                                             m_generator.length);
+
+        m_graphDisplay.setColor(0, color(75, 75, 200));
+        m_graphDisplay.setColor(1, color(200, 75, 75));
     }
 
     public void setOutputMode(int mode){
@@ -2530,7 +2551,6 @@ class InterpolationGraphDisplay {
         m_len = new PVector(lenX, lenY);
 
         m_graph = new InterpolationGraph(m_pos.x, m_pos.y, m_len.x, m_len.y);
-        m_graph.setColor(color(75, 140, 140));
     }
 
     public void setData(float[] data){
@@ -2569,7 +2589,7 @@ class SignalDisplay{
         m_automation.setRealValueRange(-1, 1);
 
         m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
-        m_input.setColor(color(75, 75, 170));
+        m_input.setColor(color(75, 75, 200));
 
         m_testFreq = new Graph[testSineAmount];
         for(int i = 0; i < m_testFreq.length; i++){

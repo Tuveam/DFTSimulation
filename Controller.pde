@@ -91,11 +91,23 @@ class Knob extends Controller{
     
 
     Knob(float xPos, float yPos, float xLen, float yLen, String name){
-        super(new PVector(xPos, yPos), new PVector((xLen < yLen)? xLen : yLen, (xLen < yLen)? xLen : yLen));
+        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+        fixDimensions();
+        
         m_value = 0.8;
 
         m_name = name;
         
+    }
+
+    protected void fixDimensions(){
+        float actualLen = (m_len.x < m_len.y)? m_len.x : m_len.y;
+
+        m_pos.x = m_pos.x + m_len.x/2 - actualLen/2;
+        m_pos.y = m_pos.y + m_len.y/2 - actualLen/2;
+
+        m_len.x = actualLen;
+        m_len.y = actualLen;
     }
 
     protected void click(){

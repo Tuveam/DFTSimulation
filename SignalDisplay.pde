@@ -20,7 +20,7 @@ class SignalDisplay{
         m_automation.setRealValueRange(-1, 1);
 
         m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
-        m_input.setColor(color(75, 75, 170));
+        m_input.setColor(color(75, 75, 200));
 
         m_testFreq = new Graph[testSineAmount];
         for(int i = 0; i < m_testFreq.length; i++){

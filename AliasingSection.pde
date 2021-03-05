@@ -44,6 +44,7 @@ class AliasInputSection extends GUISection{
                                             m_spacer,
                                             resolution);
         m_generator.setFrequencyRange(0.5, 25);
+        m_generator.setFrequency(1);
 
 
         int maxSamplerate = 150;
@@ -53,6 +54,7 @@ class AliasInputSection extends GUISection{
                                 m_spacer,
                                 "Samplerate");
         m_sampleRate.setRealValueRange(1, maxSamplerate);
+        m_sampleRate.setRealValue(20);
 
         m_graphDisplay = new AliasGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,
