@@ -52,7 +52,7 @@ class SpectrumDisplay extends OneGraphDisplay{
         for(int i = 0; i < temp.length; i++){
             temp[i] = ("i" + i ).substring(1);
         }
-        m_spectrumTabs = new HoverTabs(m_pos.x, m_pos.y, m_len.x, m_len.y, temp);
+        m_spectrumTabs = new HoverTabs(new Bounds(m_pos.x, m_pos.y, m_len.x, m_len.y), temp);
     }
 
     public void setAsSpectrumDisplay(){

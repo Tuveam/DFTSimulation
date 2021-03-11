@@ -10,10 +10,10 @@ class InfoSection extends GUISection{
         m_linkButton = new LinkButton[3];
 
         for(int i = 0; i < m_linkButton.length; i++){
-            m_linkButton[i] = new LinkButton(m_pos.x + m_len.x - 2 * m_spacer,
+            m_linkButton[i] = new LinkButton(new Bounds(m_pos.x + m_len.x - 2 * m_spacer,
                                             m_pos.y + m_spacer + i * 3 * m_spacer / 2,
                                             m_spacer,
-                                            m_spacer);
+                                            m_spacer));
             m_linkButton[i].setLink(m_infoText[i]);
         }
     }

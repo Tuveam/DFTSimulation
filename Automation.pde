@@ -7,24 +7,24 @@ class Automation extends Controller{
     private float m_minRealValue = 0;
     private float m_maxRealValue = 1;
 
-    Automation(float xPos, float yPos, float xLen, float yLen){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+    Automation(Bounds b){
+        super(b);
 
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.001, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.999, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0.001, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0.999, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(1, 0.5), m_fillColor) );
     }
 
-    Automation(float xPos, float yPos, float xLen, float yLen, color fillColor, boolean drawBackground){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+    Automation(Bounds b, color fillColor, boolean drawBackground){
+        super(b);
         m_fillColor = fillColor;
         m_drawBackground = drawBackground;
 
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0, 0.5), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.001, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(0.999, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(m_pos, m_len, new PVector(1, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0.001, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0.999, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(1, 0.5), m_fillColor) );
     }
 
     public void setBaseValue(float baseValue){
@@ -37,7 +37,7 @@ class Automation extends Controller{
     }
 
     private void insertPointAtIndex(AutomationPoint insert, ArrayList<AutomationPoint> toSort, int index){
-        toSort.add(new AutomationPoint( new PVector(0, 0), new PVector(0, 0), new PVector(0, 0), m_fillColor));
+        toSort.add(new AutomationPoint( new Bounds(0, 0, 0, 0), new PVector(0, 0), m_fillColor));
 
         for(int i = toSort.size() - 2; i >= index; i--){
             toSort.set(i + 1, toSort.get(i));
@@ -65,10 +65,7 @@ class Automation extends Controller{
             }
 
             if(createPoint){
-                if( mouseX >= m_pos.x && 
-                    mouseX <= m_pos.x + m_len.x && 
-                    mouseY >= m_pos.y && 
-                    mouseY <= m_pos.y + m_len.y){
+                if( m_bounds.checkHitbox(mouseX, mouseY)){
 
                     m_mouseClicked.x = mouseX;
                     m_mouseClicked.y = mouseY;
@@ -84,9 +81,9 @@ class Automation extends Controller{
                         index = i;
                     }
 
-                    PVector temp = new PVector( (mouseX - m_pos.x) / m_len.x, 1 - (mouseY - m_pos.y) / m_len.y);
+                    PVector temp = new PVector( (mouseX - m_bounds.getXPos()) / m_bounds.getXLen(), 1 - (mouseY - m_bounds.getYPos()) / m_bounds.getYLen());
 
-                    insertPointAtIndex(new AutomationPoint(m_pos, m_len, temp, m_fillColor), m_point, index);
+                    insertPointAtIndex(new AutomationPoint(m_bounds, temp, m_fillColor), m_point, index);
 
                 }
             }
@@ -107,13 +104,15 @@ class Automation extends Controller{
 
         //points and shape
         beginShape();
-        vertex(m_pos.x, m_pos.y + m_len.y * m_baseValue);
+        vertex(m_bounds.getXPos(),
+                m_bounds.getYPos() + m_bounds.getYLen() * m_baseValue);
         for(int i = 0; i < m_point.size(); i++){
             m_point.get(i).update(m_point, i);
             PVector temp = m_point.get(i).getActualPosition();
             vertex(temp.x, temp.y);
         }
-        vertex(m_pos.x + m_len.x, m_pos.y + m_len.y * m_baseValue);
+        vertex(m_bounds.getXPos() + m_bounds.getXLen(),
+                m_bounds.getYPos() + m_bounds.getYLen() * m_baseValue);
 
         noStroke();
         fill(m_fillColor, 75);
@@ -122,13 +121,10 @@ class Automation extends Controller{
     }
 
     public void drawBackground(){
-        pushMatrix();
-        translate(m_pos.x, m_pos.y);
         fill(m_backgroundColor2);
         stroke(m_backgroundColor1);
         strokeWeight(2);
-        rect(0, 0, m_len.x, m_len.y);
-        popMatrix();
+        rect(m_bounds);
     }
 
     public float mapXToY(float x){
@@ -177,16 +173,16 @@ class AutomationPoint extends Controller{
 
     private float m_radius = 6;
 
-    AutomationPoint(PVector windowPos, PVector windowLen, PVector value){
-        super(windowPos, windowLen);
+    AutomationPoint(Bounds windowBounds, PVector value){
+        super(windowBounds);
 
         m_value = value;
         m_curve = 0.5;
         m_previousCurve = m_curve;
     }
 
-    AutomationPoint(PVector windowPos, PVector windowLen, PVector value, color fillColor){
-        super(windowPos, windowLen);
+    AutomationPoint(Bounds windowBounds, PVector value, color fillColor){
+        super(windowBounds);
 
         m_value = value;
         m_curve = 0.5;
@@ -196,12 +192,13 @@ class AutomationPoint extends Controller{
     }
 
     public PVector getActualPosition(){
-        return new PVector(m_pos.x + m_value.x * m_len.x, m_pos.y + (1 - m_value.y) * m_len.y);
+        return new PVector(m_bounds.getXPos() + m_value.x * m_bounds.getXLen(),
+                        m_bounds.getYPos() + (1 - m_value.y) * m_bounds.getYLen());
     }
 
     private void setActualPosition(float x, float y){
-        m_value.x = (x - m_pos.x) / m_len.x;
-        m_value.y = 1 - (y - m_pos.y) / m_len.y;
+        m_value.x = (x - m_bounds.getXPos()) / m_bounds.getXLen();
+        m_value.y = 1 - (y - m_bounds.getYPos()) / m_bounds.getYLen();
     }
 
     public void update(ArrayList<AutomationPoint> others, int myIndex){
@@ -279,9 +276,9 @@ class AutomationPoint extends Controller{
             //println(m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y);
             if(myIndex < others.size() - 1){
                 if(others.get(myIndex + 1).getValue().y > getValue().y){
-                    m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
+                    m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
                 }else{
-                    m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y;
+                    m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
                 }
                 if(m_curve < 0){
                     m_curve = 0;

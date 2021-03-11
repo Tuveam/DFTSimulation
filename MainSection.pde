@@ -1,5 +1,6 @@
 class MainSection extends GUISection{
     protected VerticalTabs m_tabs;
+    protected Tutorial m_tutorial;
 
     protected InterferenceSection m_interferenceSection;
     protected AliasingSection m_aliasingSection;
@@ -9,9 +10,12 @@ class MainSection extends GUISection{
 
     MainSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+        textFont(createFont("Arial", 20));
 
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};
-        m_tabs = new VerticalTabs(m_pos.x, m_pos.y + m_spacer, m_spacer, m_len.y - m_spacer, tempTabNames);
+        m_tabs = new VerticalTabs(new Bounds(m_pos.x, m_pos.y + m_spacer, m_spacer, m_len.y - m_spacer), tempTabNames);
+
+        m_tutorial = new Tutorial(new Bounds(m_pos.x, m_pos.y, m_len.x, m_len.y), m_spacer);
     }
 
     protected void initializeSections(){
@@ -26,6 +30,7 @@ class MainSection extends GUISection{
 
     protected void drawSections(){
         m_tabs.update();
+        
 
         switch(m_tabs.getValue()){
             case 0:
@@ -41,6 +46,8 @@ class MainSection extends GUISection{
             m_infoSection.update();
             break;
         }
+
+        m_tutorial.update();
         
     }
 

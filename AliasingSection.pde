@@ -33,14 +33,14 @@ class AliasInputSection extends GUISection{
     AliasInputSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input");
+        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Input");
 
         int resolution = floor(m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7);
 
-        m_generator = new InstantGenerator(m_pos.x + m_spacer/2,
+        m_generator = new InstantGenerator(new Bounds(m_pos.x + m_spacer/2,
                                             m_pos.y + m_spacer/2,
                                             2 * m_len.x / 7,
-                                            (m_len.y - 3 * m_spacer/4) / 2 - m_spacer/4,
+                                            (m_len.y - 3 * m_spacer/4) / 2 - m_spacer/4),
                                             m_spacer,
                                             resolution);
         m_generator.setFrequencyRange(0.5, 25);
@@ -48,10 +48,10 @@ class AliasInputSection extends GUISection{
 
 
         int maxSamplerate = 150;
-        m_sampleRate = new Knob(m_pos.x + m_spacer/2,
+        m_sampleRate = new Knob(new Bounds(m_pos.x + m_spacer/2,
                                 m_pos.y + m_len.y/2 + m_spacer/2,
                                 m_spacer,
-                                m_spacer,
+                                m_spacer),
                                 "Samplerate");
         m_sampleRate.setRealValueRange(1, maxSamplerate);
         m_sampleRate.setRealValue(20);
@@ -101,7 +101,7 @@ class InterpolationSection extends GUISection{
     InterpolationSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Interpolated");
+        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Interpolated");
         m_graphDisplay = new InterpolationGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,
                                             m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,

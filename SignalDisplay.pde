@@ -15,7 +15,7 @@ class SignalDisplay{
         m_pos = new PVector(posX, posY);
         m_len = new PVector(lenX, lenY);
 
-        m_automation = new Automation(m_pos.x, m_pos.y, m_len.x, m_len.y,
+        m_automation = new Automation(new Bounds(m_pos.x, m_pos.y, m_len.x, m_len.y),
                                         color(200, 75, 75), false);
         m_automation.setRealValueRange(-1, 1);
 

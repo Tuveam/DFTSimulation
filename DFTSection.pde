@@ -89,9 +89,9 @@ class MenuSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_playButton = new PlayButton(m_pos.x + m_spacer, m_pos.y, m_spacer, m_spacer);
-        m_skipButton = new SkipButton(m_pos.x + 8 * m_spacer/4, m_pos.y, m_spacer, m_spacer);
-        m_sampleRateKnob = new Knob(m_pos.x + 13 * m_spacer/4, m_pos.y, m_spacer, m_spacer, "Samplerate");
+        m_playButton = new PlayButton(new Bounds(m_pos.x + m_len.x - 4 * m_spacer, m_pos.y, m_spacer, m_spacer));
+        m_skipButton = new SkipButton(new Bounds(m_pos.x + m_len.x - 3 * m_spacer, m_pos.y, m_spacer, m_spacer));
+        m_sampleRateKnob = new Knob(new Bounds(m_pos.x + m_len.x - 2 * m_spacer, m_pos.y, m_spacer, m_spacer), "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
     }
 
@@ -127,6 +127,11 @@ class MenuSection extends GUISection{
         fill(map(m_blink, 0, 10, 0, 255), 0, 0);
         noStroke();
         ellipse(m_pos.x + m_len.x - m_len.y/2, m_pos.y + m_len.y/2, m_len.y, m_len.y);
+
+        fill(200);
+        textSize(20);
+        textAlign(CENTER);
+        text(frameRate, m_pos.x + m_len.x - m_len.y/2, m_pos.y + m_len.y/2);
 
         if(m_blink > 0){
             m_blink--;
@@ -166,10 +171,10 @@ class InputSection extends GUISection{
         super(pos, len);
 
         m_sampleNumber = sampleNumber;
-        m_generator = new DFTGenerator(m_pos.x + m_spacer/2,
+        m_generator = new DFTGenerator(new Bounds(m_pos.x + m_spacer/2,
                                     m_pos.y + m_spacer / 2,
                                     2 * m_len.x / 7,
-                                    5 * m_spacer / 3,
+                                    5 * m_spacer / 3),
                                     m_spacer,
                                     m_sampleNumber);
         m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
@@ -181,15 +186,15 @@ class InputSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input Signal");
-        m_testFreqTickbox = new Tickbox(m_pos.x + m_spacer/2,
+        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Input Signal");
+        m_testFreqTickbox = new Tickbox(new Bounds(m_pos.x + m_spacer/2,
                                         m_pos.y + 5 * m_spacer / 2,
                                         m_spacer/3,
-                                        m_spacer/3, "Test Frequency");
-        m_windowShapeTickbox = new Tickbox(m_pos.x + m_spacer/2,
+                                        m_spacer/3), "Test Frequency");
+        m_windowShapeTickbox = new Tickbox(new Bounds(m_pos.x + m_spacer/2,
                                         m_pos.y + 19 * m_spacer / 6,
                                         m_spacer/3,
-                                        m_spacer/3, "Window Shape");
+                                        m_spacer/3), "Window Shape");
         
     }
 
@@ -283,14 +288,14 @@ class MathSection extends GUISection{
             temp[i] = ("i" + (i % (temp.length/2) )).substring(1);
         }
 
-        m_tabs = new SinCosTabs(m_pos.x + 5 * m_spacer/2, m_pos.y + m_len.y - m_spacer/2, m_len.x - 3 * m_spacer, m_spacer/2, temp);
+        m_tabs = new SinCosTabs(new Bounds(m_pos.x + 5 * m_spacer/2, m_pos.y + m_len.y - m_spacer/2, m_len.x - 3 * m_spacer, m_spacer/2), temp);
 
         m_mult = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, sampleNumber);
     }
 
     protected void initializeControllers(){
         
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Multiplication");
+        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Multiplication");
     }
 
     protected int getSelectedFrequency(){
@@ -362,20 +367,20 @@ class SpectrumSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Spectrum");
+        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Spectrum");
 
-        m_sinTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+        m_sinTickbox = new Tickbox(new Bounds(m_pos.x + 4 * m_spacer/6,
                                     m_pos.y + 4 * m_spacer/6, 
                                     m_spacer/3, 
-                                    m_spacer/3, "Sine");
-        m_cosTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_spacer/3), "Sine");
+        m_cosTickbox = new Tickbox(new Bounds(m_pos.x + 4 * m_spacer/6,
                                     m_pos.y + 4 * m_spacer/6 + m_spacer/2, 
                                     m_spacer/3, 
-                                    m_spacer/3, "Cos");
-        m_spectrumTickbox = new Tickbox(m_pos.x + 4 * m_spacer/6,
+                                    m_spacer/3), "Cos");
+        m_spectrumTickbox = new Tickbox(new Bounds(m_pos.x + 4 * m_spacer/6,
                                     m_pos.y + 4 * m_spacer/6 + m_spacer, 
                                     m_spacer/3, 
-                                    m_spacer/3, "Spectrum");
+                                    m_spacer/3), "Spectrum");
 
     }
 

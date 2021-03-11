@@ -34,17 +34,17 @@ class InterferenceInputSection extends GUISection{
     InterferenceInputSection(float xPos, float yPos, float xLen, float yLen, int resolution){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
 
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Input");
+        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Input");
 
         m_generator = new InstantGenerator[2];
 
         
 
         for(int i = 0; i < m_generator.length; i++){
-            m_generator[i] = new InstantGenerator(m_pos.x + m_spacer/2,
+            m_generator[i] = new InstantGenerator(new Bounds(m_pos.x + m_spacer/2,
                                             m_pos.y + m_spacer/2 + i * (m_len.y - 3 * m_spacer/4) / m_generator.length,
                                             2 * m_len.x / 7,
-                                            (m_len.y - 3 * m_spacer/4) / m_generator.length - m_spacer/4,
+                                            (m_len.y - 3 * m_spacer/4) / m_generator.length - m_spacer/4),
                                             m_spacer,
                                             resolution);
         }
@@ -140,13 +140,13 @@ class InterferenceOutputSection extends GUISection{
 
     InterferenceOutputSection(float xPos, float yPos, float xLen, float yLen, int resolution){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
-        m_sectionTickbox = new Tickbox(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2, "Output");
+        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Output");
         
         String[] modeNames = new String[]{"Addition", "Multiplication"};
-        m_modeTabs = new Tabs(m_pos.x + m_spacer/2,
+        m_modeTabs = new Tabs(new Bounds(m_pos.x + m_spacer/2,
                             m_pos.y + m_len.y/2 - m_spacer/4,
                             2 * m_len.x / 7,
-                            m_spacer/2,
+                            m_spacer/2),
                             modeNames);
 
         m_graphDisplay = new ContinuousGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,

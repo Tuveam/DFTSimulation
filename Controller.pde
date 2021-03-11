@@ -1,8 +1,7 @@
 class Controller{
     //private float/boolean m_value = 0;
     
-    protected PVector m_pos;
-    protected PVector m_len;
+    protected Bounds m_bounds;
 
     protected boolean m_selected = false;
     protected boolean m_firstClick = true;
@@ -14,11 +13,10 @@ class Controller{
     protected color m_backgroundColor2;
     protected color m_textColor;
 
-    protected float m_textSize = 13;
+    protected float m_textSize = 15;
 
-    Controller(PVector pos, PVector len){
-        m_pos = pos;
-        m_len = len;
+    Controller(Bounds b){
+        m_bounds = new Bounds(b);
 
         m_fillColor = color(75, 170, 75);
         m_backgroundColor1 = color(100, 100, 100);
@@ -35,24 +33,6 @@ class Controller{
     }
 
     protected void click(){
-        /*if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if( mouseX >= m_pos.x && 
-                mouseX <= m_pos.x + m_len.x && 
-                mouseY >= m_pos.y && 
-                mouseY <= m_pos.y + m_len.y){
-
-                m_mouseClickedX = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-            }
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }*/
         
     }
 
@@ -63,10 +43,6 @@ class Controller{
     protected void draw(){
         //to be inherited and overloaded
     }
-
-    //public float getValue(){
-        //to be inherited and overloaded
-    //}
 
     public void setColor(color capColor, color barColor, color fillColor){
         m_backgroundColor2 = capColor;
@@ -90,9 +66,8 @@ class Knob extends Controller{
     private String m_name;
     
 
-    Knob(float xPos, float yPos, float xLen, float yLen, String name){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
-        fixDimensions();
+    Knob(Bounds b, String name){
+        super(b);
         
         m_value = 0.8;
 
@@ -100,23 +75,10 @@ class Knob extends Controller{
         
     }
 
-    protected void fixDimensions(){
-        float actualLen = (m_len.x < m_len.y)? m_len.x : m_len.y;
-
-        m_pos.x = m_pos.x + m_len.x/2 - actualLen/2;
-        m_pos.y = m_pos.y + m_len.y/2 - actualLen/2;
-
-        m_len.x = actualLen;
-        m_len.y = actualLen;
-    }
-
     protected void click(){
         if(mousePressed && m_firstClick){
             m_firstClick = false;
-            if( mouseX >= m_pos.x && 
-                mouseX <= m_pos.x + m_len.x && 
-                mouseY >= m_pos.y && 
-                mouseY <= m_pos.y + m_len.y){
+            if( m_bounds.checkHitbox(mouseX, mouseY) ){
 
                 m_mouseClicked.x = mouseX;
                 m_mouseClicked.y = mouseY;
@@ -141,7 +103,7 @@ class Knob extends Controller{
                 }
             }
 
-            m_value = m_value + (m_mouseClicked.y - mouseY) / (m_len.y * actualSensitivity);
+            m_value = m_value + (m_mouseClicked.y - mouseY) / (m_bounds.getYLen() * actualSensitivity);
 
             m_mouseClicked.x = mouseX;
             m_mouseClicked.y = mouseY;
@@ -161,48 +123,61 @@ class Knob extends Controller{
     protected void draw(){
         colorMode(RGB, 255, 255, 255);
 
-        pushMatrix();
-        translate(m_pos.x + m_len.x / 2, m_pos.y + getKnobLen() / 2);
+        Bounds knobBounds = getKnobBounds();
+
+        //pushMatrix();
+        //translate(m_pos.x + m_len.x / 2, m_pos.y + getKnobLen() / 2);
 
         //Bar
         noStroke();
         fill(m_backgroundColor1);
-        arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, PI * 9 / 4, PIE);
+        //arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, PI * 9 / 4, PIE);
+        arc(knobBounds, PI * 3 / 4, PI * 9 / 4, PIE);
 
         //Fill
         float angle = map(m_value, 0, 1, PI * 3 / 4, PI * 9 / 4);
         noStroke();
         fill(m_fillColor);
-        arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, angle, PIE);
+        //arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, angle, PIE);
+        arc(knobBounds, PI * 3 / 4, angle, PIE);
 
         
         //Cap
         noStroke();
         fill(m_backgroundColor2);
-        ellipse(0, 0, 0.8 * getKnobLen(), 0.8 * getKnobLen());
+        //ellipse(0, 0, 0.8 * getKnobLen(), 0.8 * getKnobLen());
+        ellipse(knobBounds.withFrameRatio(0.1));
 
         //indicator line
         stroke(m_fillColor);
         strokeWeight(3);
-        line(0.1 * getKnobLen() * cos(angle), 0.1 * getKnobLen() * sin(angle), 0.3 * getKnobLen() * cos(angle), 0.3 * getKnobLen() * sin(angle));
+        line(knobBounds.getXPos() + knobBounds.getXLen()/2 + 0.1 * knobBounds.getXLen() * cos(angle),
+            knobBounds.getYPos() + knobBounds.getYLen()/2 + 0.1 * knobBounds.getYLen() * sin(angle), 
+            knobBounds.getXPos() + knobBounds.getXLen()/2 + 0.3 * knobBounds.getXLen() * cos(angle), 
+            knobBounds.getYPos() + knobBounds.getYLen()/2 + 0.3 * knobBounds.getYLen() * sin(angle));
 
-        popMatrix();
+        //popMatrix();
 
         //name
         textAlign(CENTER);
         fill(m_textColor);
         textSize(getTextLenY());
         if(m_selected){
-            text(getRealValue(), m_pos.x + m_len.x/2, m_pos.y + getKnobLen() + getTextLenY()/2);
+            text(getRealValue(),
+                m_bounds.getXPos() + m_bounds.getXLen()/2,
+                m_bounds.getYPos() + knobBounds.getYLen() + getTextLenY()/2);
         }else{
-            text(m_name, m_pos.x + m_len.x/2, m_pos.y + getKnobLen() + getTextLenY()/2);
+            text(m_name, 
+                m_bounds.getXPos() + m_bounds.getXLen()/2,
+                m_bounds.getYPos() + knobBounds.getYLen() + getTextLenY()/2);
         }
         
         
     }
 
-    private float getKnobLen(){
-        return (0.8 * m_len.x);
+
+    private Bounds getKnobBounds(){
+        return m_bounds.withoutBottomRatio(0.2).withCenteredSquare();
     }
 
     private float getTextLenY(){
@@ -242,8 +217,8 @@ class Tickbox extends Controller{
     protected String m_name;
 
 
-    Tickbox(float xPos, float yPos, float xLen, float yLen, String name){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+    Tickbox(Bounds b, String name){
+        super(b);
 
         m_backgroundColor1 = color(100, 100, 100);
         m_backgroundColor2 = color(50, 50, 50);
@@ -256,10 +231,7 @@ class Tickbox extends Controller{
     protected void click(){
         if(mousePressed && m_firstClick){
             m_firstClick = false;
-            if( mouseX >= m_pos.x && 
-                mouseX <= m_pos.x + m_len.x && 
-                mouseY >= m_pos.y && 
-                mouseY <= m_pos.y + m_len.y){
+            if( m_bounds.checkHitbox(mouseX, mouseY) ){
 
                 m_mouseClicked.x = mouseX;
                 m_mouseClicked.y = mouseY;
@@ -288,14 +260,14 @@ class Tickbox extends Controller{
 
     protected void draw(){
         pushMatrix();
-        translate(m_pos.x, m_pos.y);
+        //translate(m_pos.x, m_pos.y);
 
-        float rounding = ((m_len.x < m_len.y)? m_len.x : m_len.y)/4;
+        float rounding = min(m_bounds.getXLen(), m_bounds.getYLen())/4;
 
         //Background
         noStroke();
         fill(m_backgroundColor2);
-        rect(0, 0, m_len.x, m_len.y, rounding);
+        rect(m_bounds, rounding);
         float indent = 0.1;
 
         drawTick(indent, rounding);
@@ -303,7 +275,9 @@ class Tickbox extends Controller{
         fill(m_textColor);
         textAlign(LEFT);
         textSize(m_textSize);
-        text(m_name, 4 * m_len.x/3, m_len.y/2 + m_textSize/3);
+        text(m_name, 
+            m_bounds.getXPos() + 4 * m_bounds.getXLen()/3,
+            m_bounds.getYPos() + m_bounds.getYLen()/2 + m_textSize/3);
 
         popMatrix();
     }
@@ -318,13 +292,13 @@ class Tickbox extends Controller{
             fill(m_backgroundColor1);
         }
 
-        rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+        rect(m_bounds.withFrameRatio(indent), rounding);
 
         //Highlight
         if(m_pressed){
             noStroke();
             fill(255, 100);
-            rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+            rect(m_bounds.withFrameRatio(indent), rounding);
         }
     }
 
@@ -346,8 +320,8 @@ class Button extends Tickbox{
     protected int m_cooldown = 20;
     protected int m_tickCooldown = m_cooldown;
 
-    Button(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen, "");
+    Button(Bounds b){
+        super(b, "");
     }
 
     protected void adjust(){
@@ -382,10 +356,10 @@ class Button extends Tickbox{
     protected void drawTick(float indent, float rounding){
         noStroke();
         fill(m_backgroundColor1);
-        rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+        rect(m_bounds.withFrameRatio(indent), rounding);
 
         fill(m_fillColor, map(m_tickCooldown, 0, 20, 255, 0));
-        rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+        rect(m_bounds.withFrameRatio(indent), rounding);
 
         drawTickSymbol(indent, rounding);
 
@@ -394,7 +368,7 @@ class Button extends Tickbox{
     protected void drawTickSymbol(float indent, float rounding){
         if(m_pressed){
             fill(255,100);
-            rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+            rect(m_bounds.withFrameRatio(indent), rounding);
         }
     }
 }
@@ -402,27 +376,40 @@ class Button extends Tickbox{
 //===========================================================
 
 class SkipButton extends Button{
-    SkipButton(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen);
+    SkipButton(Bounds b){
+        super(b);
     }
 
     protected void drawTickSymbol(float indent, float rounding){
+        Bounds b = m_bounds.withFrameRatio(3 * indent);
+
         fill(m_backgroundColor2);
-        rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+        //rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+        rect(b.withoutLeftRatio(0.6));
+        
+        pushMatrix();
+        translate(b);
         beginShape();
-            vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
-            vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
-            vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+            vertex(0, 0);
+            vertex(0, b.getYLen());
+            //vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+            vertex(0.6 * b.getXLen(), 0.5 * b.getYLen());
         endShape();
+        popMatrix();
 
         if(m_pressed){
             fill(255,100);
-            rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+            rect(b.withoutLeftRatio(0.6));
+            
+            pushMatrix();
+            translate(b);
             beginShape();
-            vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
-            vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
-            vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+                vertex(0, 0);
+                vertex(0, b.getYLen());
+                //vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+                vertex(0.6 * b.getXLen(), 0.5 * b.getYLen());
             endShape();
+            popMatrix();
         }
     }
 }
@@ -431,8 +418,8 @@ class SkipButton extends Button{
 
 class PlayButton extends Tickbox{
 
-    PlayButton(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen, "");
+    PlayButton(Bounds b){
+        super(b, "");
 
         m_value = false;
     }
@@ -447,36 +434,47 @@ class PlayButton extends Tickbox{
             fill(m_backgroundColor1);
         }
 
-        rect(m_len.x * indent, m_len.y * indent, m_len.x * (1 - 2 * indent), m_len.y * (1 - 2 * indent), rounding);
+        rect(m_bounds.withFrameRatio(indent), rounding);
+
+        Bounds b = m_bounds.withFrameRatio(3 * indent);
 
         if(m_value){//PAUSE
             noStroke();
             fill(m_backgroundColor2);
-            rect(m_len.x * 3 * indent, m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
-            rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+            rect(b.withoutLeftRatio(0.6));
+            rect(b.withoutRightRatio(0.6));
 
             if(m_pressed){
                 fill(255, 100);
-                rect(m_len.x * 3 * indent, m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
-                rect(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y * 3 * indent, m_len.x * 2 * (1 - 6 * indent)/5, m_len.y * (1 - 6 * indent));
+                rect(b.withoutLeftRatio(0.6));
+                rect(b.withoutRightRatio(0.6));
             }
         }else{//PLAY
             noStroke();
             fill(m_fillColor);
 
+            pushMatrix();
+            translate(b);
             beginShape();
-            vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
-            vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
-            vertex(m_len.x - m_len.x * 3 * indent, m_len.y/2);
+                vertex(0, 0);
+                vertex(0, b.getYLen());
+                //vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+                vertex(b.getXLen(), 0.5 * b.getYLen());
             endShape();
+            popMatrix();
 
             if(m_pressed){
                 fill(255,100);
+
+                pushMatrix();
+                translate(b);
                 beginShape();
-                vertex(m_len.x * 3 * indent, m_len.y * 3 * indent);
-                vertex(m_len.x * 3 * indent, m_len.y - m_len.y * 3 * indent);
-                vertex(m_len.x - m_len.x * 3 * indent, m_len.y/2);
+                    vertex(0, 0);
+                    vertex(0, b.getYLen());
+                    //vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+                    vertex(b.getXLen(), 0.5 * b.getYLen());
                 endShape();
+                popMatrix();
             }
         }
     }
@@ -487,8 +485,8 @@ class PlayButton extends Tickbox{
 class LinkButton extends Button{
     String m_link;
 
-    LinkButton(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen);
+    LinkButton(Bounds b){
+        super(b);
     }
 
     public void setLink(String link){
@@ -502,9 +500,19 @@ class LinkButton extends Button{
     }
 
     protected void drawTickSymbol(float indent, float rounding){
-        strokeWeight(m_len.x * indent);
+        Bounds b = m_bounds.withFrameRatio(3 * indent);
+
+        strokeWeight(m_bounds.getXLen() * indent);
         stroke(m_backgroundColor2);
-        line(3 * indent * m_len.x,
+
+        pushMatrix();
+        translate(b);
+        line(0, b.getYLen(), b.getXLen(), 0);
+        line(b.getXLen() / 2, 0, b.getXLen(), 0);
+        line(b.getXLen(), b.getXLen() / 2, b.getXLen(), 0);
+        popMatrix();
+
+        /*line(3 * indent * m_len.x,
             m_len.y - 3 * indent * m_len.y,
             m_len.x - 3 * indent * m_len.x,
             3 * indent * m_len.y);
@@ -515,25 +523,60 @@ class LinkButton extends Button{
         line(m_len.x - 3 * indent * m_len.x,
             3 * indent * m_len.y,
             m_len.x - 3 * indent * m_len.x,
-            m_len.y / 2);
+            m_len.y / 2);*/
 
         if(m_pressed){
             stroke(255,100);
-            line(3 * indent * m_len.x,
-                m_len.y - 3 * indent * m_len.y,
-                m_len.x - 3 * indent * m_len.x,
-                3 * indent * m_len.y);
-            line(m_len.x / 2,
-                3 * indent * m_len.y,
-                m_len.x - 3 * indent * m_len.x,
-                3 * indent * m_len.y);
-            line(m_len.x - 3 * indent * m_len.x,
-                3 * indent * m_len.y,
-                m_len.x - 3 * indent * m_len.x,
-                m_len.y / 2);
+
+            pushMatrix();
+            translate(b);
+            line(0, b.getYLen(), b.getXLen(), 0);
+            line(b.getXLen() / 2, 0, b.getXLen(), 0);
+            line(b.getXLen(), b.getXLen() / 2, b.getXLen(), 0);
+            popMatrix();
         }
     }
 }
 
+//===========================================================
+
+class QuestionMarkTickbox extends Tickbox{
+    QuestionMarkTickbox(Bounds b){
+        super(b, "");
+
+        m_value = false;
+    }
+
+    protected void drawTick(float indent, float rounding){
+        //Tick
+        if(m_value){
+            
+            fill(m_fillColor);
+        }else{
+            fill(m_backgroundColor1);
+        }
+        noStroke();
+        rect(m_bounds.withFrameRatio(indent), rounding);
+
+        //Questionmark
+        if(m_value){
+            
+            fill(m_backgroundColor2);
+        }else{
+            fill(m_fillColor);
+        }
+        textSize(m_bounds.getYLen());
+        textAlign(CENTER);
+        text("?", m_bounds.getXPos() + m_bounds.getXLen()/2,
+                m_bounds.getYPos() + m_bounds.getYLen()/2 + 3 * m_bounds.getYLen()/8);
+
+        //Highlight
+        if(m_pressed){
+            noStroke();
+            fill(255, 100);
+            rect(m_bounds.withFrameRatio(indent), rounding);
+        }
+    }
+}
 
 

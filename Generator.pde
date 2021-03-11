@@ -1,6 +1,5 @@
 class Generator{
-    protected PVector m_pos;
-    protected PVector m_len;
+    protected Bounds m_bounds;
     private float m_spacer;
 
     int m_time = 0;
@@ -14,9 +13,8 @@ class Generator{
     
     
 
-    Generator(float xPos, float yPos, float xLen, float yLen, float spacer, int arrayLength){
-        m_pos = new PVector(xPos, yPos);
-        m_len = new PVector(xLen, yLen);
+    Generator(Bounds b, float spacer, int arrayLength){
+        m_bounds = b;
         m_spacer = spacer;
 
         m_data = new float[arrayLength];
@@ -24,35 +22,36 @@ class Generator{
             m_data[i] = 0;
         }
 
-        m_switch = new Tickbox(m_pos.x,
-                                m_pos.y,
-                                (m_len.y - m_spacer) / 2,
-                                (m_len.y - m_spacer) / 2,
+        Bounds bTop = m_bounds.withoutBottom( m_spacer ).withoutBottomRatio( 0.5 );
+        Bounds bMiddle = m_bounds.withYFrame( (m_bounds.getYLen() - m_spacer)/2 );
+        Bounds bBottom = m_bounds.withoutTop( m_spacer ).withoutTopRatio( 0.5 );
+
+        m_switch = new Tickbox(bTop.withLeftSquare(),
                                 "Generator");
 
         m_knob = new Knob[3];
 
-        m_knob[0] = new Knob(m_pos.x, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Frequency");
+        m_knob[0] = new Knob(bMiddle.asSectionOfXDivisions(0, 3), "Frequency");
         m_knob[0].setRealValueRange(0.5, m_data.length);
         m_knob[0].setRealValue(1);
 
-        m_knob[1] = new Knob(m_pos.x + 1 * m_len.x / 3, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Phase");
+        m_knob[1] = new Knob(bMiddle.asSectionOfXDivisions(1, 3), "Phase");
         m_knob[1].setRealValueRange(0, TWO_PI);
         m_knob[1].setRealValue(0);
 
-        m_knob[2] = new Knob(m_pos.x + 2 * m_len.x / 3, m_pos.y + m_len.y / 2 - m_spacer / 2, m_len.x / 3, m_spacer, "Amplitude");
+        m_knob[2] = new Knob(bMiddle.asSectionOfXDivisions(2, 3), "Amplitude");
         m_knob[2].setRealValueRange(-1, 1);
         m_knob[2].setRealValue(1);
 
         String[] tempSynthModes = new String[]{"0", "sin", "tria", "squ", "saw", "noise"};
-        m_tabs = new Tabs(m_pos.x, m_pos.y + m_len.y / 2 + m_spacer / 2, m_len.x, m_len.y / 2 - m_spacer / 2, tempSynthModes);
+        m_tabs = new Tabs(bBottom, tempSynthModes);
         m_tabs.setValue(1);
     }
 
     public void update(){
         noStroke();
         fill(100, 128);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 5);
+        rect(m_bounds, 5);
 
         m_switch.update();
 
@@ -137,8 +136,8 @@ class Generator{
 
 class DFTGenerator extends Generator{
 
-    DFTGenerator(float xPos, float yPos, float xLen, float yLen, float spacer, int arrayLength){
-        super(xPos, yPos, xLen, yLen, spacer, 1);
+    DFTGenerator(Bounds b, float spacer, int arrayLength){
+        super(b, spacer, 1);
         m_knob[0].setRealValueRange(0.5, arrayLength);
         m_knob[0].setRealValue(1);
     }    
@@ -147,8 +146,8 @@ class DFTGenerator extends Generator{
 //===========================================================================
 
 class InstantGenerator extends Generator{
-    InstantGenerator(float xPos, float yPos, float xLen, float yLen, float spacer, int arrayLength){
-        super(xPos, yPos, xLen, yLen, spacer, arrayLength);
+    InstantGenerator(Bounds b, float spacer, int arrayLength){
+        super(b, spacer, arrayLength);
         m_knob[0].setRealValueRange(0.5, arrayLength / 2);
         m_knob[0].setRealValue(1);
     } 
@@ -158,7 +157,7 @@ class InstantGenerator extends Generator{
 
         noStroke();
         fill(100, 128);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 5);
+        rect(m_bounds, 5);
 
         m_switch.update();
 
