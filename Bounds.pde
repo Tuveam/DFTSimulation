@@ -149,7 +149,7 @@ class Bounds{
     }
 
     public Bounds withXFrameRatio(float frameRatio){
-        return withFrame(m_len.x * frameRatio);
+        return withXFrame(m_len.x * frameRatio);
     }
 
     public Bounds withYFrame(float frameThickness){
@@ -160,7 +160,7 @@ class Bounds{
     }
 
     public Bounds withYFrameRatio(float frameRatio){
-        return withFrame(m_len.y * frameRatio);
+        return withYFrame(m_len.y * frameRatio);
     }
 
 //_________________Squares______________________________________________________

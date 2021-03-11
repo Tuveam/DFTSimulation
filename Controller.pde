@@ -579,4 +579,169 @@ class QuestionMarkTickbox extends Tickbox{
     }
 }
 
+//===========================================================
+
+class ForwardButton extends Button{
+    ForwardButton(Bounds b){
+        super(b);
+    }
+
+    protected void draw(){
+
+        float rounding = min(m_bounds.getXLen(), m_bounds.getYLen())/4;
+
+        //Background
+        noStroke();
+        fill(m_backgroundColor2);
+        rect(m_bounds, 0, rounding, rounding, 0);
+        float indent = 0.1;
+
+        drawTick(indent, rounding);
+    }
+
+    protected void drawTick(float indent, float rounding){
+        //Tick
+        if(m_value){
+            noStroke();
+            fill(m_fillColor);
+        }else{
+            noStroke();
+            fill(m_backgroundColor1);
+        }
+
+        Bounds bTick = m_bounds.withoutRightRatio(indent).withYFrameRatio(indent);
+
+        rect(bTick, 0, rounding, rounding, 0);
+
+        drawTickSymbol(indent, rounding);
+
+        //Highlight
+        if(m_pressed){
+            noStroke();
+            fill(255, 100);
+            rect(bTick, 0, rounding, rounding, 0);
+        }
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
+        Bounds b = m_bounds.withFrameRatio(3 * indent).withCenteredSquare();
+
+        pushMatrix();
+        translate(b);
+        beginShape();
+            vertex(0, 0);
+            vertex(0, b.getYLen());
+            //vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+            vertex(b.getXLen(), 0.5 * b.getYLen());
+        noStroke();
+        fill(m_backgroundColor2);
+        endShape();
+        popMatrix();
+    }
+
+}
+
+//===========================================================
+
+class BackwardButton extends Button{
+    BackwardButton(Bounds b){
+        super(b);
+    }
+
+    protected void draw(){
+
+        float rounding = min(m_bounds.getXLen(), m_bounds.getYLen())/4;
+
+        //Background
+        noStroke();
+        fill(m_backgroundColor2);
+        rect(m_bounds, rounding, 0, 0, rounding);
+        float indent = 0.1;
+
+        drawTick(indent, rounding);
+    }
+
+    protected void drawTick(float indent, float rounding){
+        //Tick
+        if(m_value){
+            noStroke();
+            fill(m_fillColor);
+        }else{
+            noStroke();
+            fill(m_backgroundColor1);
+        }
+
+        Bounds bTick = m_bounds.withoutLeftRatio(indent).withYFrameRatio(indent);
+
+        rect(bTick, rounding, 0, 0, rounding);
+
+        drawTickSymbol(indent, rounding);
+
+        //Highlight
+        if(m_pressed){
+            noStroke();
+            fill(255, 100);
+            rect(bTick, rounding, 0, 0, rounding);
+        }
+    }
+
+    protected void drawTickSymbol(float indent, float rounding){
+        Bounds b = m_bounds.withFrameRatio(3 * indent).withCenteredSquare();
+
+        pushMatrix();
+        translate(b);
+        beginShape();
+            vertex(b.getXLen(), 0);
+            vertex(b.getXLen(), b.getYLen());
+            //vertex(m_len.x - m_len.x * (3 * indent + 2 * (1 - 6 * indent)/5), m_len.y/2);
+            vertex(0, 0.5 * b.getYLen());
+        noStroke();
+        fill(m_backgroundColor2);
+        endShape();
+        popMatrix();
+    }
+
+}
+
+//===========================================================
+
+class TutorialButton{
+    protected QuestionMarkTickbox m_questionmark;
+    protected BackwardButton m_backward;
+    protected ForwardButton m_forward;
+
+    protected int m_page = 0;
+
+    TutorialButton(Bounds b){
+        m_questionmark = new QuestionMarkTickbox(b.asSectionOfXDivisions(0, 2));
+        m_backward = new BackwardButton(b.asSectionOfXDivisions(2, 4));
+        m_forward = new ForwardButton(b.asSectionOfXDivisions(3, 4));
+    }
+
+    public void update(){
+        m_questionmark.update();
+
+        if(m_questionmark.getValue()){
+            m_backward.update();
+            m_forward.update();
+        }
+
+        if(m_backward.getValue()){
+            m_page--;
+        }
+        
+        if(m_forward.getValue()){
+            m_page++;
+        }
+    }
+
+    public int getPage(){
+        return m_page;
+    }
+
+    public void resetPage(){
+        m_page = 0;
+    }
+}
+
 

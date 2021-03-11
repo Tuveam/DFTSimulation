@@ -115,18 +115,11 @@ class SinCosTabs extends Tabs{
         if(m_value < xPartitions){
             //Upper Deck
             if(m_value > 0){//Left
-                /*rect(m_pos.x, m_pos.y,
-                    m_value * m_len.x / xPartitions,
-                    m_len.y/2, m_len.y/10);*/
                 rect(m_bounds.withoutBottomRatio(0.5).fromToSectionOfXDivisions(0, m_value, xPartitions),
                     m_bounds.getYLen()/10);
             }
 
             if(m_value < xPartitions - 1){//Right
-                /*rect(m_pos.x + (m_value + 1) * m_len.x / xPartitions,
-                    m_pos.y,
-                    (xPartitions - 1 - m_value) * m_len.x / xPartitions,
-                    m_len.y/2, m_len.y/10);*/
                 rect(m_bounds.withoutBottomRatio(0.5).fromToSectionOfXDivisions(m_value + 1, xPartitions, xPartitions),
                     m_bounds.getYLen()/10);
             }
@@ -139,45 +132,27 @@ class SinCosTabs extends Tabs{
 
             //Lower Deck
             if((m_value % xPartitions) > 0){//Left
-                /*rect(m_pos.x,
-                    m_pos.y + m_len.y/2,
-                    (m_value % xPartitions) * m_len.x / xPartitions,
-                    m_len.y/2, m_len.y/10);*/
                 rect( m_bounds.withoutTopRatio(0.5).fromToSectionOfXDivisions(0, m_value % xPartitions, xPartitions) );
             }
 
             if((m_value % xPartitions) < xPartitions - 1){
-                /*rect(m_pos.x + ((m_value % xPartitions) + 1) * m_len.x / xPartitions,
-                    m_pos.y + m_len.y/2,
-                    (xPartitions - 1 - (m_value % xPartitions)) * m_len.x / xPartitions,
-                    m_len.y/2, m_len.y/10);*/
-                rect( m_bounds.withoutTopRatio(0.5).fromToSectionOfXDivisions( (m_value % xPartitions) - 1, xPartitions, xPartitions) );
+                rect( m_bounds.withoutTopRatio(0.5).fromToSectionOfXDivisions( (m_value % xPartitions) + 1, xPartitions, xPartitions) );
             }
         }
         
         //Marked Tab
         noStroke();
         fill(m_fillColor);
-        /*rect(m_pos.x + (m_value % xPartitions) * m_len.x / xPartitions,
-            m_pos.y + m_len.y/10 + (m_value / xPartitions) * m_len.y * 2 / 5,
-            m_len.x / xPartitions,
-            m_len.y * 2 / 5);*/
-        rect( m_bounds.withYFrameRatio(0.1
-                        ).withoutBottomRatio(0.5
-                        ).withYPos( m_bounds.getYPos() + (m_value / xPartitions) * m_bounds.getYLen() * 0.4 
+        rect( m_bounds.withoutBottomRatio(0.6
+                        ).withYPos( m_bounds.getYPos() + ((m_value / xPartitions) * 0.4 + 0.1) * m_bounds.getYLen() 
                         ).asSectionOfXDivisions(m_value % xPartitions, xPartitions) );
 
 
         //Lines
         stroke(m_backgroundColor1);
         strokeWeight(2);
-        //line(m_pos.x, m_pos.y + m_len.y/2, m_pos.x + m_len.x, m_pos.y + m_len.y/2);
 
         for(int i = 1; i < xPartitions; i++){
-            /*line(m_pos.x + i * m_len.x / xPartitions,
-                m_pos.y + m_len.y/10,
-                m_pos.x + i * m_len.x / xPartitions,
-                m_pos.y + 9 * m_len.y/10);*/
             line(m_bounds.getXPos() + i * m_bounds.getXLen()/xPartitions,
                 m_bounds.getYPos() + m_bounds.getYLen()/10,
                 m_bounds.getXPos() + i * m_bounds.getXLen()/xPartitions,
