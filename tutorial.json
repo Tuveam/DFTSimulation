@@ -1,0 +1,83 @@
+[
+
+    {
+        "label":"tab_+&x",
+        "content": [
+            {
+                "label":"page_intro",
+                "content":"tutorial-text-template",
+                "control":[
+                    {
+                        "ID":0,
+                        "targetValue":0.9
+                    }
+                ]
+            }
+        ]
+    },
+
+    {
+        "label":"tab_Aliasing",
+        "content": [
+            {
+                "label":"page_intro",
+                "content":"tutorial-text-template",
+                "control":[
+                    {
+                        "ID":0,
+                        "targetValue":0.9
+                    }
+                ]
+            }
+        ]
+    },
+
+    {
+        "label":"tab_DFT",
+        "content": [
+            {
+                "label":"page_intro",
+                "content":"tutorial-text-template",
+                "control":[
+                    {
+                        "ID":0,
+                        "targetValue":0.9
+                    }
+                ]
+            }
+        ]
+    },
+
+    {
+        "label":"tab_Info",
+        "content": [
+            {
+                "label":"page_intro",
+                "content":"tutorial-text-template",
+                "control":[
+                    {
+                        "ID":0,
+                        "targetValue":0.9
+                    }
+                ]
+            }
+        ]
+    },
+
+    {
+        "label":"tab_template",
+        "content": [
+            {
+                "label":"page_template",
+                "content":"tutorial-text-template",
+                "control":[
+                    {
+                        "ID":0,
+                        "targetValue":0.9
+                    }
+                ]
+            }
+        ]
+    }
+
+]

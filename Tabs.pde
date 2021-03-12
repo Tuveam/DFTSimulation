@@ -68,7 +68,7 @@ class Tabs extends Controller{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_textSize);
+        textFont(m_font);
         for(int i = 0; i < m_tabName.length; i++){
             text(m_tabName[i], m_bounds.getXPos() + (i + 0.5) * m_bounds.getXLen()/m_tabName.length, m_bounds.getYPos() + 5 * m_bounds.getYLen()/8);
         }
@@ -162,7 +162,7 @@ class SinCosTabs extends Tabs{
         //Tabnames
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_textSize);
+        textFont(m_font);
         for(int i = 0; i < m_tabName.length; i++){
             text(m_tabName[i],
                 m_bounds.getXPos() + ((i % xPartitions) + 0.5) * m_bounds.getXLen()/xPartitions,
@@ -222,7 +222,7 @@ class HoverTabs extends Tabs{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_textSize);
+        textFont(m_font);
         text(m_tabName[m_value], bValue.getXPos() + bValue.getXLen()/2, bValue.getYPos() + bValue.getXLen());
 
         //m_hoverValue-Rectangle
@@ -234,7 +234,7 @@ class HoverTabs extends Tabs{
 
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_textSize);
+        textFont(m_font);
         text(m_tabName[m_hoverValue], bHoverValue.getXPos() + bHoverValue.getXLen()/2, bHoverValue.getYPos() + bHoverValue.getXLen());
     }
 
@@ -304,26 +304,16 @@ class VerticalTabs extends Tabs{
         //Unmarked Tabs
         //Upper
         if(m_value > 0){
-            //rect(m_pos.x, m_pos.y, m_len.x, m_value * m_len.y/m_tabName.length, m_len.x/5);
             rect( m_bounds.fromToSectionOfYDivisions(0, m_value, m_tabName.length), m_bounds.getXLen()/5 );
         }
 
         //Lower
         if(m_value < (m_tabName.length - 1)){
-            /*rect(m_pos.x,
-                m_pos.y + (m_value + 1) * m_len.y/m_tabName.length,
-                m_len.x,
-                (m_tabName.length - (m_value + 1)) * m_len.y/m_tabName.length,
-                m_len.x/5);*/
             rect( m_bounds.fromToSectionOfYDivisions(m_value + 1, m_tabName.length, m_tabName.length), m_bounds.getXLen()/5 );
         }
 
         //Marked Tab
         fill(m_fillColor);
-        /*rect(m_pos.x,
-            m_pos.y + m_value * m_len.y/m_tabName.length,
-            4 * m_len.x/5, 
-            m_len.y/m_tabName.length);*/
         rect( m_bounds.asSectionOfYDivisions(m_value, m_tabName.length).withoutRightRatio( 0.2 ) );
 
         //Lines
@@ -339,7 +329,7 @@ class VerticalTabs extends Tabs{
         //Text
         fill(m_textColor);
         textAlign(CENTER);
-        textSize(m_textSize);
+        textFont(m_font);
         for(int i = 0; i < m_tabName.length; i++){
             pushMatrix();
             translate(m_bounds.getXPos() + 5 * m_bounds.getXLen()/8,

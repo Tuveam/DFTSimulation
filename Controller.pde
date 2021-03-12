@@ -14,6 +14,7 @@ class Controller{
     protected color m_textColor;
 
     protected float m_textSize = 15;
+    protected PFont m_font;
 
     Controller(Bounds b){
         m_bounds = new Bounds(b);
@@ -22,6 +23,7 @@ class Controller{
         m_backgroundColor1 = color(100, 100, 100);
         m_backgroundColor2 = color(50, 50, 50);
         m_textColor = color(200, 200, 200);
+        m_font = createFont("Arial", m_textSize);
         
         m_mouseClicked = new PVector(mouseX, mouseY);
     }
@@ -125,27 +127,22 @@ class Knob extends Controller{
 
         Bounds knobBounds = getKnobBounds();
 
-        //pushMatrix();
-        //translate(m_pos.x + m_len.x / 2, m_pos.y + getKnobLen() / 2);
 
         //Bar
         noStroke();
         fill(m_backgroundColor1);
-        //arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, PI * 9 / 4, PIE);
         arc(knobBounds, PI * 3 / 4, PI * 9 / 4, PIE);
 
         //Fill
         float angle = map(m_value, 0, 1, PI * 3 / 4, PI * 9 / 4);
         noStroke();
         fill(m_fillColor);
-        //arc(0, 0, getKnobLen(), getKnobLen(), PI * 3 / 4, angle, PIE);
         arc(knobBounds, PI * 3 / 4, angle, PIE);
 
         
         //Cap
         noStroke();
         fill(m_backgroundColor2);
-        //ellipse(0, 0, 0.8 * getKnobLen(), 0.8 * getKnobLen());
         ellipse(knobBounds.withFrameRatio(0.1));
 
         //indicator line
@@ -156,12 +153,11 @@ class Knob extends Controller{
             knobBounds.getXPos() + knobBounds.getXLen()/2 + 0.3 * knobBounds.getXLen() * cos(angle), 
             knobBounds.getYPos() + knobBounds.getYLen()/2 + 0.3 * knobBounds.getYLen() * sin(angle));
 
-        //popMatrix();
 
         //name
         textAlign(CENTER);
         fill(m_textColor);
-        textSize(getTextLenY());
+        textFont(m_font);
         if(m_selected){
             text(getRealValue(),
                 m_bounds.getXPos() + m_bounds.getXLen()/2,
@@ -274,7 +270,7 @@ class Tickbox extends Controller{
 
         fill(m_textColor);
         textAlign(LEFT);
-        textSize(m_textSize);
+        textFont(m_font);
         text(m_name, 
             m_bounds.getXPos() + 4 * m_bounds.getXLen()/3,
             m_bounds.getYPos() + m_bounds.getYLen()/2 + m_textSize/3);
@@ -565,6 +561,7 @@ class QuestionMarkTickbox extends Tickbox{
         }else{
             fill(m_fillColor);
         }
+        textFont(m_font);
         textSize(m_bounds.getYLen());
         textAlign(CENTER);
         text("?", m_bounds.getXPos() + m_bounds.getXLen()/2,
@@ -733,6 +730,10 @@ class TutorialButton{
         if(m_forward.getValue()){
             m_page++;
         }
+    }
+
+    public boolean isOn(){
+        return m_questionmark.getValue();
     }
 
     public int getPage(){
