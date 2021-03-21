@@ -55,6 +55,7 @@ class AliasInputSection extends GUISection{
                                 "Samplerate");
         m_sampleRate.setRealValueRange(1, maxSamplerate);
         m_sampleRate.setRealValue(20);
+        m_sampleRate.setSnapSteps(maxSamplerate - 1);
 
         m_graphDisplay = new AliasGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,

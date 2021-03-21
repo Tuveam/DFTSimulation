@@ -93,6 +93,7 @@ class MenuSection extends GUISection{
         m_skipButton = new SkipButton(new Bounds(m_pos.x + m_len.x - 3 * m_spacer, m_pos.y, m_spacer, m_spacer));
         m_sampleRateKnob = new Knob(new Bounds(m_pos.x + m_len.x - 2 * m_spacer, m_pos.y, m_spacer, m_spacer), "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
+        m_sampleRateKnob.setSnapSteps(59);
     }
 
     public void update(){

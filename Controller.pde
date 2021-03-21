@@ -64,6 +64,7 @@ class Knob extends Controller{
     private float m_maxRealValue = 1;
 
     private float m_sensitivity = 4;
+    private int m_snapSteps;
 
     private String m_name;
     
@@ -74,6 +75,8 @@ class Knob extends Controller{
         m_value = 0.8;
 
         m_name = name;
+
+        m_snapSteps = 4;
         
     }
 
@@ -98,17 +101,38 @@ class Knob extends Controller{
     protected void adjust(){
         if(m_selected){
             float actualSensitivity = m_sensitivity;
+            boolean isSnapping = false;
 
             if(keyPressed && key == CODED){
                 if(keyCode == ALT){
                     actualSensitivity = 10 * m_sensitivity;
                 }
+
+                if(keyCode == CONTROL){
+                    isSnapping = true;
+                    actualSensitivity = m_snapSteps * m_sensitivity / 10.0f;
+                }
             }
 
-            m_value = m_value + (m_mouseClicked.y - mouseY) / (m_bounds.getYLen() * actualSensitivity);
+            if(isSnapping){
+                float newValue = map( round( map(
+                                m_value + (m_mouseClicked.y - mouseY) / (m_bounds.getYLen() * actualSensitivity),
+                                0, 1, 0, m_snapSteps)),
+                                0, m_snapSteps, 0, 1);
+                if(m_value != newValue){
+                    m_value = newValue;
 
-            m_mouseClicked.x = mouseX;
-            m_mouseClicked.y = mouseY;
+                    m_mouseClicked.x = mouseX;
+                    m_mouseClicked.y = mouseY;
+                }
+
+            }else{
+                m_value = m_value + (m_mouseClicked.y - mouseY) / (m_bounds.getYLen() * actualSensitivity);
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+            }
+
+            
 
             if(m_value < 0){
                 m_value = 0;
@@ -199,6 +223,10 @@ class Knob extends Controller{
 
     public float getMaxRealValue(){
         return m_maxRealValue;
+    }
+
+    public void setSnapSteps(int snapSteps){
+        m_snapSteps = snapSteps;
     }
 }
 

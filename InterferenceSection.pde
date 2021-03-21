@@ -47,6 +47,8 @@ class InterferenceInputSection extends GUISection{
                                             (m_len.y - 3 * m_spacer/4) / m_generator.length - m_spacer/4),
                                             m_spacer,
                                             resolution);
+            m_generator[i].setFrequencyRange(0.5, 25);
+            m_generator[i].setFrequency(1);
         }
 
         m_graphDisplay = new ContinuousGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,

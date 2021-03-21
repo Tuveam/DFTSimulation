@@ -88,6 +88,7 @@ class AliasInputSection extends GUISection{
                                 "Samplerate");
         m_sampleRate.setRealValueRange(1, maxSamplerate);
         m_sampleRate.setRealValue(20);
+        m_sampleRate.setSnapSteps(maxSamplerate - 1);
 
         m_graphDisplay = new AliasGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
                                             m_pos.y + m_spacer/2,
@@ -882,6 +883,7 @@ class Knob extends Controller{
     private float m_maxRealValue = 1;
 
     private float m_sensitivity = 4;
+    private int m_snapSteps;
 
     private String m_name;
     
@@ -892,6 +894,8 @@ class Knob extends Controller{
         m_value = 0.8f;
 
         m_name = name;
+
+        m_snapSteps = 4;
         
     }
 
@@ -916,17 +920,38 @@ class Knob extends Controller{
     protected void adjust(){
         if(m_selected){
             float actualSensitivity = m_sensitivity;
+            boolean isSnapping = false;
 
             if(keyPressed && key == CODED){
                 if(keyCode == ALT){
                     actualSensitivity = 10 * m_sensitivity;
                 }
+
+                if(keyCode == CONTROL){
+                    isSnapping = true;
+                    actualSensitivity = m_snapSteps * m_sensitivity / 10.0f;
+                }
             }
 
-            m_value = m_value + (m_mouseClicked.y - mouseY) / (m_bounds.getYLen() * actualSensitivity);
+            if(isSnapping){
+                float newValue = map( round( map(
+                                m_value + (m_mouseClicked.y - mouseY) / (m_bounds.getYLen() * actualSensitivity),
+                                0, 1, 0, m_snapSteps)),
+                                0, m_snapSteps, 0, 1);
+                if(m_value != newValue){
+                    m_value = newValue;
 
-            m_mouseClicked.x = mouseX;
-            m_mouseClicked.y = mouseY;
+                    m_mouseClicked.x = mouseX;
+                    m_mouseClicked.y = mouseY;
+                }
+
+            }else{
+                m_value = m_value + (m_mouseClicked.y - mouseY) / (m_bounds.getYLen() * actualSensitivity);
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+            }
+
+            
 
             if(m_value < 0){
                 m_value = 0;
@@ -1017,6 +1042,10 @@ class Knob extends Controller{
 
     public float getMaxRealValue(){
         return m_maxRealValue;
+    }
+
+    public void setSnapSteps(int snapSteps){
+        m_snapSteps = snapSteps;
     }
 }
 
@@ -1659,6 +1688,7 @@ class MenuSection extends GUISection{
         m_skipButton = new SkipButton(new Bounds(m_pos.x + m_len.x - 3 * m_spacer, m_pos.y, m_spacer, m_spacer));
         m_sampleRateKnob = new Knob(new Bounds(m_pos.x + m_len.x - 2 * m_spacer, m_pos.y, m_spacer, m_spacer), "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
+        m_sampleRateKnob.setSnapSteps(59);
     }
 
     public void update(){
@@ -2090,10 +2120,12 @@ class Generator{
         m_knob[0] = new Knob(bMiddle.asSectionOfXDivisions(0, 3), "Frequency");
         m_knob[0].setRealValueRange(0.5f, m_data.length);
         m_knob[0].setRealValue(1);
+        m_knob[0].setSnapSteps(2 * m_data.length - 1);
 
         m_knob[1] = new Knob(bMiddle.asSectionOfXDivisions(1, 3), "Phase");
         m_knob[1].setRealValueRange(0, TWO_PI);
         m_knob[1].setRealValue(0);
+        m_knob[1].setSnapSteps(12);
 
         m_knob[2] = new Knob(bMiddle.asSectionOfXDivisions(2, 3), "Amplitude");
         m_knob[2].setRealValueRange(-1, 1);
@@ -2180,6 +2212,7 @@ class Generator{
 
     public void setFrequencyRange(float minFrequency, float maxFrequency){
         m_knob[0].setRealValueRange(minFrequency, maxFrequency);
+        m_knob[0].setSnapSteps(PApplet.parseInt(2 * maxFrequency - 1));
     }
 
     public void setFrequency(float frequency){
@@ -2196,6 +2229,7 @@ class DFTGenerator extends Generator{
         super(b, spacer, 1);
         m_knob[0].setRealValueRange(0.5f, arrayLength);
         m_knob[0].setRealValue(1);
+        m_knob[0].setSnapSteps(2 * arrayLength - 1);
     }    
 }
 
@@ -2206,6 +2240,7 @@ class InstantGenerator extends Generator{
         super(b, spacer, arrayLength);
         m_knob[0].setRealValueRange(0.5f, arrayLength / 2);
         m_knob[0].setRealValue(1);
+        m_knob[0].setSnapSteps(2 * arrayLength - 1);
     } 
 
     public void update(){
@@ -2587,6 +2622,8 @@ class InterferenceInputSection extends GUISection{
                                             (m_len.y - 3 * m_spacer/4) / m_generator.length - m_spacer/4),
                                             m_spacer,
                                             resolution);
+            m_generator[i].setFrequencyRange(0.5f, 25);
+            m_generator[i].setFrequency(1);
         }
 
         m_graphDisplay = new ContinuousGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,

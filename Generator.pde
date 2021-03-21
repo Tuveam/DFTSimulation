@@ -34,10 +34,12 @@ class Generator{
         m_knob[0] = new Knob(bMiddle.asSectionOfXDivisions(0, 3), "Frequency");
         m_knob[0].setRealValueRange(0.5, m_data.length);
         m_knob[0].setRealValue(1);
+        m_knob[0].setSnapSteps(2 * m_data.length - 1);
 
         m_knob[1] = new Knob(bMiddle.asSectionOfXDivisions(1, 3), "Phase");
         m_knob[1].setRealValueRange(0, TWO_PI);
         m_knob[1].setRealValue(0);
+        m_knob[1].setSnapSteps(12);
 
         m_knob[2] = new Knob(bMiddle.asSectionOfXDivisions(2, 3), "Amplitude");
         m_knob[2].setRealValueRange(-1, 1);
@@ -124,6 +126,7 @@ class Generator{
 
     public void setFrequencyRange(float minFrequency, float maxFrequency){
         m_knob[0].setRealValueRange(minFrequency, maxFrequency);
+        m_knob[0].setSnapSteps(int(2 * maxFrequency - 1));
     }
 
     public void setFrequency(float frequency){
@@ -140,6 +143,7 @@ class DFTGenerator extends Generator{
         super(b, spacer, 1);
         m_knob[0].setRealValueRange(0.5, arrayLength);
         m_knob[0].setRealValue(1);
+        m_knob[0].setSnapSteps(2 * arrayLength - 1);
     }    
 }
 
@@ -150,6 +154,7 @@ class InstantGenerator extends Generator{
         super(b, spacer, arrayLength);
         m_knob[0].setRealValueRange(0.5, arrayLength / 2);
         m_knob[0].setRealValue(1);
+        m_knob[0].setSnapSteps(2 * arrayLength - 1);
     } 
 
     public void update(){
