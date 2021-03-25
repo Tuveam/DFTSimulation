@@ -3719,7 +3719,7 @@ class TextBox{
         text(m_text[0], m_bounds.getXPos(), m_bounds.getYPos());
     }
 }
-  public void settings() {  size(1200,800); }
+  public void settings() {  size(1250,850); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "DFTSimulation" };
     if (passedArgs != null) {

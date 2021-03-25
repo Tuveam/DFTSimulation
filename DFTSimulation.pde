@@ -5,7 +5,7 @@ MainSection m;
 
 
 void setup(){
-    size(1200,800);
+    size(1250,850);
 
     savePNG();
 
