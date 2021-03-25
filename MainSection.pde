@@ -10,6 +10,9 @@ class MainSection extends GUISection{
 
     MainSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+
+        savePNG();
+
         textFont(createFont("Arial", 20));
 
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};

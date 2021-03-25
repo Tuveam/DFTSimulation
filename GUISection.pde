@@ -2,11 +2,17 @@ class GUISection{
     protected PVector m_pos;
     protected PVector m_len;
 
+    protected color m_backgroundColor;
+
     protected float m_spacer = 65;
 
     GUISection(PVector pos, PVector len){
         m_pos = pos;
         m_len = len;
+
+        ColorLoader.construct(loadImage("ColorPalette.png"));
+
+        m_backgroundColor = ColorLoader.getBackgroundColor(0);
 
         initializeControllers();
         initializeSections();
@@ -37,7 +43,7 @@ class GUISection{
 
     protected void drawBackground(){
         noStroke();
-        fill(10);
+        fill(m_backgroundColor);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
     }
 

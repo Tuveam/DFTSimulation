@@ -63,12 +63,8 @@ class AliasInputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             resolution,
                                             maxSamplerate);
-    }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(13, 37, 51);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void drawComponents(){
@@ -107,12 +103,8 @@ class InterpolationSection extends GUISection{
                                             m_pos.y + m_spacer/2,
                                             m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
                                             m_len.y - m_spacer);
-    }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(51, 13, 37);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void drawComponents(){

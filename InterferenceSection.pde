@@ -60,6 +60,8 @@ class InterferenceInputSection extends GUISection{
 
         m_graphDisplay.setColor(0, color(75, 75, 200));
         m_graphDisplay.setColor(1, color(200, 75, 75));
+
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     public void setOutputMode(int mode){
@@ -111,12 +113,6 @@ class InterferenceInputSection extends GUISection{
         return ret;
     }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(13, 37, 51);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
-    }
-
     protected void drawComponents(){
         m_sectionTickbox.update();
 
@@ -157,12 +153,8 @@ class InterferenceOutputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             resolution,
                                             1);
-    }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(51, 13, 37);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void drawComponents(){

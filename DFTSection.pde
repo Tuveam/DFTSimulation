@@ -114,8 +114,8 @@ class MenuSection extends GUISection{
 
     protected void drawBackground(){
         noStroke();
-        fill(40);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        fill(m_backgroundColor);
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
 
         blink();
     }
@@ -184,6 +184,8 @@ class InputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             testFreqAmount,
                                             m_sampleNumber);
+
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
@@ -197,12 +199,6 @@ class InputSection extends GUISection{
                                         m_spacer/3,
                                         m_spacer/3), "Window Shape");
         
-    }
-
-    protected void drawBackground(){
-        noStroke();
-        fill(13, 37, 51);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
     }
 
     protected void drawComponents(){
@@ -292,6 +288,8 @@ class MathSection extends GUISection{
         m_tabs = new SinCosTabs(new Bounds(m_pos.x + 5 * m_spacer/2, m_pos.y + m_len.y - m_spacer/2, m_len.x - 3 * m_spacer, m_spacer/2), temp);
 
         m_mult = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, sampleNumber);
+    
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
@@ -306,13 +304,6 @@ class MathSection extends GUISection{
     protected void setSelectedFrequency(int selectedFrequency){
 
         m_tabs.setValue(selectedFrequency);
-    }
-
-
-    protected void drawBackground(){
-        noStroke();
-        fill(51, 13, 37);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
     }
 
     protected void drawComponents(){
@@ -365,6 +356,7 @@ class SpectrumSection extends GUISection{
 
         m_spectrum = new SpectrumDisplay(m_pos.x + 5 * m_spacer / 2, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer, m_len.y - m_spacer, testFreqAmount);
 
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
@@ -398,12 +390,6 @@ class SpectrumSection extends GUISection{
     protected void setSelectedFrequency(int selectedFrequency){
         m_selectedFrequency = selectedFrequency;
         m_spectrum.setSelectedFrequency(m_selectedFrequency % m_spectrum.getMaxFrequency());
-    }
-
-    protected void drawBackground(){
-        noStroke();
-        fill(37, 51, 13);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
     }
 
     protected void drawComponents(){

@@ -19,10 +19,10 @@ class Controller{
     Controller(Bounds b){
         m_bounds = new Bounds(b);
 
-        m_fillColor = color(75, 170, 75);
-        m_backgroundColor1 = color(100, 100, 100);
-        m_backgroundColor2 = color(50, 50, 50);
-        m_textColor = color(200, 200, 200);
+        m_fillColor = ColorLoader.getFillColor(0);
+        m_backgroundColor1 = ColorLoader.getGreyColor(1);
+        m_backgroundColor2 = ColorLoader.getGreyColor(2);
+        m_textColor = ColorLoader.getGreyColor(0);
         m_font = createFont("Arial", m_textSize);
         
         m_mouseClicked = new PVector(mouseX, mouseY);

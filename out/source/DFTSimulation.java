@@ -23,8 +23,12 @@ MainSection m;
 public void setup(){
     
 
+    savePNG();
+
     //fullScreen();
     m = new MainSection(0, 0, width, height);
+
+    
 }
 
 public void draw(){
@@ -96,12 +100,8 @@ class AliasInputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             resolution,
                                             maxSamplerate);
-    }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(13, 37, 51);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void drawComponents(){
@@ -140,12 +140,8 @@ class InterpolationSection extends GUISection{
                                             m_pos.y + m_spacer/2,
                                             m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
                                             m_len.y - m_spacer);
-    }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(51, 13, 37);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void drawComponents(){
@@ -817,6 +813,90 @@ class Bounds{
             endAngle,
             arcMode);
     }
+static class ColorLoader{
+
+    static private boolean m_isConstructed = false;
+    static private int[][] m_color;
+
+    ColorLoader(){
+    }
+
+    static private void construct(PImage colorPalette){
+        if(!m_isConstructed){
+            m_isConstructed = true;
+
+            colorPalette.loadPixels();
+            m_color = new int[colorPalette.height][colorPalette.width];
+
+            for(int y = 0; y < m_color.length; y++){
+                for(int x = 0; x < m_color[0].length; x++){
+                    int i = x + colorPalette.width * y;
+                    m_color[y][x] = colorPalette.pixels[i];
+                }
+                
+            }
+        }
+    }
+
+    static public int getColor(int group, int variant){
+
+        if(group < m_color.length && variant < m_color[0].length){
+            return m_color[group][variant];
+        }
+
+        return m_color[0][0];
+        
+    }
+
+    static public int getGreyColor(int variant){
+        return getColor(0, variant);
+    }
+
+    static public int getFillColor(int variant){
+        return getColor(1, variant);
+    }
+
+    static public int getGraphColor(int variant){
+        return getColor(2, variant);
+    }
+
+    static public int getBackgroundColor(int variant){
+        return getColor(3, variant);
+    }
+
+}
+
+
+public void savePNG(){
+
+    PImage temp = createImage(10, 4, RGB);
+
+    temp.loadPixels();
+
+    //global greys
+    temp.pixels[0 * temp.width + 0] = color(228, 228, 228, 255);
+    temp.pixels[0 * temp.width + 1] = color(100, 100, 100, 255);
+    temp.pixels[0 * temp.width + 2] = color(50, 50, 50, 255);
+
+    //fillcolors
+    temp.pixels[1 * temp.width + 0] = color(56, 174, 65, 255);
+    temp.pixels[1 * temp.width + 1] = color(56, 174, 65, 255);
+    temp.pixels[1 * temp.width + 2] = color(56, 174, 65, 255);
+
+    //graphcolors
+    temp.pixels[2 * temp.width + 0] = color(56, 174, 65, 255);
+    temp.pixels[2 * temp.width + 1] = color(200, 50, 50, 255);
+    temp.pixels[2 * temp.width + 2] = color(224, 211, 36, 255);
+
+    //backgroundcolors
+    temp.pixels[3 * temp.width + 0] = color(17, 53, 20, 255);
+    temp.pixels[3 * temp.width + 1] = color(65, 19, 19, 255);
+    temp.pixels[3 * temp.width + 2] = color(102, 96, 14, 255);
+
+    temp.updatePixels();
+
+    temp.save("ColorPalette.png");
+}
 class Controller{
     //private float/boolean m_value = 0;
     
@@ -838,10 +918,10 @@ class Controller{
     Controller(Bounds b){
         m_bounds = new Bounds(b);
 
-        m_fillColor = color(75, 170, 75);
-        m_backgroundColor1 = color(100, 100, 100);
-        m_backgroundColor2 = color(50, 50, 50);
-        m_textColor = color(200, 200, 200);
+        m_fillColor = ColorLoader.getFillColor(0);
+        m_backgroundColor1 = ColorLoader.getGreyColor(1);
+        m_backgroundColor2 = ColorLoader.getGreyColor(2);
+        m_textColor = ColorLoader.getGreyColor(0);
         m_font = createFont("Arial", m_textSize);
         
         m_mouseClicked = new PVector(mouseX, mouseY);
@@ -1709,8 +1789,8 @@ class MenuSection extends GUISection{
 
     protected void drawBackground(){
         noStroke();
-        fill(40);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        fill(m_backgroundColor);
+        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
 
         blink();
     }
@@ -1779,6 +1859,8 @@ class InputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             testFreqAmount,
                                             m_sampleNumber);
+
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
@@ -1792,12 +1874,6 @@ class InputSection extends GUISection{
                                         m_spacer/3,
                                         m_spacer/3), "Window Shape");
         
-    }
-
-    protected void drawBackground(){
-        noStroke();
-        fill(13, 37, 51);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
     }
 
     protected void drawComponents(){
@@ -1887,6 +1963,8 @@ class MathSection extends GUISection{
         m_tabs = new SinCosTabs(new Bounds(m_pos.x + 5 * m_spacer/2, m_pos.y + m_len.y - m_spacer/2, m_len.x - 3 * m_spacer, m_spacer/2), temp);
 
         m_mult = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, sampleNumber);
+    
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
@@ -1901,13 +1979,6 @@ class MathSection extends GUISection{
     protected void setSelectedFrequency(int selectedFrequency){
 
         m_tabs.setValue(selectedFrequency);
-    }
-
-
-    protected void drawBackground(){
-        noStroke();
-        fill(51, 13, 37);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
     }
 
     protected void drawComponents(){
@@ -1960,6 +2031,7 @@ class SpectrumSection extends GUISection{
 
         m_spectrum = new SpectrumDisplay(m_pos.x + 5 * m_spacer / 2, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer, m_len.y - m_spacer, testFreqAmount);
 
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
@@ -1995,12 +2067,6 @@ class SpectrumSection extends GUISection{
         m_spectrum.setSelectedFrequency(m_selectedFrequency % m_spectrum.getMaxFrequency());
     }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(37, 51, 13);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
-    }
-
     protected void drawComponents(){
         m_sectionTickbox.update();
 
@@ -2034,11 +2100,17 @@ class GUISection{
     protected PVector m_pos;
     protected PVector m_len;
 
+    protected int m_backgroundColor;
+
     protected float m_spacer = 65;
 
     GUISection(PVector pos, PVector len){
         m_pos = pos;
         m_len = len;
+
+        ColorLoader.construct(loadImage("ColorPalette.png"));
+
+        m_backgroundColor = ColorLoader.getBackgroundColor(0);
 
         initializeControllers();
         initializeSections();
@@ -2069,7 +2141,7 @@ class GUISection{
 
     protected void drawBackground(){
         noStroke();
-        fill(10);
+        fill(m_backgroundColor);
         rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
     }
 
@@ -2635,6 +2707,8 @@ class InterferenceInputSection extends GUISection{
 
         m_graphDisplay.setColor(0, color(75, 75, 200));
         m_graphDisplay.setColor(1, color(200, 75, 75));
+
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     public void setOutputMode(int mode){
@@ -2686,12 +2760,6 @@ class InterferenceInputSection extends GUISection{
         return ret;
     }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(13, 37, 51);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
-    }
-
     protected void drawComponents(){
         m_sectionTickbox.update();
 
@@ -2732,12 +2800,8 @@ class InterferenceOutputSection extends GUISection{
                                             m_len.y - m_spacer,
                                             resolution,
                                             1);
-    }
 
-    protected void drawBackground(){
-        noStroke();
-        fill(51, 13, 37);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y, 10);
+        m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void drawComponents(){
@@ -2772,6 +2836,9 @@ class MainSection extends GUISection{
 
     MainSection(float xPos, float yPos, float xLen, float yLen){
         super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+
+        savePNG();
+
         textFont(createFont("Arial", 20));
 
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};
