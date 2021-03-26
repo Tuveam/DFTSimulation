@@ -7,10 +7,10 @@ MainSection m;
 void setup(){
     size(1250,850);
 
-    savePNG();
+    //savePNG();
 
     //fullScreen();
-    m = new MainSection(0, 0, width, height);
+    m = new MainSection(new Bounds(0, 0, width, height));
 
     
 }

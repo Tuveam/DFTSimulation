@@ -9,15 +9,29 @@ class DFTSection extends GUISection{
     private int m_selectedFrequency = 0;
 
 
-    DFTSection(float xPos, float yPos, float xLen, float yLen, int windowLength){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+    DFTSection(Bounds b, int windowLength){
+        super(b);
 
         m_windowLength = windowLength;
 
-        m_menuSection = new MenuSection(m_pos, new PVector(m_len.x, m_spacer));
-        m_inputSection = new InputSection(new PVector(m_pos.x, m_pos.y + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), m_windowLength, m_windowLength);
-        m_mathSection = new MathSection(new PVector(m_pos.x, m_pos.y + (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), m_windowLength, m_windowLength);
-        m_spectrumSection = new SpectrumSection(new PVector(m_pos.x, m_pos.y + 2 * (m_len.y - m_spacer)/3 + m_spacer), new PVector(m_len.x, (m_len.y - m_spacer)/3), m_windowLength/2);
+        m_menuSection = new MenuSection(m_bounds.withYLen(m_spacer));
+        m_inputSection = new InputSection(
+            m_bounds.withoutTop(m_spacer
+            ).asSectionOfYDivisions(0, 3
+            ).withFrame(m_spacer/8),
+            m_windowLength,
+            m_windowLength);
+        m_mathSection = new MathSection(
+            m_bounds.withoutTop(m_spacer
+            ).asSectionOfYDivisions(1, 3
+            ).withFrame(m_spacer/8),
+            m_windowLength,
+            m_windowLength);
+        m_spectrumSection = new SpectrumSection(
+            m_bounds.withoutTop(m_spacer
+            ).asSectionOfYDivisions(2, 3
+            ).withFrame(m_spacer/8),
+            m_windowLength/2);
     }
 
     protected void preDrawUpdate(){
@@ -84,14 +98,15 @@ class MenuSection extends GUISection{
 
     int m_blink = 0;
 
-    MenuSection(PVector pos, PVector len){
-        super(pos, len);
+    MenuSection(Bounds b){
+        super(b);
     }
 
     protected void initializeControllers(){
-        m_playButton = new PlayButton(new Bounds(m_pos.x + m_len.x - 4 * m_spacer, m_pos.y, m_spacer, m_spacer));
-        m_skipButton = new SkipButton(new Bounds(m_pos.x + m_len.x - 3 * m_spacer, m_pos.y, m_spacer, m_spacer));
-        m_sampleRateKnob = new Knob(new Bounds(m_pos.x + m_len.x - 2 * m_spacer, m_pos.y, m_spacer, m_spacer), "Samplerate");
+        Bounds area = m_bounds.withoutLeft(m_bounds.getXLen() - 4 * m_spacer);
+        m_playButton = new PlayButton(area.asSectionOfXDivisions(0, 4));
+        m_skipButton = new SkipButton(area.asSectionOfXDivisions(1, 4));
+        m_sampleRateKnob = new Knob(area.asSectionOfXDivisions(2, 4), "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
         m_sampleRateKnob.setSnapSteps(59);
     }
@@ -115,7 +130,7 @@ class MenuSection extends GUISection{
     protected void drawBackground(){
         noStroke();
         fill(m_backgroundColor);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        rect(m_bounds);
 
         blink();
     }
@@ -127,12 +142,13 @@ class MenuSection extends GUISection{
 
         fill(map(m_blink, 0, 10, 0, 255), 0, 0);
         noStroke();
-        ellipse(m_pos.x + m_len.x - m_len.y/2, m_pos.y + m_len.y/2, m_len.y, m_len.y);
+        ellipse(m_bounds.withoutLeft(m_bounds.getXLen() - m_spacer));
 
         fill(200);
         textSize(20);
         textAlign(CENTER);
-        text(frameRate, m_pos.x + m_len.x - m_len.y/2, m_pos.y + m_len.y/2);
+        text(frameRate, m_bounds.getXPos() + m_bounds.getXLen() - m_spacer/2,
+            m_bounds.getYPos() + m_bounds.getYLen()/2);
 
         if(m_blink > 0){
             m_blink--;
@@ -168,20 +184,19 @@ class InputSection extends GUISection{
     boolean multiplicationChanged = true;
     boolean spectrumChanged = true;
 
-    InputSection(PVector pos, PVector len, int testFreqAmount, int sampleNumber){
-        super(pos, len);
+    InputSection(Bounds b, int testFreqAmount, int sampleNumber){
+        super(b);
+
+        Bounds area = m_bounds.withFrame(m_spacer/4);
 
         m_sampleNumber = sampleNumber;
-        m_generator = new DFTGenerator(new Bounds(m_pos.x + m_spacer/2,
-                                    m_pos.y + m_spacer / 2,
-                                    2 * m_len.x / 7,
-                                    5 * m_spacer / 3),
-                                    m_spacer,
-                                    m_sampleNumber);
-        m_signalDisplay = new SignalDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
-                                            m_pos.y + m_spacer/2,
-                                            m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
-                                            m_len.y - m_spacer,
+        m_generator = new DFTGenerator(m_bounds.withFrame(m_spacer/2
+                ).withoutRightRatio(5.0f/7
+                ).withoutRight(m_spacer/4
+                ).withYLen(m_bounds.getYLen()/2),
+                m_spacer,
+                m_sampleNumber);
+        m_signalDisplay = new SignalDisplay(area.withoutLeftRatio(2.0f/7),
                                             testFreqAmount,
                                             m_sampleNumber);
 
@@ -189,13 +204,13 @@ class InputSection extends GUISection{
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Input Signal");
-        m_testFreqTickbox = new Tickbox(new Bounds(m_pos.x + m_spacer/2,
-                                        m_pos.y + 5 * m_spacer / 2,
+        m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input Signal");
+        m_testFreqTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + m_spacer/2,
+                                        m_bounds.getYPos() + 5 * m_spacer / 2,
                                         m_spacer/3,
                                         m_spacer/3), "Test Frequency");
-        m_windowShapeTickbox = new Tickbox(new Bounds(m_pos.x + m_spacer/2,
-                                        m_pos.y + 19 * m_spacer / 6,
+        m_windowShapeTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + m_spacer/2,
+                                        m_bounds.getYPos() + 19 * m_spacer / 6,
                                         m_spacer/3,
                                         m_spacer/3), "Window Shape");
         
@@ -207,24 +222,8 @@ class InputSection extends GUISection{
         if(m_sectionTickbox.getValue()){
             m_generator.update();
 
-            noStroke();
-            fill(100, 128);
-            rect(m_pos.x + m_spacer/2,
-                m_pos.y + 5 * m_spacer / 2 - m_spacer / 12,
-                2 * m_len.x / 7,
-                m_spacer/2,
-                m_spacer/8);
-            
             m_testFreqTickbox.update();
 
-            noStroke();
-            fill(100, 128);
-            rect(m_pos.x + m_spacer/2,
-                m_pos.y + 19 * m_spacer / 6 - m_spacer / 12,
-                2 * m_len.x / 7,
-                m_spacer/2,
-                m_spacer/8);
-            
             m_windowShapeTickbox.update();
 
             m_signalDisplay.setInputVisibility(m_generator.isOn());
@@ -276,8 +275,8 @@ class MathSection extends GUISection{
     OneGraphDisplay m_mult;
 
 
-    MathSection(PVector pos, PVector len, int testFreqAmount, int sampleNumber){
-        super(pos, len);
+    MathSection(Bounds b, int testFreqAmount, int sampleNumber){
+        super(b);
 
         String[] temp = new String[testFreqAmount];
 
@@ -285,16 +284,21 @@ class MathSection extends GUISection{
             temp[i] = ("i" + (i % (temp.length/2) )).substring(1);
         }
 
-        m_tabs = new SinCosTabs(new Bounds(m_pos.x + 5 * m_spacer/2, m_pos.y + m_len.y - m_spacer/2, m_len.x - 3 * m_spacer, m_spacer/2), temp);
+        m_tabs = new SinCosTabs(m_bounds.withXFrame(m_spacer/4
+            ).withYLen(m_spacer/2
+            ).withoutLeftRatio(0.2),
+            temp);
 
-        m_mult = new OneGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7, m_len.y - m_spacer, sampleNumber);
+        m_mult = new OneGraphDisplay(m_bounds.withXFrame(m_spacer/4
+            ).withoutLeftRatio(2.0f/7
+            ).withoutTop(m_spacer/2), sampleNumber);
     
         m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
         
-        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Multiplication");
+        m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Multiplication");
     }
 
     protected int getSelectedFrequency(){
@@ -309,18 +313,20 @@ class MathSection extends GUISection{
     protected void drawComponents(){
         m_sectionTickbox.update();
 
-        if(m_sectionTickbox.getValue()){
-            m_tabs.update();
-            fill(150);
-            textSize(m_spacer /5);
-            textAlign(LEFT);
-            text("Sin",
-            m_pos.x + 2 * m_spacer,
-            m_pos.y + m_len.y - m_spacer/2 + 2 * m_spacer/9);
-            text("Cos",
-            m_pos.x + 2 * m_spacer,
-            m_pos.y + m_len.y - m_spacer/4 + 2 * m_spacer/9);
+        m_tabs.update();
+        fill(150);
+        textSize(m_spacer /5);
+        textAlign(LEFT);
+        text("Sin",
+        m_bounds.getXPos() + 3 * m_spacer,
+        m_bounds.getYPos() + 2 * m_spacer/9);
+        text("Cos",
+        m_bounds.getXPos() + 3 * m_spacer,
+        m_bounds.getYPos() + m_spacer/4 + 2 * m_spacer/9);
 
+
+        if(m_sectionTickbox.getValue()){
+            
             m_mult.draw();
         }
         
@@ -351,27 +357,29 @@ class SpectrumSection extends GUISection{
 
     private int m_selectedFrequency;
 
-    SpectrumSection(PVector pos, PVector len, int testFreqAmount){
-        super(pos, len);
+    SpectrumSection(Bounds b, int testFreqAmount){
+        super(b);
 
-        m_spectrum = new SpectrumDisplay(m_pos.x + 5 * m_spacer / 2, m_pos.y + m_spacer/2, m_len.x - 3 * m_spacer, m_len.y - m_spacer, testFreqAmount);
+        m_spectrum = new SpectrumDisplay(m_bounds.withFrame(m_spacer/4
+            ).withoutLeftRatio(0.2),
+            testFreqAmount);
 
         m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
 
     protected void initializeControllers(){
-        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Spectrum");
+        m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Spectrum");
 
-        m_sinTickbox = new Tickbox(new Bounds(m_pos.x + 4 * m_spacer/6,
-                                    m_pos.y + 4 * m_spacer/6, 
+        m_sinTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
+                                    m_bounds.getYPos() + 4 * m_spacer/6, 
                                     m_spacer/3, 
                                     m_spacer/3), "Sine");
-        m_cosTickbox = new Tickbox(new Bounds(m_pos.x + 4 * m_spacer/6,
-                                    m_pos.y + 4 * m_spacer/6 + m_spacer/2, 
+        m_cosTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
+                                    m_bounds.getYPos() + 4 * m_spacer/6 + m_spacer/2, 
                                     m_spacer/3, 
                                     m_spacer/3), "Cos");
-        m_spectrumTickbox = new Tickbox(new Bounds(m_pos.x + 4 * m_spacer/6,
-                                    m_pos.y + 4 * m_spacer/6 + m_spacer, 
+        m_spectrumTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
+                                    m_bounds.getYPos() + 4 * m_spacer/6 + m_spacer, 
                                     m_spacer/3, 
                                     m_spacer/3), "Spectrum");
 

@@ -3,13 +3,21 @@ class InterferenceSection extends GUISection{
     private InterferenceInputSection m_inputSection;
     private InterferenceOutputSection m_outputSection;
 
-    InterferenceSection(float xPos, float yPos, float xLen, float yLen, int resolution){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+    InterferenceSection(Bounds b, int resolution){
+        super(b);
 
-        resolution = floor(m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7);
+        resolution = floor(m_bounds.withFrame(m_spacer/8).withFrame(m_spacer/4).withoutLeftRatio(2.0f/7).getXLen());
 
-        m_inputSection = new InterferenceInputSection(m_pos.x, m_pos.y + m_spacer, m_len.x, (m_len.y - m_spacer) / 2, resolution);
-        m_outputSection = new InterferenceOutputSection(m_pos.x, m_pos.y + m_spacer + (m_len.y - m_spacer)/2, m_len.x, (m_len.y - m_spacer) / 2, resolution);
+        m_inputSection = new InterferenceInputSection(
+            m_bounds.withoutTop(m_spacer
+            ).asSectionOfYDivisions(0, 2
+            ).withFrame(m_spacer/8),
+            resolution);
+        m_outputSection = new InterferenceOutputSection(
+            m_bounds.withoutTop(m_spacer
+            ).asSectionOfYDivisions(1, 2
+            ).withFrame(m_spacer/8),
+            resolution);
     }
 
     protected void drawSections(){
@@ -31,35 +39,32 @@ class InterferenceInputSection extends GUISection{
 
     protected int m_outputMode = 0;
 
-    InterferenceInputSection(float xPos, float yPos, float xLen, float yLen, int resolution){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+    InterferenceInputSection(Bounds b, int resolution){
+        super(b);
 
-        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Input");
+        m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input");
 
         m_generator = new InstantGenerator[2];
 
-        
+        Bounds area = m_bounds.withFrame(m_spacer/4);
 
         for(int i = 0; i < m_generator.length; i++){
-            m_generator[i] = new InstantGenerator(new Bounds(m_pos.x + m_spacer/2,
-                                            m_pos.y + m_spacer/2 + i * (m_len.y - 3 * m_spacer/4) / m_generator.length,
-                                            2 * m_len.x / 7,
-                                            (m_len.y - 3 * m_spacer/4) / m_generator.length - m_spacer/4),
+            Bounds gen = area.withoutRightRatio(5.0f/7
+                ).asSectionOfYDivisions(i, m_generator.length
+                ).withFrame(m_spacer/4);
+            m_generator[i] = new InstantGenerator(gen,
                                             m_spacer,
                                             resolution);
             m_generator[i].setFrequencyRange(0.5, 25);
             m_generator[i].setFrequency(1);
         }
 
-        m_graphDisplay = new ContinuousGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
-                                            m_pos.y + m_spacer/2,
-                                            m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
-                                            m_len.y - m_spacer,
+        m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
                                             m_generator.length);
 
-        m_graphDisplay.setColor(0, color(75, 75, 200));
-        m_graphDisplay.setColor(1, color(200, 75, 75));
+        m_graphDisplay.setColor(0, ColorLoader.getGraphColor(0));
+        m_graphDisplay.setColor(1, ColorLoader.getGraphColor(1));
 
         m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
@@ -136,21 +141,20 @@ class InterferenceOutputSection extends GUISection{
     protected Tabs m_modeTabs;
     protected ContinuousGraphDisplay m_graphDisplay;
 
-    InterferenceOutputSection(float xPos, float yPos, float xLen, float yLen, int resolution){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
-        m_sectionTickbox = new Tickbox(new Bounds(m_pos.x, m_pos.y, m_spacer/2, m_spacer/2), "Output");
+    InterferenceOutputSection(Bounds b, int resolution){
+        super(b);
+        m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Output");
         
+        Bounds area = m_bounds.withFrame(m_spacer/4);
+
         String[] modeNames = new String[]{"Addition", "Multiplication"};
-        m_modeTabs = new Tabs(new Bounds(m_pos.x + m_spacer/2,
-                            m_pos.y + m_len.y/2 - m_spacer/4,
-                            2 * m_len.x / 7,
-                            m_spacer/2),
+        m_modeTabs = new Tabs(area.withYLen(m_spacer/2
+                            ).withoutRightRatio(5.0f/7
+                            ).withoutLeft(m_spacer/4
+                            ).withYPos(area.getYPos() + area.getYLen()/2 - m_spacer/4),
                             modeNames);
 
-        m_graphDisplay = new ContinuousGraphDisplay(m_pos.x + m_spacer + 2 * m_len.x / 7,
-                                            m_pos.y + m_spacer/2,
-                                            m_len.x - 3 * m_spacer/2 - 2 * m_len.x / 7,
-                                            m_len.y - m_spacer,
+        m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
                                             1);
 

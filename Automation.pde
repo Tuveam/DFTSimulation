@@ -115,7 +115,7 @@ class Automation extends Controller{
                 m_bounds.getYPos() + m_bounds.getYLen() * m_baseValue);
 
         noStroke();
-        fill(m_fillColor, 75);
+        fill(m_fillColor, 30);
         endShape(CLOSE);
 
     }

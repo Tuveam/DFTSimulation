@@ -8,27 +8,25 @@ class MainSection extends GUISection{
     protected InfoSection m_infoSection;
 
 
-    MainSection(float xPos, float yPos, float xLen, float yLen){
-        super(new PVector(xPos, yPos), new PVector(xLen, yLen));
+    MainSection(Bounds b){
+        super(b);
 
-        savePNG();
+        //savePNG();
 
         textFont(createFont("Arial", 20));
 
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};
-        m_tabs = new VerticalTabs(new Bounds(m_pos.x, m_pos.y + m_spacer, m_spacer, m_len.y - m_spacer), tempTabNames);
+        m_tabs = new VerticalTabs(m_bounds.withoutTop(m_spacer).withXLen(m_spacer), tempTabNames);
 
-        m_tutorial = new Tutorial(new Bounds(m_pos.x, m_pos.y, m_len.x, m_len.y), m_spacer);
+        m_tutorial = new Tutorial(m_bounds, m_spacer);
     }
 
     protected void initializeSections(){
-        m_interferenceSection = new InterferenceSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 150);
-        m_dftSection = new DFTSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y, 80);
-        m_aliasingSection = new AliasingSection(m_pos.x + m_spacer,
-                                                m_pos.y,
-                                                m_len.x - m_spacer,
-                                                m_len.y);
-        m_infoSection = new InfoSection(m_pos.x + m_spacer, m_pos.y, m_len.x - m_spacer, m_len.y);
+        Bounds temp = m_bounds.withoutLeft(m_spacer);
+        m_interferenceSection = new InterferenceSection(temp, 150);
+        m_dftSection = new DFTSection(temp, 80);
+        m_aliasingSection = new AliasingSection(temp);
+        m_infoSection = new InfoSection(temp);
     }
 
     protected void drawSections(){

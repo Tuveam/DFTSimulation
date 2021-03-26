@@ -1,6 +1,5 @@
 class SignalDisplay{
-    private PVector m_pos;
-    private PVector m_len;
+    private Bounds m_bounds;
     
     boolean m_automationIsVisible = true;
     boolean m_inputIsVisible = true;
@@ -11,20 +10,19 @@ class SignalDisplay{
     private Graph m_input;
     private Graph[] m_testFreq;
 
-    SignalDisplay(float posX, float posY, float lenX, float lenY, int testSineAmount, int resolution){
-        m_pos = new PVector(posX, posY);
-        m_len = new PVector(lenX, lenY);
+    SignalDisplay(Bounds b, int testSineAmount, int resolution){
+        m_bounds = b;
 
-        m_automation = new Automation(new Bounds(m_pos.x, m_pos.y, m_len.x, m_len.y),
-                                        color(200, 75, 75), false);
+        m_automation = new Automation(m_bounds, ColorLoader.getGraphColor(2), false);
         m_automation.setRealValueRange(-1, 1);
 
-        m_input = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
-        m_input.setColor(color(75, 75, 200));
+        m_input = new Graph(m_bounds, resolution);
+        m_input.setColor(ColorLoader.getGraphColor(0));
 
         m_testFreq = new Graph[testSineAmount];
         for(int i = 0; i < m_testFreq.length; i++){
-            m_testFreq[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+            m_testFreq[i] = new Graph(m_bounds, resolution);
+            m_testFreq[i].setColor(ColorLoader.getGraphColor(1));
         }
         setDataForTestFreqs();
 
@@ -162,7 +160,7 @@ class SignalDisplay{
         stroke(color(100, 100, 100));
         strokeWeight(2);
         fill(color(50, 50, 50));
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        rect(m_bounds);
 
         
 
