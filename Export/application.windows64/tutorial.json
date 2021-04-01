@@ -1,0 +1,518 @@
+[
+
+    {
+        "type":"tab",
+        "name":"+&x",
+        "content": [
+            {
+                "type":"topic",
+                "name":"introduction",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"intro",
+                        "text":"This tab will show you, what happens, when you add or multiply signals. Feel free to try around yourself to see, what you can come up with. You can toggle the question mark in the top left corner at any time to hide this text. Your current page will be saved."
+                    }
+                ]
+            },
+
+            {
+                "type":"topic",
+                "name":"generators",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"switch",
+                        "text":"First look at the top section labelled “Input”. In case it is empty, switch it on with the tickbox in the section. In the input-section there are two generators. Use the generators’ tickboxes to switch them on or off. For now, only switch the first one on."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"fpa",
+                        "text":"The generator produces a signal with a given frequency, phase, amplitude and waveform and displays it in the window to the right. You can set the waveform using the tabs on the bottom. Set the waveform to sine, for example. Control the frequency, phase and amplitude with the three knobs from left to right respectively. Try to figure out, what these three terms mean, by turning the knobs however you like. If you think you got it, turn to the next page."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"window",
+                        "text":"In the window to the right of the generators, you can see a signal: For every point on the x-Axis (the horizontal line), there is a value. Assuming the x-Axis displays the time, a value is changing over time and tracing through the window to form a graph. The window is limited though. Thus, the time and the displayed signal is limited as well. How much time can the window display? It does not display anything real, so it doesn’t matter. It could be 1 hour, 17 minutes or 3 seconds, it won’t have any consequences on the further discussions. Let’s say it is one “window” long, which is our new invented unit."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"frequency",
+                        "text":"A frequency defines, how often a particular event happens within a given time. In this case we can observe how often the event of a waveform happens within one “window”. Turn the frequency knob to around 4 by watching the number below the knob, when you press it. This number corresponds to how often your chosen waveform repeats within one “window”. A single repetition is called the period. Press “Ctrl” while dragging the knob to snap to 4 and you will count exactly 4 repetitions or periods of your waveform. As you turn the knob higher, the number of periods increase and vice versa."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"phase",
+                        "text":"The phase determines the “position” the wave starts at. Set the frequency back to 1 by pressing “Ctrl” while dragging. Now turn the phase-knob and see how the wave is shifted or as we sometimes say “turned”. Notice that the values go from 0 to 6.28.., which is 2*pi. This is the unit of radians. Like degrees go from 0° to 360°, radians mean the same, while going from 0 to 2*pi. So you can turn your wave by some radians. Turning the knob by two*pi or 6.28 only ever shifts the wave by one period, even at higher frequencies. Try it out."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"amplitude",
+                        "text":"The amplitude determines how far the signal goes up and down. Turn the knob to the value 1 and the signal will reach the borders of the window. Turn it down and the wave gets smaller. When 0, the signal is turned off: There’s only a straight line left of it. Turning it even lower makes a mirrored signal appear, mirrored at the x-Axis. Turning it to -1 makes the mirrored signal reach the borders as well. We call this mirroring “reversing the polarity”. Notice that, if set to a sinewave, turning the amplitude of a signal to -1 does the same as turning the phase by pi. This only works with the sine though."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"waveforms",
+                        "text":"The different waveforms can be chosen with the tabs. On 0, nothing is produced. On sin, the generator produces the simplest periodic motion in nature: the sinewave. Together with the saw-, square- and triangle-wave they are the most common waveforms in synthesis. The last one called noise is just random values."
+                    }
+                ]
+            },
+
+            {
+                "type":"topic",
+                "name":"addition",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"two generators",
+                        "text":"Turn on both generators in the input-section and turn on the bottom section: the interference section. Change the parameters of one generator to be different from the other and you will see two graphs in the window of the input section. In the window below you will see another graph. Set the interference-section to addition if it isn’t already. Turn around the generators’ knobs and try to understand what the bottom graph represents."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"plus",
+                        "text":"In the addition mode, the two signals of the input section are added up. This means at each point in time within the window, the values of the two generators at that point are added up to produce the result below. Try for example to have one generator at the frequency of 1 and the second one at a frequency much higher like 20. In the graph below you will see a fast wave “riding” a slow wave."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"interference",
+                        "text":"Now turn the frequency of both generators to 1 using “Ctrl” while dragging to snap to values and the phases to 0. If you change the amplitude of either one to 0, naturally, the amplitude of the result graph decreases, too. Turning the amplitude into the negative, makes the generator’s wave grow again, but with inverted polarity. Meanwhile, the result continues shrinking to 0, the moment the generators have opposite amplitudes."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"destructive",
+                        "text":"The values in the graph on top reach from -1 to 1. Of course, if one generator’s values are added up with their mirrored or negative equivalents, it should add up to 0. When two waves of opposite polarity are added up they cancel each other out and produce a destructive interference. The same happens, when they are in the same polarity but their phases are pi apart: they cancel out to make a destructive interference. Try it out!"
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"constructive",
+                        "text":"The graph below goes from -2 to 2, if set to addition. If both generators have the same phase, frequency and amplitude, they add together as constructive interference. The result graph now touches the window’s borders, meaning it goes from -2 to 2, as supposed to going from -1 to 1 like the generator’s signals go. It has doubled its amplitude."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"slightly apart",
+                        "text":"What happens if the generators’ frequencies are slightly apart? Set one of them to 9 and the other one to 10 using “Ctrl” to snap to values. The graph below forms a new big wave, as if the small wave was swelling in amplitude up and down. Notice that in the input section the waves are going in and out of phase, meaning at some points in time they align, other points in time one is positive, while the other one is negative. When in phase or aligned, they add up to produce a maximum deflection called constructive interference. When out of phase or misaligned, they cancel out to a destructive interference."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"beat frequency",
+                        "text":"Set one of the frequencies to 16 and the other one to 17. Notice that the swelling up as well as the swelling down of the result both happen once within the result window. Now watch the result when you turn the frequency of 17 to 18. Suddenly the swelling up and down happens twice. This swelling up and down is called the beat frequency. The beat frequency happens, when two sines at similar pitches add up. It is always equal to the difference of the input sine frequencies. Now the frequencies are 2 apart, which is the difference. This results in two periods of the beat frequency."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"try it out",
+                        "text":"Try different configurations to produce beat frequencies: what happens if you change the phase of one generator? What happens if they have different amplitudes? What if the frequencies are too far apart or both too low? Try around! You can use “Alt” while dragging the knobs to make finer adjustments."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"sin and cos",
+                        "text":"Set the generators back to sinewaves of frequencies 1 using “Ctrl” to snap to values. Set ones phase to 0 and the other ones to pi halves (1.57..) using “Ctrl” to snap to the value a quarter way in of the dial. In the result window, there is still a sine wave. Now turn the amplitude of one generator around and watch what happens to the result: the sine waves changes in amplitude slightly but also in phase despite you not touching the phase knobs. Using only the amplitudes of the generators, try to turn the result’s phase by its whole period. You can produce a sine of any phase combining two sines with phases apart pi halves while varying only their amplitudes."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"pulsewidth",
+                        "text":"Bonus: Set both generators to saw-waves of same frequency and turn one’s amplitude to 1 and the other one’s to -1. Now vary their phases and watch the result: A squarey wave appears, that changes its shape in a very particular manner. This is called a pulsewidth-modulated wave, PWM for short. It produces one value for a certain “pulsewidth” and then switches back to another value for the rest of the period. Try to figure out why this happens!"
+                    }
+                ]
+            },
+
+            {
+                "type":"topic",
+                "name":"multiplication",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"multiply",
+                        "text":"Switch the interference section at the bottom to multiplication. Similar to the addition mode, the result is now the multiplication of both signals. This means at each point in time within the window, the values of the two generators at that point are instead multiplied to produce the result below. Important note: the bottom window now only spans a range from -1 to 1. Turn around the knobs and see, what you can come up with."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"offset",
+                        "text":"Set both generators to full amplitude sinewaves of frequency 1 using “Ctrl” to snap to values. Now play around with the phase and watch the result. Below you will see a sinewave of twice the frequency of the generators. But depending on which phase you set for the generators, the result is offset by some amount in the y-direction. Set both generators’ phases to 0. When both generators have the maximum values of 1 or both have -1, they multiply up to 1. When both are 0, they multiply to 0."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"maths",
+                        "text":"You can easily check that: 1 * 1 = 1. Also -1 * (-1) = 1, because negative times negative is positive. Look at it a different way: You learned previously, that negative amplitudes mirror the signal or in technical terms invert the polarity. The amplitude itself is simply a factor, with which every value of the signal is multiplied. In this case every value of one generator is multiplied by a changing amplitude. You could say, that the second generator is modulating the first one or vice versa."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"partially invert",
+                        "text":"When the second generator goes into negative values, the result is a polarity-inverted version of the first generator. Now shift the phases apart and see how the result always inverts its polarity, depending on whether the modulating generator is negative. Notice, that anywhere any generator is 0, the results amounts to 0 as well, because 0 multiplied by anything always results in 0."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"conclude",
+                        "text":"Shift the generators apart in phase by exactly pi using “Ctrl” to snap to 3.14. The resulting signal now is shifted downwards: Any value of one generator is always multiplied with its mirrored equivalent and negative times positive gives us negative. That is why the resulting signal only touches the negative area. To conclude, the resulting signals is offset upwards, when the generators are in phase, downwards, when the generators are out of phase and not at all, if the generators are pi halves or a quarter of their period out of phase."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"beat frequency",
+                        "text":"Verify that the same happens, when the generators are both set to the same but higher frequency. Then, set one frequency to 15 and the other one to 16. The result will show a fast sinewave “riding” a slow one, despite you not choosing a slow frequency. It turns out, when multiplying two sine waves, another kind of beat frequency appears, that is calculated the same way: the difference between the frequencies turns out as beat frequency. Choose another pair of frequencies to check it out."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"but why",
+                        "text":"But why does this happen? Set the frequencies back to 15 and 16. The generators’ signals are aligned or in phase at some points in time, half aligned at others and misaligned or out of phase at others. When aligned, the result has a positive offset upwards. Half aligned or pi halves apart in phase sinewaves result in no offset. Sinewaves, that are out of phase produce a negative offset. The offset is changing with time, because the input signals go in and out of phase because of their different frequencies."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"average",
+                        "text":"You could now calculate the averages of the result wave or simply visually guess, where it is. With two different frequencies, the average when watching the entire window turns out to be the middle so 0. For the same frequency, the average is clearly offset, when they are in or out of phase, and 0, when they are pi halves apart in phase. You could use that to see whether a frequency is in a signal."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"Fourier",
+                        "text":"According to Fourier, any signal, even the saw-wave or the square-wave, can be replicated by adding sinewaves with different frequencies, amplitudes and phases. Rephrased: every signal consists of different sinewaves called frequencies. But might not know which frequencies. Is there a way to check for frequencies? What we want to do is not look at the signal’s amplitude, depending on the time, but the signal’s amplitude depending on which frequency we look at."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"one frequency",
+                        "text":"First focus on one frequency: you found out, that there is an offset in the average, if you multiply the same frequency together, but only at specific phases. Given a signal to analyse, you can multiply it with a test frequency, which you want to know, whether it is in the signal. Take the average of the result and you will see, how much of that frequency is in the signal, but only, if the frequency in the signal is in the right phase. Simply do the same with a test frequency pi halves apart in phase to check for this eventuality."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"sincos",
+                        "text":"You calculated two parts: a part with the test frequency with no phase offset and one with pi halves offset in phase. Let’s call them the sine- and cosine-part respectively. Using these you can calculate the total amplitude of the test frequency in the input signal with the following formula: Take the square root of the sum of the sine-part squared and the cosine-part squared."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"test frequency",
+                        "text":"Test it out: Choose the saw-wave of any frequency for one generator as our input signal to analyse and with the other, choose a sine wave as test frequency. Now sweep the test frequency up and down and see, if the graph below shows any offset in average visually. Then do it again, but with the phase of the test frequency shifted by pi halves. Can you find out what is happening? Go to the DFT-section to find out more."
+                    }
+
+                    
+                ]
+            }
+        ]
+    },
+
+    {
+        "type":"tab",
+        "name":"Aliasing",
+        "content": [
+            {
+                "type":"topic",
+                "name":"introduction",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"intro",
+                        "text":"Computers cannot save continuous signals. This tab will show you the implications and consequences of this fact. Feel free to try around yourself to see, what you can come up with. You can toggle the question mark in the top left corner at any time to hide this text. Your current page will be saved."
+                    }
+                ]
+
+            },
+
+            {
+                "type":"topic",
+                "name":"sampling",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"zoom in",
+                        "text":"A continuous signal is a signal, that you can “zoom into” infinitely, because it has no gaps. Turn on the top section called input. The uninterrupted graph in the window to the right is a continuous signal (technically it is not continuous, because your computer cannot save continuous signals, but for the sake of this example, you can assume, it is continuous.) Play around with the generator in the left to see how it changes. If you want to get familiar with the controls, got to the +&*-tab."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"continuous",
+                        "text":"Real examples of continuous signals include real sound, the changing voltage in a cable over time or the movement of a pendulum. When zooming in infinitely timewise, a pendulum would still have a position. Rephrased: between two moments in time will always be another one, for which the pendulum is in a specific position. When talking about sound, these signals are called analog signals."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"computer",
+                        "text":"The computer can only capture values for single points in time. You would need infinite capacities if you were to save a continuous or analog signal. Luckily, for audio you do not need to save continuous signals, because when converting a computer signal back to real sound, humans have a limit to how precisely they can hear distinct “values”. Instead, computers sample analog continuous audio signals: they save a sample of the signal at a regular time interval called the sampling period. You can see an example of that in the top section."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"discrete",
+                        "text":"Now the signal consists of an array of values and is called discrete. No values exist for points in time between the sampling period. They can be interpolated but are not saved. As you can see in the top section, between the samples are no further values. You can decide how often you sample a signal by changing the length of the sampling interval. Does the number of events like sampling within a given time remind you of something? It is a frequency, commonly called the sampling frequency or samplerate."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"samplerate",
+                        "text":"With the samplerate-knob below the generator you can decide how many samples of the continuous signal within the window are taken. The value that appears at the bottom of the samplerate-knob when pressing it corresponds to the number of samples in the window. As you turn it up, the input signal is sampled finer and finer, though it will always stay a discrete signal."
+                    }
+                ]
+
+            },
+
+            {
+                "type":"topic",
+                "name":"aliasing",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"information loss",
+                        "text":"When reducing the signal like this, the computer has to lose some information. Look at the graph in the window of the section below. The graph is reconstructed with linear interpolation according to the samples that went into it. Now set the samplerate to a value of 30 and the generator to a frequency of 2. The reconstructed signal at the bottom looks intact. But what are the limits? Try it out!"
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"beat frequency",
+                        "text":"Push the frequency of the generator slowly to 14. With a samplerate of 30, you will now see a “beat frequency”: the volume of the reconstructed signal swells up and down. Now turn the frequency of the generator to 15 using “Ctrl” to snap to values. Change the phase around to see the effect: At this frequency, the amplitude of the reconstructed signal is dependent on the phase of the input signal."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"nyquist",
+                        "text":"Did you notice, that the generator’s frequency is exactly half the sampling frequency, when this effect happened? Half the sample frequency is called the Nyquist frequency. Sampling this frequency cannot guarantee a correct reconstruction. At the nyquist frequency you have ambiguity. But what happens, when turning the frequency of the generator higher?"
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"mirror",
+                        "text":"At first you probably will not be able to make sense of the chaotic samples. Turn the frequency higher to about 25 and you will see, that the reconstructed signal does not resemble the input signal at all anymore: You now see a much lower frequency of 5. Each sample is taken while skipping more than half the input signal period. Thus, a correct reconstruction is not possible anymore and instead this high frequency is mirrored down to be a low frequency. In fact, if you increase the frequency, the reconstructed frequency decreases."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"line",
+                        "text":"Now set the generator’s frequency equal to the samplerate using “Ctrl” to snap to 30. The reconstruction only shows a horizontal line. The height of the line is determined by the phase of the generator. This happens, because the sampling process skips exactly one whole period of the input. This means every sample has the same value. But what happens if you push the frequency even further?"
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"rising again",
+                        "text":"If you push the frequency even further, the reconstructed frequency rises again, too, but is much lower. In fact the difference between the input frequency and the reconstructed frequency is the sampling frequency. Set the generator’s frequency to 31. With a samplerate of 30 the signal is reconstructed as a sinewave with one period in the window, so with a frequency of 1."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"loop",
+                        "text":"Push it further und you will see that the reconstructed frequency will continue looping to mirror at multiples of the nyquist frequency and the samplerate. If you want to make fine frequency adjustments, press “Alt” while dragging the frequency knob. This mirroring is called Aliasing: a high frequency presents itself as a different low one, which is its “alias” frequency."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"filter",
+                        "text":"Humans only hear frequencies between 20 to 20000 Hz, so in order to be able to reconstruct 20000 Hz correctly, it had to be sampled at more than double the sampling frequency. Typical samplerates are 44100 or 48000 Hz. Recording frequencies higher than the nyquist frequency would result in unwanted aliasing, which is why the high frequency content of continuous signals must be filtered before being sampled and converted into a discrete signal."
+                    }
+                ]
+
+            }
+
+        ]
+
+    },
+
+    {
+        "type":"tab",
+        "name":"DFT",
+        "content": [
+            {
+                "type":"topic",
+                "name":"introduction",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"intro",
+                        "text":"How does a frequency analyser work? This tab will explain the principle of the Discrete Fourier Transform, that frequency analysers use in more optimized versions. To understand how it works, you need to know about discrete signals, signal addition and multiplication. Please refer to the other tabs for this knowledge. You can toggle the question mark in the top left corner at any time to hide this text. Your current page will be saved."
+                    }
+                ]
+
+            },
+
+            {
+                "type":"topic",
+                "name":"DFT",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"sample generation",
+                        "text":"The top section called input contains a generator to produce a discrete signal, that will be displayed in the window to the right. Though this time the signal is created sample by sample. With the play and skip buttons you can control when a sample is being produced. The samplerate knob controls the rate at which samples are created (and not the number of samples in the window. This is fixed at 80). When a sample is generated, the red light to the right lights up. Get yourself familiar with the sample generation."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"fourier",
+                        "text":"According to Fourier, any signal can be reconstructed using sinewaves of different frequencies, phases and amplitudes. Rephrased: any signal consists of a bunch of frequencies. In this case we only analyse, which frequencies the signal in the limited window consists of. Imagine the window’s content to loop infinitely: this signal can only consist of sinewaves, whose period spans the window a natural number of times. Only then can each loop of the signal be exactly the same."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"test range",
+                        "text":"This is good news for us: we only need to check for frequencies, that fit a natural number of times into the window. Also, we only need to check frequencies up to excluding the nyquist frequency, because as you know, higher frequencies cannot be represented. With only 80 samples filling the window, we can only check frequencies from 0 to 39. (We will get to the 0th frequency later)."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"multiplication",
+                        "text":"Turn off the bottom spectrum section and the “window shape” option in the input section. If the generator and the “test frequency” option in the input section are turned on, there are two discrete signals in the window to the right. First set up a sine frequency for the generator and press play until the entire window is filled with an input signal. In the multiplication section below, choose a random frequency from the two rows of tabs going from 0 to 39. A second sinewave will appear in the input section in a different colour. The window below displays the multiplication of these two signals."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"sincos",
+                        "text":"To get a frequency spectrum, the algorithm calculates the multiplication of the input signal with all frequencies we established must be checked. The frequencies go from 0 to 39, each in two phase configurations: Once with 0 phase offset called the sine-part and once with pi halves offset, called the cosine-part. These phase configurations are what the sin and cos next to the two rows of tabs in the multiplication section stand for respectively."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"find it",
+                        "text":"Now pause the sample generation and find the test frequency corresponding to the frequency you set your generator. You can find it by looking for the one, that produces a signal in the multiplication section with an estimated average of non-zero. It should also be the one with the closest frequency to the generator’s frequency. It is important to check both the sine and the cosine-part. Can you find it?"
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"average",
+                        "text":"The algorithm does not estimate but calculate the average for each frequency, sine- and cosine-part. The corresponding sine- and cosine-parts are then separately squared and added up. The square root of the sum now indicates the intensity of the frequency in the signal. Turn on the bottom spectrum section, to see this intensity for each frequency."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"spectrum",
+                        "text":"Set the generator to a sinewave of frequency 2 and let the program generate samples to fill the entire window. The big peak in the spectrum section below at 2 is the combined spectrum. Press play and watch as the smaller peaks below it dance up and down. Turn off the spectrum option in the spectrum section to only see them. They are the sine- and cosine-parts of the signal."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"sweep up",
+                        "text":"Turn the sample generation and the spectrum back on and now slowly sweep up the generator’s frequency, using “Alt” to make fine adjustments. Watch as the peak in the spectrum wanders upwards. Now you know how the principles of a Frequency analyser work: Multiply the input signal with a bunch of test frequencies, calculate their averages and add sine- and cosine-parts together."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"0th frequency",
+                        "text":"The 0th frequency is the offset of the initial input signal’s average. Switch to the 0th cosine-test frequency. All its samples are at 1. Multiplying any input with 1 always equals the input. That is why the multiplication shows an exact replica of the input signal. If the algorithm now calculates the average of this, it is the same as calculating the input signal’s average. Try to create an offset by playing a frequency of below 1, and watch the spectrum."
+                    }
+                ]
+
+            },
+
+            {
+                "type":"topic",
+                "name":"harmonic series",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"saw-wave",
+                        "text":"You only looked at sinewaves yet, now discover what happens with the other waves. Set up a saw-wave with a frequency of 3 and press play until the window is filled. In the spectrum there are peaks at 3, 6, 9, 12 and so on. All multiples of the third frequency show activity. These frequencies are called the harmonics of the fundamental, in this case the third frequency. Look through the test frequencies to see the multiplication graphs. You can see offset averages at exactly these frequencies."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"square-wave",
+                        "text":"Switch the waveform of the generator to a square-wave and press play. Can you figure out what frequencies peak in the spectrum? Frequencies 3, 9, 15, 21 and so on light up. These are all odd multiples or odd harmonics of the third frequency."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"other waveshapes",
+                        "text":"Check out the frequency content of the triangle wave and the noise. What can you find out about their spectra?"
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"delta-pulse",
+                        "text":"A delta-pulse is a signal with one single sample sticking up to 1, while all other ones are 0. To produce one, switch the waveform to 0 and pause the sample generation, when every sample is at 0. Now switch the generator to a square-wave and skip ahead a single sample. Then switch the waveform back to 0. The frequency spectrum shows a straight line. Watch how the sine- and cosine- parts in the spectrum change as you step further through the sample generation."
+                    }
+                ]
+
+            },
+
+            {
+                "type":"topic",
+                "name":"aliasing",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"sine",
+                        "text":"Switch the generator to a sinewave. Push the frequency higher up into the spectrum, using “Alt” to make fine adjustments. When crossing the 40-mark, the frequency starts coming back down. You can see aliasing in the spectrum: Frequencies higher than the nyquist frequency mirror down to lower frequencies again."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"saw",
+                        "text":"Turn the frequency to 29 and switch the waveform to a saw-wave. The additional peaks all over the spectrum are alias-frequencies. The next harmonic after the fundamental of the saw would be 2*29=58. This is 58-40=18 beyond the spectrum. This frequency will introduce an alias-frequency, mirrored at the nyquist frequency. Therefore you see the next biggest peak apart from 29 at 40-18=22. This happens to all the other harmonics as well. The next one would be at 22-29=-7, but flips up to 7, and so on."
+                    }
+                ]
+
+            },
+
+            {
+                "type":"topic",
+                "name":"window shape",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"reduced length",
+                        "text":"Turn on the window shape option in the input section. Now you can draw a window shape into the window. For now, use it to shorten the window length. First select the fourth test frequency, then edit the window shape to be at maximum for only one period of the frequency behind it. The rest of the time, the line should be in the middle at 0. The multiplication section should now only show values in the region you have reduced the window to."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"hills",
+                        "text":"Set the generator’s frequency to 4 using “Ctrl” to snap to values and press play to fill the screen. In the spectrum is now a hill around the fourth frequency and more hills between frequencies 8, 12, 16 and so on. The algorithm can now only say precisely whether frequencies that fit a natural number of times into the window are present in the signal."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"less precision",
+                        "text":"You set the generator to the fourth frequency, so there should not be any other frequency present in the spectrum. In the spectrum the fourth frequency lights up, and the other natural multiples of four are at intensity 0. The frequencies other than the ones mentioned do not fit into the window a natural number of times. Only if you look at a sinewave for natural numbers of periods will the average of this frequency be 0. If a period is cut off half way already the test frequency will be of average not equal to 0."
+                    },
+
+                    {
+                        "type":"text",
+                        "name":"round off",
+                        "text":"Try to make the ends of the window round off smoother by editing the window shape. The spectrum updates automatically. Can you improve the precision by editing the window shape, eg. remove the hills?"
+                    }
+                ]
+
+            }
+
+        ]
+
+    },
+
+    {
+        "type":"tab",
+        "name":"Info",
+        "content": [
+            {
+                "type":"topic",
+                "name":"info",
+                "content":[
+                    {
+                        "type":"text",
+                        "name":"info",
+                        "text":"This is the info section, not much to explain here. The buttons to the right lead you to links like the GitHub repo, my channel and an explanatory video about this program. Enjoy the interactive visuals and share my video. I hope you get to understand the DFT principles. Ask questions in the comments of my video."
+                    }                    
+                ]
+
+            }
+
+        ]
+
+    }
+
+]
