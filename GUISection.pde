@@ -1,14 +1,12 @@
 class GUISection{
-    protected PVector m_pos;
-    protected PVector m_len;
+    protected Bounds m_bounds;
 
     protected color m_backgroundColor;
 
     protected float m_spacer = 65;
 
-    GUISection(PVector pos, PVector len){
-        m_pos = pos;
-        m_len = len;
+    GUISection(Bounds b){
+        m_bounds = b;
 
         ColorLoader.construct(loadImage("ColorPalette.png"));
 
@@ -44,7 +42,7 @@ class GUISection{
     protected void drawBackground(){
         noStroke();
         fill(m_backgroundColor);
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        rect(m_bounds);
     }
 
     protected void drawSections(){

@@ -1,6 +1,5 @@
 class Graph{
-    private PVector m_pos;
-    private PVector m_len;
+    private Bounds m_bounds;
     private color m_color;
 
     protected float[] m_data;
@@ -12,11 +11,10 @@ class Graph{
 
     private int m_displayMode = 0;
 
-    Graph(float xPos, float yPos, float xLen, float yLen, int resolution){
-        m_pos = new PVector(xPos, yPos);
-        m_len = new PVector(xLen, yLen);
+    Graph(Bounds b, int resolution){
+        m_bounds = b;
 
-        m_color = color(75, 170, 75);
+        m_color = ColorLoader.getGraphColor(0);
 
         m_data = new float[resolution];
         for(int i = 0; i < m_data.length; i++){
@@ -99,18 +97,18 @@ class Graph{
         noFill();
         stroke(m_color);
         strokeWeight(2);
-        float spacing = m_len.x / (m_dataLength - 1);
+        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
-            ellipse(m_pos.x + i * spacing,
-                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
+            ellipse(m_bounds.getXPos() + i * spacing,
+                drawValue,
                 10, 10);
-            line(m_pos.x + i * spacing,
-                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
-                m_pos.x + i * spacing,
-                m_pos.y + (1 - m_baseValue) * m_len.y);
+            line(m_bounds.getXPos() + i * spacing,
+                drawValue,
+                m_bounds.getXPos() + i * spacing,
+                m_bounds.getYPos() + (1 - m_baseValue) * m_bounds.getYLen());
         }
     }
 
@@ -119,17 +117,17 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_len.x / (m_dataLength);
+        float spacing = m_bounds.getXLen() / (m_dataLength);
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
-            vertex(m_pos.x + spacing/2 + i * spacing,
-                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
-            line(m_pos.x + spacing/2 + i * spacing,
-                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y),
-                m_pos.x + spacing/2 + i * spacing,
-                m_pos.y + (1 - m_baseValue) * m_len.y);
+            vertex(m_bounds.getXPos() + spacing/2 + i * spacing,
+                drawValue);
+            line(m_bounds.getXPos() + spacing/2 + i * spacing,
+                drawValue,
+                m_bounds.getXPos() + spacing/2 + i * spacing,
+                m_bounds.getYPos() + (1 - m_baseValue) * m_bounds.getYLen());
         }
 
         
@@ -141,13 +139,13 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_len.x / (m_dataLength - 1);
+        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
 
-            vertex(m_pos.x + i * spacing,
-                map(drawValue, m_minInputValue, m_maxInputValue, m_pos.y + m_len.y, m_pos.y));
+            vertex(m_bounds.getXPos() + i * spacing,
+                drawValue);
         }
 
         
@@ -155,7 +153,11 @@ class Graph{
     }
 
     protected float getDrawValue(int index){
-        return m_data[getDrawIndex(index)];
+        return map(m_data[getDrawIndex(index)],
+                    m_minInputValue, 
+                    m_maxInputValue, 
+                    m_bounds.getYPos() + m_bounds.getYLen(), 
+                    m_bounds.getYPos());
     }
 
     public int getDrawIndex(int index){
@@ -172,8 +174,8 @@ class Graph{
 class SampledGraph extends Graph{
     private float[] m_inputData;
 
-    SampledGraph(float xPos, float yPos, float xLen, float yLen, int maxResolution){
-        super(xPos, yPos, xLen, yLen, maxResolution);
+    SampledGraph(Bounds b, int maxResolution){
+        super(b, maxResolution);
 
     }
 
@@ -211,8 +213,8 @@ class SampledGraph extends Graph{
 //==========================================================================================
 
 class InterpolationGraph extends Graph{
-    InterpolationGraph(float xPos, float yPos, float xLen, float yLen){
-        super(xPos, yPos, xLen, yLen, 1);
+    InterpolationGraph(Bounds b){
+        super(b, 1);
         setDisplayMode(3);
     }
 

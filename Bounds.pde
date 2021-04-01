@@ -244,3 +244,29 @@ class Bounds{
             endAngle,
             arcMode);
     }
+
+//_________________Text_________________________________________________________
+    void text(String text, Bounds b, int textAlign){
+        textAlign(textAlign);
+        float textSize = b.getYLen();
+        textSize(textSize);
+
+        float yPos = b.getYPos() + 4 * textSize/5;
+        switch(textAlign){
+            case LEFT:
+            text(text, b.getXPos(), yPos);
+            break;
+            case RIGHT:
+            text(text, b.getXPos() + b.getXLen(), yPos);
+            break;
+            case CENTER:
+            text(text, b.getXPos() + b.getXLen()/2, yPos);
+            break;
+        }
+
+        //noFill();
+        //stroke(255);
+        //strokeWeight(1);
+        //rect(b);
+        
+    }

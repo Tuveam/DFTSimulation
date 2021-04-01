@@ -730,46 +730,88 @@ class BackwardButton extends Button{
 
 //===========================================================
 
-class TutorialButton{
-    protected QuestionMarkTickbox m_questionmark;
+class PageButton{
+    Bounds m_bounds;
+
     protected BackwardButton m_backward;
     protected ForwardButton m_forward;
 
     protected int m_page = 0;
+    protected int m_maxPage = 1;
+    protected String m_pageIndicator;
 
-    TutorialButton(Bounds b){
-        m_questionmark = new QuestionMarkTickbox(b.asSectionOfXDivisions(0, 2));
-        m_backward = new BackwardButton(b.asSectionOfXDivisions(2, 4));
-        m_forward = new ForwardButton(b.asSectionOfXDivisions(3, 4));
+    protected int m_textSize;
+    protected color m_textColor;
+
+
+    PageButton(Bounds b){
+        m_bounds = b;
+
+        m_backward = new BackwardButton(m_bounds.asSectionOfXDivisions(0, 2));
+        m_forward = new ForwardButton(m_bounds.asSectionOfXDivisions(1, 2));
+
+        m_textSize = 15;
+        m_textColor = ColorLoader.getGreyColor(0);
+
+        generatePageIndicator();
     }
 
     public void update(){
-        m_questionmark.update();
 
-        if(m_questionmark.getValue()){
-            m_backward.update();
-            m_forward.update();
-        }
+        m_backward.update();
+        m_forward.update();
+
+        textAlign(RIGHT);
+        textSize(m_textSize);
+        fill(m_textColor);
+        text(
+            m_pageIndicator,
+            m_bounds.getXPos() - m_textSize/4,
+            m_bounds.getYPos() + 2 * m_bounds.getYLen()/3
+        );
 
         if(m_backward.getValue()){
             m_page--;
+            m_page = constrain(m_page, 0, m_maxPage - 1);
+            generatePageIndicator();
         }
         
         if(m_forward.getValue()){
             m_page++;
+            m_page = constrain(m_page, 0, m_maxPage - 1);
+            generatePageIndicator();
         }
+
+        
     }
 
-    public boolean isOn(){
-        return m_questionmark.getValue();
+    public void setMaxPage(int maxPage){
+        m_maxPage = maxPage;
+        m_page = constrain(m_page, 0, m_maxPage - 1);
+        generatePageIndicator();
+    }
+
+    public int getMaxPage(){
+        return m_maxPage;
     }
 
     public int getPage(){
         return m_page;
     }
 
+    public void setPage(int page){
+        m_page = page;
+        m_page = constrain(m_page, 0, m_maxPage - 1);
+        generatePageIndicator();
+    }
+
     public void resetPage(){
-        m_page = 0;
+        setPage(0);
+    }
+
+    protected void generatePageIndicator(){
+        int actualPage = m_page + 1;
+        m_pageIndicator = actualPage + "/" + m_maxPage;
     }
 }
 

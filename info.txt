@@ -3,6 +3,7 @@ https://github.com/Tuveam/DFTSimulation
 https://youtu.be/dQw4w9WgXcQ
 
 DFT-Simulation
+v0.1
 Made by Victor Keilhack
 
 This Program aims at simulating a Discrete Fourier Transform
@@ -12,7 +13,7 @@ Try around turning knobs and pressing buttons in the software
 and discover the DFT aswell as the harmonic series, aliasing,
 constructive and destructive interference, signal multiplica-
 tion and more. If you want a more guided approach, press the 
-(soon to be implemented) question mark in the upper left corner.
+question mark in the upper left corner.
 
 Also check out the (soon to be coming) video on YouTube about
 this program. If you want to modify or look at the code, this

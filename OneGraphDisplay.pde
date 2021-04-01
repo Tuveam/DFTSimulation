@@ -1,15 +1,15 @@
 class OneGraphDisplay{
-    protected PVector m_pos;
-    protected PVector m_len;
+    protected Bounds m_bounds;
 
     protected Graph m_graph;
 
-    OneGraphDisplay(float posX, float posY, float lenX, float lenY, int resolution){
-        m_pos = new PVector(posX, posY);
-        m_len = new PVector(lenX, lenY);
+    protected float m_baseValue = 0.5;
 
-        m_graph = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
-        m_graph.setColor(color(75, 140, 140));
+    OneGraphDisplay(Bounds b, int resolution){
+        m_bounds = b;
+
+        m_graph = new Graph(m_bounds, resolution);
+        m_graph.setColor(ColorLoader.getGraphColor(0));
     }
 
     public void setData(float[] data){
@@ -17,12 +17,21 @@ class OneGraphDisplay{
     }
 
     public void draw(){
-        stroke(color(100, 100, 100));
+        stroke(ColorLoader.getGreyColor(1));
         strokeWeight(2);
-        fill(color(50, 50, 50));
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        fill(ColorLoader.getGreyColor(2));
+        rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 
@@ -40,11 +49,11 @@ class SpectrumDisplay extends OneGraphDisplay{
 
     private HoverTabs m_spectrumTabs;
 
-    SpectrumDisplay(float posX, float posY, float lenX, float lenY, int resolution){
-        super(posX, posY, lenX, lenY, resolution);
+    SpectrumDisplay(Bounds b, int resolution){
+        super(b, resolution);
 
-        m_sinSpectrum = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
-        m_cosSpectrum = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+        m_sinSpectrum = new Graph(m_bounds, resolution);
+        m_cosSpectrum = new Graph(m_bounds, resolution);
 
         setAsSpectrumDisplay();
 
@@ -52,26 +61,28 @@ class SpectrumDisplay extends OneGraphDisplay{
         for(int i = 0; i < temp.length; i++){
             temp[i] = ("i" + i ).substring(1);
         }
-        m_spectrumTabs = new HoverTabs(new Bounds(m_pos.x, m_pos.y, m_len.x, m_len.y), temp);
+        m_spectrumTabs = new HoverTabs(m_bounds, temp);
     }
 
     public void setAsSpectrumDisplay(){
         float maxValue = 0.6;
 
+        setBaseValue(0);
+
         m_graph.setBaseValue(0);
         m_graph.setInputValueRange(0, maxValue);
         m_graph.setDisplayMode(1);
-        m_graph.setColor(color(255, 120, 9));
+        m_graph.setColor(ColorLoader.getGraphColor(0));
 
         m_sinSpectrum.setBaseValue(0);
         m_sinSpectrum.setInputValueRange(0, maxValue);
         m_sinSpectrum.setDisplayMode(1);
-        m_sinSpectrum.setColor(color(105, 255, 9));
+        m_sinSpectrum.setColor(ColorLoader.getGraphColor(1));
 
         m_cosSpectrum.setBaseValue(0);
         m_cosSpectrum.setInputValueRange(0, maxValue);
         m_cosSpectrum.setDisplayMode(1);
-        m_cosSpectrum.setColor(color(180, 10, 198));
+        m_cosSpectrum.setColor(ColorLoader.getGraphColor(2));
     }
 
     public int getSelectedFrequency(){
@@ -87,10 +98,15 @@ class SpectrumDisplay extends OneGraphDisplay{
     }
 
     public void draw(){
-        stroke(color(100, 100, 100));
+        stroke(ColorLoader.getGreyColor(1));
         strokeWeight(2);
-        fill(color(50, 50, 50));
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        fill(ColorLoader.getGreyColor(2));
+        rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         if(m_sinIsVisible){
             m_sinSpectrum.draw();
@@ -134,21 +150,21 @@ class SpectrumDisplay extends OneGraphDisplay{
 //=======================================================
 
 class ContinuousGraphDisplay{
-    private PVector m_pos;
-    private PVector m_len;
+    private Bounds m_bounds;
 
     private Graph[] m_graph;
     private boolean[] m_isVisible;
 
-    ContinuousGraphDisplay(float xPos, float yPos, float xLen, float yLen, int resolution, int graphAmount){
-        m_pos = new PVector(xPos, yPos);
-        m_len = new PVector(xLen, yLen);
+    protected float m_baseValue = 0.5;
+
+    ContinuousGraphDisplay(Bounds b, int resolution, int graphAmount){
+        m_bounds = b;
         
         m_graph = new Graph[graphAmount];
         m_isVisible = new boolean[m_graph.length];
 
         for(int i = 0; i < m_graph.length; i++){
-            m_graph[i] = new Graph(m_pos.x, m_pos.y, m_len.x, m_len.y, resolution);
+            m_graph[i] = new Graph(m_bounds, resolution);
             m_graph[i].setDisplayMode(2);
             m_isVisible[i] = true;
         }
@@ -167,10 +183,16 @@ class ContinuousGraphDisplay{
     }
 
     public void draw(){
-        stroke(color(100, 100, 100));
+        stroke(ColorLoader.getGreyColor(1));
         strokeWeight(2);
-        fill(color(50, 50, 50));
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        fill(ColorLoader.getGreyColor(2));
+        rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
+
         for(int i = 0; i < m_graph.length; i++){
 
             if(m_isVisible[i]){
@@ -178,6 +200,10 @@ class ContinuousGraphDisplay{
             }
             
         }
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 }
@@ -188,12 +214,12 @@ class AliasGraphDisplay extends OneGraphDisplay{
 
     protected SampledGraph m_sampledGraph;
 
-    AliasGraphDisplay(float posX, float posY, float lenX, float lenY, int resolution, int sampledMaxResolution){
-        super(posX, posY, lenX, lenY, resolution);
+    AliasGraphDisplay(Bounds b, int resolution, int sampledMaxResolution){
+        super(b, resolution);
 
         m_graph.setDisplayMode(2);
 
-        m_sampledGraph = new SampledGraph(m_pos.x, m_pos.y, m_len.x, m_len.y, sampledMaxResolution);
+        m_sampledGraph = new SampledGraph(m_bounds, sampledMaxResolution);
     }
 
     public void setSampleRate(int samplerate){
@@ -206,10 +232,15 @@ class AliasGraphDisplay extends OneGraphDisplay{
     }
 
     public void draw(){
-        stroke(color(100, 100, 100));
+        stroke(ColorLoader.getGreyColor(1));
         strokeWeight(2);
-        fill(color(50, 50, 50));
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        fill(ColorLoader.getGreyColor(2));
+        rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
         m_sampledGraph.draw();
@@ -224,16 +255,16 @@ class AliasGraphDisplay extends OneGraphDisplay{
 //===========================================================
 
 class InterpolationGraphDisplay {
-    protected PVector m_pos;
-    protected PVector m_len;
+    protected Bounds m_bounds;
 
     protected InterpolationGraph m_graph;
 
-    InterpolationGraphDisplay(float posX, float posY, float lenX, float lenY){
-        m_pos = new PVector(posX, posY);
-        m_len = new PVector(lenX, lenY);
+    protected float m_baseValue = 0.5;
 
-        m_graph = new InterpolationGraph(m_pos.x, m_pos.y, m_len.x, m_len.y);
+    InterpolationGraphDisplay(Bounds b){
+        m_bounds = b;
+
+        m_graph = new InterpolationGraph(m_bounds);
     }
 
     public void setData(float[] data){
@@ -241,12 +272,21 @@ class InterpolationGraphDisplay {
     }
 
     public void draw(){
-        stroke(color(100, 100, 100));
+        stroke(ColorLoader.getGreyColor(1));
         strokeWeight(2);
-        fill(color(50, 50, 50));
-        rect(m_pos.x, m_pos.y, m_len.x, m_len.y);
+        fill(ColorLoader.getGreyColor(2));
+        rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 }
