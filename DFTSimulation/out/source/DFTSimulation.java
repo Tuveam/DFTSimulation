@@ -88,7 +88,7 @@ class AliasInputSection extends GUISection{
                 ).withFrame(m_spacer/4),
                 m_spacer,
                 resolution);
-        m_generator.setFrequencyRange(0.5f, 25);
+        m_generator.setFrequencyRange(0.5f, 60);
         m_generator.setFrequency(1);
 
 
@@ -799,6 +799,17 @@ class Bounds{
     public void ellipse(Bounds b){
         ellipseMode(CENTER);
         ellipse(b.getXPos() + b.getXLen()/2, b.getYPos() + b.getYLen()/2, b.getXLen(), b.getYLen());
+    }
+        
+//_________________Crosses______________________________________________________
+    
+    public void cross(Bounds b){
+        cross(b.getXPos() + b.getXLen()/2, b.getYPos() + b.getYLen()/2, b.getXLen(), b.getYLen());
+    }
+    
+    public void cross(float xCenter, float yCenter, float xLen, float yLen){
+        line(xCenter - xLen/2, yCenter - yLen/2, xCenter + xLen/2, yCenter + yLen/2);
+        line(xCenter - xLen/2, yCenter + yLen/2, xCenter + xLen/2, yCenter - yLen/2);
     }
 
 //_________________Arc__________________________________________________________
@@ -2461,6 +2472,8 @@ class Graph{
 
     private int m_displayMode = 0;
 
+    protected boolean m_isTouchingRightBorder = true;
+
     Graph(Bounds b, int resolution){
         m_bounds = b;
 
@@ -2543,11 +2556,23 @@ class Graph{
         
     }
 
+    private float getSpacing(){
+        float spacing;
+        if(m_isTouchingRightBorder){
+            spacing = m_bounds.getXLen() / (m_dataLength - 1);
+        }else{
+            spacing = m_bounds.getXLen() / (m_dataLength);
+        }
+        return spacing;
+    }
+
     private void drawPointsAndLines(){
         noFill();
         stroke(m_color);
         strokeWeight(2);
-        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
+
+        float spacing = getSpacing();
+        
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
@@ -2589,7 +2614,7 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
+        float spacing = getSpacing();
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
@@ -2617,6 +2642,10 @@ class Graph{
     public int getLength(){
         return m_dataLength;
     }
+
+    public void setTouchRightBorder(boolean isTouching){
+        m_isTouchingRightBorder = isTouching;
+    }
 }
 
 //==========================================================================================
@@ -2643,11 +2672,20 @@ class SampledGraph extends Graph{
     }
 
     protected void translateData(){
-        for(int i = 0; i < m_dataLength - 1; i++){
-            m_data[i] = m_inputData[i * m_inputData.length/(m_dataLength - 1) ];
+        float factor;
+
+        if(m_isTouchingRightBorder){
+            factor = (1.0f * m_inputData.length)/(m_dataLength - 1.0f);
+        }else{
+            factor = (1.0f * m_inputData.length)/(m_dataLength);
         }
 
-        m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
+        for(int i = 0; i < m_dataLength /*- 1*/; i++){
+            int index = floor(i * factor);
+            m_data[i] = m_inputData[index];
+        }
+
+        //m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
     }
 
     public int getDrawIndex(int index){
@@ -3186,6 +3224,7 @@ class AliasGraphDisplay extends OneGraphDisplay{
         m_graph.setDisplayMode(2);
 
         m_sampledGraph = new SampledGraph(m_bounds, sampledMaxResolution);
+        m_sampledGraph.setTouchRightBorder(false);
     }
 
     public void setSampleRate(int samplerate){
@@ -3231,6 +3270,7 @@ class InterpolationGraphDisplay {
         m_bounds = b;
 
         m_graph = new InterpolationGraph(m_bounds);
+        m_graph.setTouchRightBorder(false);
     }
 
     public void setData(float[] data){
@@ -3800,7 +3840,7 @@ class Tutorial{
 
         m_questionmark = new QuestionMarkTickbox(m_bounds.withLen(m_spacer, m_spacer));
         
-        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5f).withFrame(m_spacer/2), tabName, m_spacer);
+        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5f).withFrame(m_spacer/2).withYFrameRatio(1.0f/6.0f), tabName, m_spacer);
     }
 
     public void update(){
@@ -3951,8 +3991,7 @@ class TextBox{
 
             jsonTabIndex = getJSONTabIndex(data, m_tabCache);
             
-            //set page value
-            m_page.setPage(m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
+            
             //get the text
             //set the text
             //divide text into line sensibly
@@ -3971,6 +4010,9 @@ class TextBox{
         if(hasTopicChanged || hasTabChanged){
             //set max page-number of m_page
             m_page.setMaxPage( getMaxPage(data, jsonTabIndex, m_topicCache[m_tabCache]) );
+
+            //set page value
+            m_page.setPage(m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
 
             m_previousTopicCache = m_topicCache[m_tabCache];
         }
@@ -4033,23 +4075,31 @@ class TextBox{
                     ).getString("text");
 
         int lastCutIndex = 0;
-        int lineLength = 34;
+        int lineLength = 36;
         
-        for(int i = 0; i < ret.length; i++){
-            int nextCut = lastCutIndex + lineLength;
+        for(int i = 0; i < ret.length; i++){ //Fill each index of the array
+            int nextCut = lastCutIndex + lineLength; //set nextCut to a whole line
             
-            if(lastCutIndex >= temp.length()){
+            if(lastCutIndex >= temp.length()){ //fill remaining lines with nothing, when all text is gone
                 ret[i] = "";
-            }else if(nextCut > temp.length()){
+            }else if(nextCut >= temp.length()){ //if nextCut is at the end, fill in the last line
                 nextCut = temp.length();
                 ret[i] = temp.substring(lastCutIndex, nextCut);
                 lastCutIndex  = nextCut + 1;
-            }else{
-                while(temp.charAt(nextCut) != ' '){
+            }else{ // if there's still text left, cut it at the nearest space
+                
+                while(temp.charAt(nextCut) != ' '){ //only cut if the char after the cut is space
                     nextCut--;
+
+                    if(nextCut <= lastCutIndex + 1){ //cut off the word, if it occupies more than the entire line
+                        nextCut = lastCutIndex + lineLength;
+
+                        break;
+                    }
                 }
-                ret[i] = temp.substring(lastCutIndex, nextCut);
-                lastCutIndex = nextCut + 1;
+
+                ret[i] = temp.substring(lastCutIndex, nextCut); //get the text
+                lastCutIndex = nextCut + 1; //start the next line without the space
             }
             
             
@@ -4102,20 +4152,22 @@ class TextBox{
         noStroke();
         rect(m_bounds, 10);
 
-        Bounds textBounds = m_bounds.withFrame(m_spacer/2).withoutBottomRatio(0.33f);
+        Bounds textBounds = m_bounds.withFrame(m_spacer/2);
         textFont(m_font);
         textAlign(LEFT);
         fill(m_textColor);
         for(int i = 0; i < m_currentText.length; i++){
             text(m_currentText[i], textBounds.asSectionOfYDivisions(i, m_currentText.length), LEFT);
         }
-        
+
+
+        m_page.update();
+        m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();
     
         m_topic.update();
         m_topicCache[m_tabCache] = m_topic.getValue();
 
-        m_page.update();
-        m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();
+        
     }
 
     public void setTabCache(int tabCache){

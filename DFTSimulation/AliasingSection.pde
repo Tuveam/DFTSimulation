@@ -51,7 +51,7 @@ class AliasInputSection extends GUISection{
                 ).withFrame(m_spacer/4),
                 m_spacer,
                 resolution);
-        m_generator.setFrequencyRange(0.5, 25);
+        m_generator.setFrequencyRange(0.5, 60);
         m_generator.setFrequency(1);
 
 

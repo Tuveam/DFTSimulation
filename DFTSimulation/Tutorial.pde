@@ -12,7 +12,7 @@ class Tutorial{
 
         m_questionmark = new QuestionMarkTickbox(m_bounds.withLen(m_spacer, m_spacer));
         
-        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5).withFrame(m_spacer/2), tabName, m_spacer);
+        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5).withFrame(m_spacer/2).withYFrameRatio(1.0f/6.0f), tabName, m_spacer);
     }
 
     public void update(){
@@ -163,8 +163,7 @@ class TextBox{
 
             jsonTabIndex = getJSONTabIndex(data, m_tabCache);
             
-            //set page value
-            m_page.setPage(m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
+            
             //get the text
             //set the text
             //divide text into line sensibly
@@ -183,6 +182,9 @@ class TextBox{
         if(hasTopicChanged || hasTabChanged){
             //set max page-number of m_page
             m_page.setMaxPage( getMaxPage(data, jsonTabIndex, m_topicCache[m_tabCache]) );
+
+            //set page value
+            m_page.setPage(m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
 
             m_previousTopicCache = m_topicCache[m_tabCache];
         }
@@ -245,23 +247,31 @@ class TextBox{
                     ).getString("text");
 
         int lastCutIndex = 0;
-        int lineLength = 34;
+        int lineLength = 36;
         
-        for(int i = 0; i < ret.length; i++){
-            int nextCut = lastCutIndex + lineLength;
+        for(int i = 0; i < ret.length; i++){ //Fill each index of the array
+            int nextCut = lastCutIndex + lineLength; //set nextCut to a whole line
             
-            if(lastCutIndex >= temp.length()){
+            if(lastCutIndex >= temp.length()){ //fill remaining lines with nothing, when all text is gone
                 ret[i] = "";
-            }else if(nextCut > temp.length()){
+            }else if(nextCut >= temp.length()){ //if nextCut is at the end, fill in the last line
                 nextCut = temp.length();
                 ret[i] = temp.substring(lastCutIndex, nextCut);
                 lastCutIndex  = nextCut + 1;
-            }else{
-                while(temp.charAt(nextCut) != ' '){
+            }else{ // if there's still text left, cut it at the nearest space
+                
+                while(temp.charAt(nextCut) != ' '){ //only cut if the char after the cut is space
                     nextCut--;
+
+                    if(nextCut <= lastCutIndex + 1){ //cut off the word, if it occupies more than the entire line
+                        nextCut = lastCutIndex + lineLength;
+
+                        break;
+                    }
                 }
-                ret[i] = temp.substring(lastCutIndex, nextCut);
-                lastCutIndex = nextCut + 1;
+
+                ret[i] = temp.substring(lastCutIndex, nextCut); //get the text
+                lastCutIndex = nextCut + 1; //start the next line without the space
             }
             
             
@@ -314,20 +324,22 @@ class TextBox{
         noStroke();
         rect(m_bounds, 10);
 
-        Bounds textBounds = m_bounds.withFrame(m_spacer/2).withoutBottomRatio(0.33);
+        Bounds textBounds = m_bounds.withFrame(m_spacer/2);
         textFont(m_font);
         textAlign(LEFT);
         fill(m_textColor);
         for(int i = 0; i < m_currentText.length; i++){
             text(m_currentText[i], textBounds.asSectionOfYDivisions(i, m_currentText.length), LEFT);
         }
-        
+
+
+        m_page.update();
+        m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();
     
         m_topic.update();
         m_topicCache[m_tabCache] = m_topic.getValue();
 
-        m_page.update();
-        m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();
+        
     }
 
     public void setTabCache(int tabCache){
