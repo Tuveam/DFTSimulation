@@ -3,6 +3,8 @@ class OneGraphDisplay{
 
     protected Graph m_graph;
 
+    protected float m_baseValue = 0.5;
+
     OneGraphDisplay(Bounds b, int resolution){
         m_bounds = b;
 
@@ -19,8 +21,17 @@ class OneGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 
@@ -56,6 +67,8 @@ class SpectrumDisplay extends OneGraphDisplay{
     public void setAsSpectrumDisplay(){
         float maxValue = 0.6;
 
+        setBaseValue(0);
+
         m_graph.setBaseValue(0);
         m_graph.setInputValueRange(0, maxValue);
         m_graph.setDisplayMode(1);
@@ -89,6 +102,11 @@ class SpectrumDisplay extends OneGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         if(m_sinIsVisible){
             m_sinSpectrum.draw();
@@ -137,6 +155,8 @@ class ContinuousGraphDisplay{
     private Graph[] m_graph;
     private boolean[] m_isVisible;
 
+    protected float m_baseValue = 0.5;
+
     ContinuousGraphDisplay(Bounds b, int resolution, int graphAmount){
         m_bounds = b;
         
@@ -167,6 +187,12 @@ class ContinuousGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
+
         for(int i = 0; i < m_graph.length; i++){
 
             if(m_isVisible[i]){
@@ -174,6 +200,10 @@ class ContinuousGraphDisplay{
             }
             
         }
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 }
@@ -206,6 +236,11 @@ class AliasGraphDisplay extends OneGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
         m_sampledGraph.draw();
@@ -224,6 +259,8 @@ class InterpolationGraphDisplay {
 
     protected InterpolationGraph m_graph;
 
+    protected float m_baseValue = 0.5;
+
     InterpolationGraphDisplay(Bounds b){
         m_bounds = b;
 
@@ -239,8 +276,17 @@ class InterpolationGraphDisplay {
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 }

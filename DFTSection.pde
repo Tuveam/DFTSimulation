@@ -32,6 +32,7 @@ class DFTSection extends GUISection{
             ).asSectionOfYDivisions(2, 3
             ).withFrame(m_spacer/8),
             m_windowLength/2);
+
     }
 
     protected void preDrawUpdate(){
@@ -140,15 +141,15 @@ class MenuSection extends GUISection{
             m_blink = 10;
         }
 
-        fill(map(m_blink, 0, 10, 0, 255), 0, 0);
+        fill(ColorLoader.getFillColor(0), map(m_blink, 0, 10, 0, 255));
         noStroke();
         ellipse(m_bounds.withoutLeft(m_bounds.getXLen() - m_spacer));
 
         fill(200);
-        textSize(20);
+        textSize(15);
         textAlign(CENTER);
-        text(frameRate, m_bounds.getXPos() + m_bounds.getXLen() - m_spacer/2,
-            m_bounds.getYPos() + m_bounds.getYLen()/2);
+        text(round(frameRate) + " FPS", m_bounds.getXPos() + m_bounds.getXLen() - m_spacer/2,
+            m_bounds.getYPos() + m_bounds.getYLen()/2 + 5);
 
         if(m_blink > 0){
             m_blink--;

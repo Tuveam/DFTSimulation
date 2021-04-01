@@ -18,7 +18,7 @@ class MainSection extends GUISection{
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};
         m_tabs = new VerticalTabs(m_bounds.withoutTop(m_spacer).withXLen(m_spacer), tempTabNames);
 
-        m_tutorial = new Tutorial(m_bounds, m_spacer);
+        m_tutorial = new Tutorial(m_bounds, m_spacer, tempTabNames);
     }
 
     protected void initializeSections(){
@@ -49,6 +49,7 @@ class MainSection extends GUISection{
         }
 
         m_tutorial.update();
+        m_tutorial.setCurrentTab(m_tabs.getValue());
         
     }
 

@@ -75,7 +75,8 @@ void savePNG(){
 
     //backgroundcolors
     temp.pixels[3 * temp.width + 0] = color(17, 53, 20, 255);
-    temp.pixels[3 * temp.width + 1] = color(65, 19, 19, 255);
+    temp.pixels[3 * temp.width + 1] = color(19, 19, 19, 255);
+    //temp.pixels[3 * temp.width + 1] = color(65, 19, 19, 255);
     temp.pixels[3 * temp.width + 2] = color(102, 96, 14, 255);
 
     temp.updatePixels();

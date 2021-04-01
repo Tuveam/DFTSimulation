@@ -80,13 +80,17 @@ class Tabs extends Controller{
     }
 
     public void setValue(int value){
-        if(value < m_tabName.length && value >= 0){
-            m_value = value;
-        }
+        m_value = constrain(value, 0, m_tabName.length);
     }
 
     public int getMaxValue(){
         return m_tabName.length;
+    }
+
+    public void setTabName(String[] tabName){
+        m_tabName = tabName;
+
+        m_value = constrain(m_value, 0, m_tabName.length - 1);
     }
 
 }

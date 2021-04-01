@@ -813,6 +813,32 @@ class Bounds{
             endAngle,
             arcMode);
     }
+
+//_________________Text_________________________________________________________
+    public void text(String text, Bounds b, int textAlign){
+        textAlign(textAlign);
+        float textSize = b.getYLen();
+        textSize(textSize);
+
+        float yPos = b.getYPos() + 4 * textSize/5;
+        switch(textAlign){
+            case LEFT:
+            text(text, b.getXPos(), yPos);
+            break;
+            case RIGHT:
+            text(text, b.getXPos() + b.getXLen(), yPos);
+            break;
+            case CENTER:
+            text(text, b.getXPos() + b.getXLen()/2, yPos);
+            break;
+        }
+
+        //noFill();
+        //stroke(255);
+        //strokeWeight(1);
+        //rect(b);
+        
+    }
 static class ColorLoader{
 
     static private boolean m_isConstructed = false;
@@ -890,7 +916,8 @@ public void savePNG(){
 
     //backgroundcolors
     temp.pixels[3 * temp.width + 0] = color(17, 53, 20, 255);
-    temp.pixels[3 * temp.width + 1] = color(65, 19, 19, 255);
+    temp.pixels[3 * temp.width + 1] = color(19, 19, 19, 255);
+    //temp.pixels[3 * temp.width + 1] = color(65, 19, 19, 255);
     temp.pixels[3 * temp.width + 2] = color(102, 96, 14, 255);
 
     temp.updatePixels();
@@ -1629,46 +1656,88 @@ class BackwardButton extends Button{
 
 //===========================================================
 
-class TutorialButton{
-    protected QuestionMarkTickbox m_questionmark;
+class PageButton{
+    Bounds m_bounds;
+
     protected BackwardButton m_backward;
     protected ForwardButton m_forward;
 
     protected int m_page = 0;
+    protected int m_maxPage = 1;
+    protected String m_pageIndicator;
 
-    TutorialButton(Bounds b){
-        m_questionmark = new QuestionMarkTickbox(b.asSectionOfXDivisions(0, 2));
-        m_backward = new BackwardButton(b.asSectionOfXDivisions(2, 4));
-        m_forward = new ForwardButton(b.asSectionOfXDivisions(3, 4));
+    protected int m_textSize;
+    protected int m_textColor;
+
+
+    PageButton(Bounds b){
+        m_bounds = b;
+
+        m_backward = new BackwardButton(m_bounds.asSectionOfXDivisions(0, 2));
+        m_forward = new ForwardButton(m_bounds.asSectionOfXDivisions(1, 2));
+
+        m_textSize = 15;
+        m_textColor = ColorLoader.getGreyColor(0);
+
+        generatePageIndicator();
     }
 
     public void update(){
-        m_questionmark.update();
 
-        if(m_questionmark.getValue()){
-            m_backward.update();
-            m_forward.update();
-        }
+        m_backward.update();
+        m_forward.update();
+
+        textAlign(RIGHT);
+        textSize(m_textSize);
+        fill(m_textColor);
+        text(
+            m_pageIndicator,
+            m_bounds.getXPos() - m_textSize/4,
+            m_bounds.getYPos() + 2 * m_bounds.getYLen()/3
+        );
 
         if(m_backward.getValue()){
             m_page--;
+            m_page = constrain(m_page, 0, m_maxPage - 1);
+            generatePageIndicator();
         }
         
         if(m_forward.getValue()){
             m_page++;
+            m_page = constrain(m_page, 0, m_maxPage - 1);
+            generatePageIndicator();
         }
+
+        
     }
 
-    public boolean isOn(){
-        return m_questionmark.getValue();
+    public void setMaxPage(int maxPage){
+        m_maxPage = maxPage;
+        m_page = constrain(m_page, 0, m_maxPage - 1);
+        generatePageIndicator();
+    }
+
+    public int getMaxPage(){
+        return m_maxPage;
     }
 
     public int getPage(){
         return m_page;
     }
 
+    public void setPage(int page){
+        m_page = page;
+        m_page = constrain(m_page, 0, m_maxPage - 1);
+        generatePageIndicator();
+    }
+
     public void resetPage(){
-        m_page = 0;
+        setPage(0);
+    }
+
+    protected void generatePageIndicator(){
+        int actualPage = m_page + 1;
+        m_pageIndicator = actualPage + "/" + m_maxPage;
     }
 }
 
@@ -1707,6 +1776,7 @@ class DFTSection extends GUISection{
             ).asSectionOfYDivisions(2, 3
             ).withFrame(m_spacer/8),
             m_windowLength/2);
+
     }
 
     protected void preDrawUpdate(){
@@ -1815,15 +1885,15 @@ class MenuSection extends GUISection{
             m_blink = 10;
         }
 
-        fill(map(m_blink, 0, 10, 0, 255), 0, 0);
+        fill(ColorLoader.getFillColor(0), map(m_blink, 0, 10, 0, 255));
         noStroke();
         ellipse(m_bounds.withoutLeft(m_bounds.getXLen() - m_spacer));
 
         fill(200);
-        textSize(20);
+        textSize(15);
         textAlign(CENTER);
-        text(frameRate, m_bounds.getXPos() + m_bounds.getXLen() - m_spacer/2,
-            m_bounds.getYPos() + m_bounds.getYLen()/2);
+        text(round(frameRate) + " FPS", m_bounds.getXPos() + m_bounds.getXLen() - m_spacer/2,
+            m_bounds.getYPos() + m_bounds.getYLen()/2 + 5);
 
         if(m_blink > 0){
             m_blink--;
@@ -2857,7 +2927,7 @@ class MainSection extends GUISection{
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};
         m_tabs = new VerticalTabs(m_bounds.withoutTop(m_spacer).withXLen(m_spacer), tempTabNames);
 
-        m_tutorial = new Tutorial(m_bounds, m_spacer);
+        m_tutorial = new Tutorial(m_bounds, m_spacer, tempTabNames);
     }
 
     protected void initializeSections(){
@@ -2888,6 +2958,7 @@ class MainSection extends GUISection{
         }
 
         m_tutorial.update();
+        m_tutorial.setCurrentTab(m_tabs.getValue());
         
     }
 
@@ -2897,6 +2968,8 @@ class OneGraphDisplay{
     protected Bounds m_bounds;
 
     protected Graph m_graph;
+
+    protected float m_baseValue = 0.5f;
 
     OneGraphDisplay(Bounds b, int resolution){
         m_bounds = b;
@@ -2914,8 +2987,17 @@ class OneGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 
@@ -2951,6 +3033,8 @@ class SpectrumDisplay extends OneGraphDisplay{
     public void setAsSpectrumDisplay(){
         float maxValue = 0.6f;
 
+        setBaseValue(0);
+
         m_graph.setBaseValue(0);
         m_graph.setInputValueRange(0, maxValue);
         m_graph.setDisplayMode(1);
@@ -2984,6 +3068,11 @@ class SpectrumDisplay extends OneGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         if(m_sinIsVisible){
             m_sinSpectrum.draw();
@@ -3032,6 +3121,8 @@ class ContinuousGraphDisplay{
     private Graph[] m_graph;
     private boolean[] m_isVisible;
 
+    protected float m_baseValue = 0.5f;
+
     ContinuousGraphDisplay(Bounds b, int resolution, int graphAmount){
         m_bounds = b;
         
@@ -3062,6 +3153,12 @@ class ContinuousGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
+
         for(int i = 0; i < m_graph.length; i++){
 
             if(m_isVisible[i]){
@@ -3069,6 +3166,10 @@ class ContinuousGraphDisplay{
             }
             
         }
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 }
@@ -3101,6 +3202,11 @@ class AliasGraphDisplay extends OneGraphDisplay{
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
         m_sampledGraph.draw();
@@ -3119,6 +3225,8 @@ class InterpolationGraphDisplay {
 
     protected InterpolationGraph m_graph;
 
+    protected float m_baseValue = 0.5f;
+
     InterpolationGraphDisplay(Bounds b){
         m_bounds = b;
 
@@ -3134,8 +3242,17 @@ class InterpolationGraphDisplay {
         strokeWeight(2);
         fill(ColorLoader.getGreyColor(2));
         rect(m_bounds);
+        line(
+            m_bounds.getXPos(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue),
+            m_bounds.getXPos() + m_bounds.getXLen(),
+            m_bounds.getYPos() + m_bounds.getYLen() * (1-m_baseValue));
 
         m_graph.draw();
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
 }
@@ -3403,13 +3520,17 @@ class Tabs extends Controller{
     }
 
     public void setValue(int value){
-        if(value < m_tabName.length && value >= 0){
-            m_value = value;
-        }
+        m_value = constrain(value, 0, m_tabName.length);
     }
 
     public int getMaxValue(){
         return m_tabName.length;
+    }
+
+    public void setTabName(String[] tabName){
+        m_tabName = tabName;
+
+        m_value = constrain(m_value, 0, m_tabName.length - 1);
     }
 
 }
@@ -3669,57 +3790,337 @@ class Tutorial{
     protected Bounds m_bounds;
     protected float m_spacer;
 
-    protected TutorialButton m_questionmark;
+    protected QuestionMarkTickbox m_questionmark;
 
     protected TextBox m_text;
 
-    Tutorial(Bounds b, float spacer){
+    Tutorial(Bounds b, float spacer, String[] tabName){
         m_bounds = new Bounds(b);
         m_spacer = spacer;
 
-        m_questionmark = new TutorialButton(m_bounds.withLen(2 * m_spacer, m_spacer));
+        m_questionmark = new QuestionMarkTickbox(m_bounds.withLen(m_spacer, m_spacer));
         
-        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5f).withoutTopRatio(0.5f));
+        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5f).withFrame(m_spacer/2), tabName, m_spacer);
     }
 
     public void update(){
 
         m_questionmark.update();
 
-        if(m_questionmark.isOn()){
+        if(m_questionmark.getValue()){
             m_text.draw();
         }
     }
+
+    public void setCurrentTab(int currentTab){
+        m_text.setTabCache(currentTab);
+    }
 }
+
+//===========================================================
 
 class TextBox{
     protected Bounds m_bounds;
+    protected float m_spacer;
+
+    protected Tabs m_topic;
+    protected PageButton m_page;
 
     protected int m_backgroundColor;
     protected int m_textColor;
     protected PFont m_font;
-    protected String[] m_text;
+    protected String[] m_currentText;
 
-    TextBox(Bounds b){
+
+    protected int m_tabCache;
+    protected int m_previousTabCache;
+
+    protected int[] m_topicCache; //[tab]
+    protected int m_previousTopicCache;
+
+    protected int[][] m_pageCache; //[tab][topic]
+    protected int m_previousPageCache;
+
+
+    protected String[] m_tabName;
+
+    TextBox(Bounds b, String[] tabName, float spacer){
         m_bounds = new Bounds(b);
+        m_spacer = spacer;
+        m_tabName = tabName;
+
+        initializeFromJSON();
+        m_page = new PageButton(
+            m_bounds.withoutTop(m_bounds.getYLen() - m_spacer/2
+            ).withoutLeft(m_bounds.getXLen() - m_spacer)
+            );
+
+        
 
         m_backgroundColor = color(0, 118, 96);
         m_textColor = color(200);
         m_font = createFont("Courier New", 20);
-        m_text = new String[1];
-        m_text[0] = "Test";
+        m_currentText = new String[1];
+        m_currentText[0] = "Test";
+        setTabTopicPage(0, 0, 0);
     }
 
+    private void initializeFromJSON(){
+        m_tabCache = 0;
+        m_topicCache = new int[m_tabName.length];
+        m_pageCache = new int[m_tabName.length][];
+
+        m_previousTabCache = -1;
+        m_previousTopicCache = -1;
+        m_previousPageCache = -1;
+
+        m_topic = new Tabs(m_bounds.withYLen(m_spacer/2), new String[]{"No Topics loaded"});
+
+        for(int i = 0; i < m_pageCache.length; i++){
+            int topicsPerTab = 1;
+
+            JSONArray data = loadJSONArray("tutorial.json");
+
+            if( data.getJSONObject(i
+                    ).getString("type"
+                    ).equals("tab") ){
+
+                if( data.getJSONObject(i
+                        ).getString("name"
+                        ).equals(m_tabName[i]) ){
+
+                    topicsPerTab = data.getJSONObject(i
+                                        ).getJSONArray("content"
+                                        ).size();
+                    
+                }
+            }else{
+                
+                for(int j = 0; j < data.size(); j++){
+
+                    if( data.getJSONObject(j
+                            ).getString("name"
+                            ).equals(m_tabName[i]) ){
+
+                        topicsPerTab = data.getJSONObject(j
+                                            ).getJSONArray("content"
+                                            ).size();
+                        
+                        println("tab " + i + " misaligned at JSONIndex " + topicsPerTab);
+
+                        break;
+                    }
+
+                }
+            }
+
+            m_pageCache[i] = new int[topicsPerTab];
+
+            for(int j = 0; j < m_pageCache[i].length; j++){
+                m_pageCache[i][j] = 0;
+            }
+        }
+    }
+
+    protected void setTabTopicPage(int tabIndex, int topicIndex, int pageIndex){
+        if(tabIndex > 0 && tabIndex < m_topicCache.length){
+            if(topicIndex > 0 && topicIndex < m_pageCache[tabIndex].length){
+                m_tabCache = tabIndex;
+                m_topicCache[tabIndex] = topicIndex;
+                m_pageCache[tabIndex][topicIndex] = pageIndex;
+            }
+        }
+
+        setText();
+    }
+
+    private void setText(){
+        boolean hasTabChanged = (m_previousTabCache != m_tabCache);
+        boolean hasTopicChanged = (m_previousTopicCache != m_topicCache[m_tabCache]);
+        boolean hasPageChanged = (m_previousPageCache != m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
+        
+        JSONArray data = new JSONArray();
+
+        int jsonTabIndex = -1;
+        //check if page changed:
+        if(hasPageChanged || hasTabChanged || hasTopicChanged){
+            
+
+            data = loadJSONArray("tutorial.json");
+            //check if page is in range, otherwise constrain
+
+            jsonTabIndex = getJSONTabIndex(data, m_tabCache);
+            
+            //set page value
+            m_page.setPage(m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
+            //get the text
+            //set the text
+            //divide text into line sensibly
+            m_currentText = getTextFromJSON(
+                data,
+                jsonTabIndex,
+                m_topicCache[m_tabCache],
+                m_pageCache[m_tabCache][m_topicCache[m_tabCache]]
+                );
+            
+            
+            m_previousPageCache = m_pageCache[m_tabCache][m_topicCache[m_tabCache]];
+        }
+
+        //check if topic changed:
+        if(hasTopicChanged || hasTabChanged){
+            //set max page-number of m_page
+            m_page.setMaxPage( getMaxPage(data, jsonTabIndex, m_topicCache[m_tabCache]) );
+
+            m_previousTopicCache = m_topicCache[m_tabCache];
+        }
+        
+        //check if tab changed:
+        if(hasTabChanged){
+            //get topic names
+            String[] topicName = getTopicName(data, jsonTabIndex);
+            //set m_topic to new topic names
+            m_topic.setTabName(topicName);
+            //set topic value
+            m_topic.setValue(m_topicCache[m_tabCache]);
+
+            m_previousTabCache = m_tabCache;
+        }
+               
+    }
+
+    private String[] getTopicName(JSONArray data, int tabIndex){
+        String[] ret;
+
+        if(tabIndex != -1){
+            JSONArray content = data.getJSONObject(tabIndex
+                ).getJSONArray("content");
+
+            ret = new String[content.size()];
+
+            for(int i = 0; i < content.size(); i++){
+                if(content.getJSONObject(i).getString("type").equals("topic")){
+                    ret[i] = content.getJSONObject(i).getString("name");
+                }else{
+                    ret[i] = "Wrong type";
+                }
+            }
+
+            return ret;
+        }
+
+        ret = new String[1];
+        ret[0] = "no topics found";
+
+        return ret;
+    }
+
+    private int getMaxPage(JSONArray data, int jsonTabIndex, int topicIndex){
+        return data.getJSONObject(jsonTabIndex
+                    ).getJSONArray("content"
+                    ).getJSONObject(topicIndex
+                    ).getJSONArray("content").size();
+    }
+
+    private String[] getTextFromJSON(JSONArray data, int jsonTabIndex, int topicIndex, int pageIndex){
+        String[] ret = new String[20];
+
+        String temp = data.getJSONObject(jsonTabIndex
+                    ).getJSONArray("content"
+                    ).getJSONObject(topicIndex
+                    ).getJSONArray("content"
+                    ).getJSONObject(pageIndex
+                    ).getString("text");
+
+        int lastCutIndex = 0;
+        int lineLength = 34;
+        
+        for(int i = 0; i < ret.length; i++){
+            int nextCut = lastCutIndex + lineLength;
+            
+            if(lastCutIndex >= temp.length()){
+                ret[i] = "";
+            }else if(nextCut > temp.length()){
+                nextCut = temp.length();
+                ret[i] = temp.substring(lastCutIndex, nextCut);
+                lastCutIndex  = nextCut + 1;
+            }else{
+                while(temp.charAt(nextCut) != ' '){
+                    nextCut--;
+                }
+                ret[i] = temp.substring(lastCutIndex, nextCut);
+                lastCutIndex = nextCut + 1;
+            }
+            
+            
+        }
+        
+
+        return ret;
+    }
+
+    private int getJSONTabIndex(JSONArray data, int tabIndex){
+        int jsonTabIndex = -1;
+
+        if(//get jsonTabIndex
+            tabIndex < data.size() 
+            && data.getJSONObject(tabIndex
+            ).getString("type"
+            ).equals("tab") 
+            && data.getJSONObject(tabIndex
+            ).getString("name"
+            ).equals(m_tabName[tabIndex]) 
+            ){
+
+            jsonTabIndex = tabIndex;
+
+        }else{
+            for(int i = 0; i < data.size(); i++){
+
+                if(
+                    data.getJSONObject(i
+                    ).getString("type"
+                    ).equals("tab") 
+                    && data.getJSONObject(i
+                    ).getString("name"
+                    ).equals(m_tabName[tabIndex]) 
+                    ){
+
+                    jsonTabIndex = i;
+                }
+            }
+        }
+
+        return jsonTabIndex;
+    }
+
+
     public void draw(){
+        
 
         fill(m_backgroundColor);
         noStroke();
         rect(m_bounds, 10);
 
+        Bounds textBounds = m_bounds.withFrame(m_spacer/2).withoutBottomRatio(0.33f);
         textFont(m_font);
         textAlign(LEFT);
         fill(m_textColor);
-        text(m_text[0], m_bounds.getXPos(), m_bounds.getYPos());
+        for(int i = 0; i < m_currentText.length; i++){
+            text(m_currentText[i], textBounds.asSectionOfYDivisions(i, m_currentText.length), LEFT);
+        }
+        
+    
+        m_topic.update();
+        m_topicCache[m_tabCache] = m_topic.getValue();
+
+        m_page.update();
+        m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();
+    }
+
+    public void setTabCache(int tabCache){
+        m_tabCache = tabCache;
+        setText();
     }
 }
   public void settings() {  size(1250,850); }
