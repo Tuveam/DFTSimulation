@@ -1,10 +1,11 @@
 class Controller{
     //private float/boolean m_value = 0;
+    protected int m_id;
     
     protected Bounds m_bounds;
 
     protected boolean m_selected = false;
-    protected boolean m_firstClick = true;
+    //protected boolean m_firstClick = true;
 
     protected PVector m_mouseClicked;
 
@@ -17,12 +18,14 @@ class Controller{
     protected PFont m_font;
 
     Controller(Bounds b){
+        m_id = MouseControl.getID();
+
         m_bounds = new Bounds(b);
 
-        m_fillColor = ColorLoader.getFillColor(0);
-        m_backgroundColor1 = ColorLoader.getGreyColor(1);
-        m_backgroundColor2 = ColorLoader.getGreyColor(2);
-        m_textColor = ColorLoader.getGreyColor(0);
+        m_fillColor = color(56, 174, 65, 255);
+        m_backgroundColor1 = color(100, 100, 100, 255);
+        m_backgroundColor2 = color(50, 50, 50, 255);
+        m_textColor = color(228, 228, 228, 255);
         m_font = createFont("Arial", m_textSize);
         
         m_mouseClicked = new PVector(mouseX, mouseY);
@@ -35,7 +38,22 @@ class Controller{
     }
 
     protected void click(){
+
+        if(
+            MouseControl.amIClicked(m_id,
+                                m_bounds.checkHitbox(mouseX, mouseY),
+                                mousePressed,
+                                frameCount)
+            ){
+            m_mouseClicked.x = mouseX;
+            m_mouseClicked.y = mouseY;
+
+            m_selected = true;
+        }
         
+        if(!mousePressed){
+            m_selected = false;
+        }
     }
 
     protected void adjust(){
@@ -47,9 +65,14 @@ class Controller{
     }
 
     public void setColor(color capColor, color barColor, color fillColor){
+        setColor(capColor, barColor, fillColor, m_textColor);
+    }
+
+    public void setColor(color capColor, color barColor, color fillColor, color textColor){
         m_backgroundColor2 = capColor;
         m_backgroundColor1 = barColor;
         m_fillColor = fillColor;
+        m_textColor = textColor;
     }
 
 }
@@ -78,24 +101,6 @@ class Knob extends Controller{
 
         m_snapSteps = 4;
         
-    }
-
-    protected void click(){
-        if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if( m_bounds.checkHitbox(mouseX, mouseY) ){
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-            }
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
     }
 
     protected void adjust(){
@@ -250,25 +255,6 @@ class Tickbox extends Controller{
         m_value = true;
 
         m_name = name;
-    }
-
-    protected void click(){
-        if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if( m_bounds.checkHitbox(mouseX, mouseY) ){
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-            }
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
     protected void adjust(){
@@ -812,6 +798,11 @@ class PageButton{
     protected void generatePageIndicator(){
         int actualPage = m_page + 1;
         m_pageIndicator = actualPage + "/" + m_maxPage;
+    }
+
+    public void setColor(color capColor, color barColor, color fillColor, color textColor){
+        m_backward.setColor(capColor, barColor, fillColor, textColor);
+        m_forward.setColor(capColor, barColor, fillColor, textColor);
     }
 }
 

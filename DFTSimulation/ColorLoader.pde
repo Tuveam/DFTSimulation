@@ -65,8 +65,8 @@ void savePNG(){
 
     //fillcolors
     temp.pixels[1 * temp.width + 0] = color(56, 174, 65, 255);
-    temp.pixels[1 * temp.width + 1] = color(56, 174, 65, 255);
-    temp.pixels[1 * temp.width + 2] = color(56, 174, 65, 255);
+    temp.pixels[1 * temp.width + 1] = color(200, 50, 50, 255);
+    temp.pixels[1 * temp.width + 2] = color(224, 211, 36, 255);
 
     //graphcolors
     temp.pixels[2 * temp.width + 0] = color(56, 174, 65, 255);

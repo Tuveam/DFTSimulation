@@ -17,6 +17,7 @@ class MainSection extends GUISection{
 
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};
         m_tabs = new VerticalTabs(m_bounds.withoutTop(m_spacer).withXLen(m_spacer), tempTabNames);
+        m_tabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_tutorial = new Tutorial(m_bounds, m_spacer, tempTabNames);
     }

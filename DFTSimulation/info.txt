@@ -3,7 +3,7 @@ https://github.com/Tuveam/DFTSimulation
 https://youtu.be/dQw4w9WgXcQ
 
 DFT-Simulation
-v0.1
+v0.2
 Made by Victor Keilhack
 
 This Program aims at simulating a Discrete Fourier Transform

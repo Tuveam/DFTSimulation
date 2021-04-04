@@ -13,8 +13,10 @@ class SignalDisplay{
     SignalDisplay(Bounds b, int testSineAmount, int resolution){
         m_bounds = b;
 
-        m_automation = new Automation(m_bounds, ColorLoader.getGraphColor(2), false);
+        m_automation = new Automation(m_bounds);
         m_automation.setRealValueRange(-1, 1);
+        m_automation.setDrawBackground(false);
+        m_automation.setColor(ColorLoader.getGreyColor(1), ColorLoader.getGreyColor(2), ColorLoader.getGraphColor(2));
 
         m_input = new Graph(m_bounds, resolution);
         m_input.setColor(ColorLoader.getGraphColor(0));

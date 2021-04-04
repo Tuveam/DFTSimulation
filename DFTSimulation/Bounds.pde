@@ -211,6 +211,10 @@ class Bounds{
     void translate(Bounds b){
         translate(b.getXPos(), b.getYPos());
     }
+//_________________Vertex_______________________________________________________
+    void vertex(PVector v){
+        vertex(v.x, v.y);
+    }
 //_________________Rectangle____________________________________________________
     void rect(Bounds b, float tl, float tr, float br, float bl){
         rectMode(CORNER);
@@ -230,6 +234,17 @@ class Bounds{
     void ellipse(Bounds b){
         ellipseMode(CENTER);
         ellipse(b.getXPos() + b.getXLen()/2, b.getYPos() + b.getYLen()/2, b.getXLen(), b.getYLen());
+    }
+        
+//_________________Crosses______________________________________________________
+    
+    void cross(Bounds b){
+        cross(b.getXPos() + b.getXLen()/2, b.getYPos() + b.getYLen()/2, b.getXLen(), b.getYLen());
+    }
+    
+    void cross(float xCenter, float yCenter, float xLen, float yLen){
+        line(xCenter - xLen/2, yCenter - yLen/2, xCenter + xLen/2, yCenter + yLen/2);
+        line(xCenter - xLen/2, yCenter + yLen/2, xCenter + xLen/2, yCenter - yLen/2);
     }
 
 //_________________Arc__________________________________________________________

@@ -28,6 +28,7 @@ public void setup(){
     //fullScreen();
     m = new MainSection(new Bounds(0, 0, width, height));
 
+
     
 }
 
@@ -77,6 +78,7 @@ class AliasInputSection extends GUISection{
         super(b);
 
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         Bounds area = m_bounds.withFrame(m_spacer/4);
 
@@ -88,8 +90,9 @@ class AliasInputSection extends GUISection{
                 ).withFrame(m_spacer/4),
                 m_spacer,
                 resolution);
-        m_generator.setFrequencyRange(0.5f, 25);
+        m_generator.setFrequencyRange(0.5f, 60);
         m_generator.setFrequency(1);
+        m_generator.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
 
         int maxSamplerate = 150;
@@ -98,6 +101,7 @@ class AliasInputSection extends GUISection{
         m_sampleRate.setRealValueRange(1, maxSamplerate);
         m_sampleRate.setRealValue(20);
         m_sampleRate.setSnapSteps(maxSamplerate - 1);
+        m_sampleRate.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_graphDisplay = new AliasGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
@@ -138,6 +142,8 @@ class InterpolationSection extends GUISection{
         super(b);
 
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Interpolated");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         Bounds area = m_bounds.withFrame(m_spacer/4);
         m_graphDisplay = new InterpolationGraphDisplay(area.withoutLeftRatio(2.0f/7));
 
@@ -171,25 +177,30 @@ class Automation extends Controller{
     Automation(Bounds b){
         super(b);
 
-        m_point.add( new AutomationPoint(b, new PVector(0, 0.5f), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.001f, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.999f, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(1, 0.5f), m_fillColor) );
-    }
-
-    Automation(Bounds b, int fillColor, boolean drawBackground){
-        super(b);
-        m_fillColor = fillColor;
-        m_drawBackground = drawBackground;
-
-        m_point.add( new AutomationPoint(b, new PVector(0, 0.5f), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.001f, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.999f, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(1, 0.5f), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(1, 1), m_fillColor) );
     }
 
     public void setBaseValue(float baseValue){
-        m_baseValue = baseValue;
+        m_baseValue = constrain(baseValue, 0, 1);
+
+        for(int i = 0; i < m_point.size(); i++){
+            m_point.get(i).setBaseValue(baseValue);
+        }
+    }
+
+    public void setDrawBackground(boolean drawBackground){
+        m_drawBackground = drawBackground;
+    }
+
+    public void setColor(int backgroundColor, int lineColor, int fillColor){
+        m_backgroundColor2 = backgroundColor;
+        m_backgroundColor1 = lineColor;
+        m_fillColor = fillColor;
+
+        for(int i = 0; i < m_point.size(); i++){
+            m_point.get(i).setColor(backgroundColor, lineColor, fillColor);
+        }
     }
 
     public void setRealValueRange(float minRealValue, float maxRealValue){
@@ -208,53 +219,60 @@ class Automation extends Controller{
     }
 
     protected void click(){
-        if(mousePressed && m_firstClick && mouseButton == RIGHT){
-            m_firstClick = false;
-
-            boolean createPoint = true;
-
-            for(int i = 1; i < m_point.size() - 1 && createPoint; i++){
-                if(m_point.get(i).checkHitbox()){
-                    createPoint  = false;
-                    m_point.remove(i);
-                }
-
-                if(m_point.get(i).checkCurveHandleHitbox(m_point, i)){
-                    createPoint  = false;
-                    m_point.get(i).resetCurve();
-                }
-            }
-
-            if(createPoint){
-                if( m_bounds.checkHitbox(mouseX, mouseY)){
-
-                    m_mouseClicked.x = mouseX;
-                    m_mouseClicked.y = mouseY;
-
-                    m_selected = true;
-
-                    int index = m_point.size()-1;
-
-                    for(int i = m_point.size()-2; i >= 0; i--){
-                        if(m_point.get(i).getActualPosition().x < mouseX){
-                            break;
-                        }
-                        index = i;
-                    }
-
-                    PVector temp = new PVector( (mouseX - m_bounds.getXPos()) / m_bounds.getXLen(), 1 - (mouseY - m_bounds.getYPos()) / m_bounds.getYLen());
-
-                    insertPointAtIndex(new AutomationPoint(m_bounds, temp, m_fillColor), m_point, index);
-
-                }
-            }
+        if(
+            MouseControl.amIClicked(m_id,
+                                m_bounds.checkHitbox(mouseX, mouseY),
+                                mousePressed,
+                                frameCount)
+            && mouseButton == RIGHT
+            ){
+            
+            m_selected = true;
+            
         }
         
         if(!mousePressed){
             m_selected = false;
-            m_firstClick = true;
         }
         
+    }
+
+    protected void adjust(){
+        if(m_selected){
+            boolean createPoint = true;
+
+            for(int i = 1; i < m_point.size() - 1 && createPoint; i++){
+                if(m_point.get(i).checkHitbox()){
+                    createPoint = false;
+                    m_point.remove(i);
+                    m_selected = false;
+                    return;
+                }
+            }
+
+            if(createPoint){
+
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+
+                int index = m_point.size()-1;
+
+                for(int i = m_point.size()-2; i >= 0; i--){
+                    if(m_point.get(i).getActualPosition().x < mouseX){
+                        break;
+                    }
+                    index = i;
+                }
+
+                PVector temp = new PVector( (mouseX - m_bounds.getXPos()) / m_bounds.getXLen(), 1 - (mouseY - m_bounds.getYPos()) / m_bounds.getYLen());
+
+                insertPointAtIndex(new AutomationPoint(m_bounds, temp, m_fillColor), m_point, index);
+                
+                m_selected = false;
+                
+                return;
+            }
+        }
     }
 
     public void draw(){
@@ -270,14 +288,15 @@ class Automation extends Controller{
         for(int i = 0; i < m_point.size(); i++){
             m_point.get(i).update(m_point, i);
             PVector temp = m_point.get(i).getActualPosition();
-            vertex(temp.x, temp.y);
+            
         }
         vertex(m_bounds.getXPos() + m_bounds.getXLen(),
                 m_bounds.getYPos() + m_bounds.getYLen() * m_baseValue);
 
-        noStroke();
+        strokeWeight(2);
+        stroke(m_fillColor);
         fill(m_fillColor, 30);
-        endShape(CLOSE);
+        endShape(OPEN);
 
     }
 
@@ -322,34 +341,38 @@ class Automation extends Controller{
 
 }
 
+//====================================================================
+
 class AutomationPoint extends Controller{
 
+    private int m_curveHandleID;
+
     private PVector m_value;
+    private float m_baseValue;
 
     private float m_curve;
     private float m_previousCurve;
-    private int m_displayIncrement = 10;
+    private int m_displayIncrement = 1;
     private boolean m_selectedCurveHandle = false;
     private float m_curveHandleSensitivity = 1;
 
     private float m_radius = 6;
 
-    AutomationPoint(Bounds windowBounds, PVector value){
-        super(windowBounds);
-
-        m_value = value;
-        m_curve = 0.5f;
-        m_previousCurve = m_curve;
-    }
-
     AutomationPoint(Bounds windowBounds, PVector value, int fillColor){
         super(windowBounds);
 
+        m_curveHandleID = MouseControl.getID();
+
         m_value = value;
+        m_baseValue = 0.5f;
         m_curve = 0.5f;
         m_previousCurve = m_curve;
 
         setColor(m_backgroundColor1, m_backgroundColor2, fillColor);
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
     public PVector getActualPosition(){
@@ -369,17 +392,25 @@ class AutomationPoint extends Controller{
     }
 
     protected void click(ArrayList<AutomationPoint> others, int myIndex){
-        if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if(checkHitbox()){
+        if(
+            MouseControl.amIClicked(m_id,
+                                checkHitbox() && mouseButton == LEFT,
+                                mousePressed,
+                                frameCount)
+            ){
 
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
+            m_mouseClicked.x = mouseX;
+            m_mouseClicked.y = mouseY;
 
-                m_selected = true;
-
+            m_selected = true;
+        }
                 
-            }else if(checkCurveHandleHitbox(others, myIndex)){
+        if(
+            MouseControl.amIClicked(m_curveHandleID,
+                                checkCurveHandleHitbox(others, myIndex),
+                                mousePressed,
+                                frameCount)
+            ){
                 
                 m_mouseClicked.x = mouseX;
                 m_mouseClicked.y = mouseY;
@@ -388,12 +419,11 @@ class AutomationPoint extends Controller{
                 m_previousCurve = m_curve;
 
             }
-        }
+        
         
         if(!mousePressed){
             m_selected = false;
             m_selectedCurveHandle = false;
-            m_firstClick = true;
             
         }
         
@@ -406,8 +436,11 @@ class AutomationPoint extends Controller{
     protected void adjust(ArrayList<AutomationPoint> others, int myIndex){
         
         if(m_selected){
-            
             setActualPosition(mouseX, mouseY);
+
+            if(keyPressed && key == CODED && keyCode == CONTROL){
+                m_value.y = m_baseValue;
+            }
 
             if(myIndex == 0){
                 m_value.x = 0;
@@ -434,21 +467,20 @@ class AutomationPoint extends Controller{
             //println(m_value);
         }else if(m_selectedCurveHandle){
 
-            //println(m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y);
-            if(myIndex < others.size() - 1){
-                if(others.get(myIndex + 1).getValue().y > getValue().y){
-                    m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
-                }else{
-                    m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
+            if(mouseButton == LEFT){
+                if(myIndex < others.size() - 1){
+                    if(others.get(myIndex + 1).getValue().y > getValue().y){
+                        m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
+                    }else{
+                        m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
+                    }
+
+                    m_curve = constrain(m_curve, 0, 1);
                 }
-                if(m_curve < 0){
-                    m_curve = 0;
-                }
-                
-                if(m_curve > 1){
-                    m_curve = 1;
-                }
+            }else if(mouseButton == RIGHT){
+                resetCurve();
             }
+            
             
         }
     }
@@ -470,22 +502,23 @@ class AutomationPoint extends Controller{
         popMatrix();
 
         //Curve
+        
         if(myIndex < others.size() - 1){
+            vertex(getActualPosition());
             if(m_curve == 0.5f || getActualPosition().x == others.get(myIndex + 1).getActualPosition().x){
-                strokeWeight(2);
-                stroke(m_fillColor);
-                line(getActualPosition().x, getActualPosition().y, others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
+                
             }else{
-                beginShape();
-                for(int i = PApplet.parseInt(getActualPosition().x); i < others.get(myIndex + 1).getActualPosition().x; i += m_displayIncrement){
+                
+                for(int i = PApplet.parseInt(getActualPosition().x) + m_displayIncrement; i < others.get(myIndex + 1).getActualPosition().x; i += m_displayIncrement){
                     float x = map(i, getActualPosition().x, others.get(myIndex + 1).getActualPosition().x, 0, 1);
                     float actualY = map(getY(x), 0, 1, getActualPosition().y, others.get(myIndex + 1).getActualPosition().y);
 
                     vertex(i, actualY);
                 }
                 vertex(others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
-                endShape();
+                
             }
+            vertex(others.get(myIndex + 1).getActualPosition());
         }
 
         //CurveHandle
@@ -780,6 +813,10 @@ class Bounds{
     public void translate(Bounds b){
         translate(b.getXPos(), b.getYPos());
     }
+//_________________Vertex_______________________________________________________
+    public void vertex(PVector v){
+        vertex(v.x, v.y);
+    }
 //_________________Rectangle____________________________________________________
     public void rect(Bounds b, float tl, float tr, float br, float bl){
         rectMode(CORNER);
@@ -799,6 +836,17 @@ class Bounds{
     public void ellipse(Bounds b){
         ellipseMode(CENTER);
         ellipse(b.getXPos() + b.getXLen()/2, b.getYPos() + b.getYLen()/2, b.getXLen(), b.getYLen());
+    }
+        
+//_________________Crosses______________________________________________________
+    
+    public void cross(Bounds b){
+        cross(b.getXPos() + b.getXLen()/2, b.getYPos() + b.getYLen()/2, b.getXLen(), b.getYLen());
+    }
+    
+    public void cross(float xCenter, float yCenter, float xLen, float yLen){
+        line(xCenter - xLen/2, yCenter - yLen/2, xCenter + xLen/2, yCenter + yLen/2);
+        line(xCenter - xLen/2, yCenter + yLen/2, xCenter + xLen/2, yCenter - yLen/2);
     }
 
 //_________________Arc__________________________________________________________
@@ -906,8 +954,8 @@ public void savePNG(){
 
     //fillcolors
     temp.pixels[1 * temp.width + 0] = color(56, 174, 65, 255);
-    temp.pixels[1 * temp.width + 1] = color(56, 174, 65, 255);
-    temp.pixels[1 * temp.width + 2] = color(56, 174, 65, 255);
+    temp.pixels[1 * temp.width + 1] = color(200, 50, 50, 255);
+    temp.pixels[1 * temp.width + 2] = color(224, 211, 36, 255);
 
     //graphcolors
     temp.pixels[2 * temp.width + 0] = color(56, 174, 65, 255);
@@ -926,11 +974,12 @@ public void savePNG(){
 }
 class Controller{
     //private float/boolean m_value = 0;
+    protected int m_id;
     
     protected Bounds m_bounds;
 
     protected boolean m_selected = false;
-    protected boolean m_firstClick = true;
+    //protected boolean m_firstClick = true;
 
     protected PVector m_mouseClicked;
 
@@ -943,12 +992,14 @@ class Controller{
     protected PFont m_font;
 
     Controller(Bounds b){
+        m_id = MouseControl.getID();
+
         m_bounds = new Bounds(b);
 
-        m_fillColor = ColorLoader.getFillColor(0);
-        m_backgroundColor1 = ColorLoader.getGreyColor(1);
-        m_backgroundColor2 = ColorLoader.getGreyColor(2);
-        m_textColor = ColorLoader.getGreyColor(0);
+        m_fillColor = color(56, 174, 65, 255);
+        m_backgroundColor1 = color(100, 100, 100, 255);
+        m_backgroundColor2 = color(50, 50, 50, 255);
+        m_textColor = color(228, 228, 228, 255);
         m_font = createFont("Arial", m_textSize);
         
         m_mouseClicked = new PVector(mouseX, mouseY);
@@ -961,7 +1012,22 @@ class Controller{
     }
 
     protected void click(){
+
+        if(
+            MouseControl.amIClicked(m_id,
+                                m_bounds.checkHitbox(mouseX, mouseY),
+                                mousePressed,
+                                frameCount)
+            ){
+            m_mouseClicked.x = mouseX;
+            m_mouseClicked.y = mouseY;
+
+            m_selected = true;
+        }
         
+        if(!mousePressed){
+            m_selected = false;
+        }
     }
 
     protected void adjust(){
@@ -973,9 +1039,14 @@ class Controller{
     }
 
     public void setColor(int capColor, int barColor, int fillColor){
+        setColor(capColor, barColor, fillColor, m_textColor);
+    }
+
+    public void setColor(int capColor, int barColor, int fillColor, int textColor){
         m_backgroundColor2 = capColor;
         m_backgroundColor1 = barColor;
         m_fillColor = fillColor;
+        m_textColor = textColor;
     }
 
 }
@@ -1004,24 +1075,6 @@ class Knob extends Controller{
 
         m_snapSteps = 4;
         
-    }
-
-    protected void click(){
-        if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if( m_bounds.checkHitbox(mouseX, mouseY) ){
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-            }
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
     }
 
     protected void adjust(){
@@ -1176,25 +1229,6 @@ class Tickbox extends Controller{
         m_value = true;
 
         m_name = name;
-    }
-
-    protected void click(){
-        if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if( m_bounds.checkHitbox(mouseX, mouseY) ){
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-            }
-        }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
     protected void adjust(){
@@ -1739,6 +1773,11 @@ class PageButton{
         int actualPage = m_page + 1;
         m_pageIndicator = actualPage + "/" + m_maxPage;
     }
+
+    public void setColor(int capColor, int barColor, int fillColor, int textColor){
+        m_backward.setColor(capColor, barColor, fillColor, textColor);
+        m_forward.setColor(capColor, barColor, fillColor, textColor);
+    }
 }
 
 
@@ -1850,10 +1889,15 @@ class MenuSection extends GUISection{
     protected void initializeControllers(){
         Bounds area = m_bounds.withoutLeft(m_bounds.getXLen() - 4 * m_spacer);
         m_playButton = new PlayButton(area.asSectionOfXDivisions(0, 4));
+        m_playButton.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         m_skipButton = new SkipButton(area.asSectionOfXDivisions(1, 4));
+        m_skipButton.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         m_sampleRateKnob = new Knob(area.asSectionOfXDivisions(2, 4), "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
         m_sampleRateKnob.setSnapSteps(59);
+        m_sampleRateKnob.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
     }
 
     public void update(){
@@ -1941,6 +1985,8 @@ class InputSection extends GUISection{
                 ).withYLen(m_bounds.getYLen()/2),
                 m_spacer,
                 m_sampleNumber);
+        m_generator.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         m_signalDisplay = new SignalDisplay(area.withoutLeftRatio(2.0f/7),
                                             testFreqAmount,
                                             m_sampleNumber);
@@ -1950,14 +1996,19 @@ class InputSection extends GUISection{
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input Signal");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        
         m_testFreqTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + m_spacer/2,
                                         m_bounds.getYPos() + 5 * m_spacer / 2,
                                         m_spacer/3,
                                         m_spacer/3), "Test Frequency");
+        m_testFreqTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(1), ColorLoader.getGreyColor(0));
+        
         m_windowShapeTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + m_spacer/2,
                                         m_bounds.getYPos() + 19 * m_spacer / 6,
                                         m_spacer/3,
                                         m_spacer/3), "Window Shape");
+        m_windowShapeTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(2), ColorLoader.getGreyColor(0));
         
     }
 
@@ -2033,6 +2084,7 @@ class MathSection extends GUISection{
             ).withYLen(m_spacer/2
             ).withoutLeftRatio(0.2f),
             temp);
+        m_tabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(1), ColorLoader.getGreyColor(0));
 
         m_mult = new OneGraphDisplay(m_bounds.withXFrame(m_spacer/4
             ).withoutLeftRatio(2.0f/7
@@ -2044,6 +2096,8 @@ class MathSection extends GUISection{
     protected void initializeControllers(){
         
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Multiplication");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
     }
 
     protected int getSelectedFrequency(){
@@ -2114,19 +2168,25 @@ class SpectrumSection extends GUISection{
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Spectrum");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_sinTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
                                     m_bounds.getYPos() + 4 * m_spacer/6, 
                                     m_spacer/3, 
                                     m_spacer/3), "Sine");
+        m_sinTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(1), ColorLoader.getGreyColor(0));
+
         m_cosTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
                                     m_bounds.getYPos() + 4 * m_spacer/6 + m_spacer/2, 
                                     m_spacer/3, 
                                     m_spacer/3), "Cos");
+        m_cosTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(2), ColorLoader.getGreyColor(0));
+
         m_spectrumTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
                                     m_bounds.getYPos() + 4 * m_spacer/6 + m_spacer, 
                                     m_spacer/3, 
                                     m_spacer/3), "Spectrum");
+        m_spectrumTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
     }
 
@@ -2367,6 +2427,15 @@ class Generator{
         m_knob[0].setRealValue(frequency);
     }
 
+    public void setColor(int capColor, int barColor, int fillColor, int textColor){
+        for(int i = 0; i < m_knob.length; i++){
+            m_knob[i].setColor(capColor, barColor, fillColor, textColor);
+        }
+
+        m_tabs.setColor(capColor, barColor, fillColor, textColor);
+        m_switch.setColor(capColor, barColor, fillColor, textColor);
+    }
+
 }
 
 //===========================================================================
@@ -2461,6 +2530,8 @@ class Graph{
 
     private int m_displayMode = 0;
 
+    protected boolean m_isTouchingRightBorder = true;
+
     Graph(Bounds b, int resolution){
         m_bounds = b;
 
@@ -2543,11 +2614,23 @@ class Graph{
         
     }
 
+    private float getSpacing(){
+        float spacing;
+        if(m_isTouchingRightBorder){
+            spacing = m_bounds.getXLen() / (m_dataLength - 1);
+        }else{
+            spacing = m_bounds.getXLen() / (m_dataLength);
+        }
+        return spacing;
+    }
+
     private void drawPointsAndLines(){
         noFill();
         stroke(m_color);
         strokeWeight(2);
-        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
+
+        float spacing = getSpacing();
+        
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
@@ -2589,7 +2672,7 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
+        float spacing = getSpacing();
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
@@ -2617,6 +2700,10 @@ class Graph{
     public int getLength(){
         return m_dataLength;
     }
+
+    public void setTouchRightBorder(boolean isTouching){
+        m_isTouchingRightBorder = isTouching;
+    }
 }
 
 //==========================================================================================
@@ -2643,11 +2730,20 @@ class SampledGraph extends Graph{
     }
 
     protected void translateData(){
-        for(int i = 0; i < m_dataLength - 1; i++){
-            m_data[i] = m_inputData[i * m_inputData.length/(m_dataLength - 1) ];
+        float factor;
+
+        if(m_isTouchingRightBorder){
+            factor = (1.0f * m_inputData.length)/(m_dataLength - 1.0f);
+        }else{
+            factor = (1.0f * m_inputData.length)/(m_dataLength);
         }
 
-        m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
+        for(int i = 0; i < m_dataLength /*- 1*/; i++){
+            int index = floor(i * factor);
+            m_data[i] = m_inputData[index];
+        }
+
+        //m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
     }
 
     public int getDrawIndex(int index){
@@ -2695,16 +2791,19 @@ class InfoSection extends GUISection{
             m_linkButton[i] = new LinkButton(area.withYPos(area.getYPos() + i * 3 * m_spacer/2
                 ).withYLen(m_spacer));
             m_linkButton[i].setLink(m_infoText[i]);
+            m_linkButton[i].setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
         }
+
+        m_backgroundColor = ColorLoader.getBackgroundColor(0);
     }
 
     protected void drawBackground(){
         noStroke();
-        fill(40);
+        fill(m_backgroundColor);
         rect(m_bounds);
 
         float textSize = 25;
-        fill(200);
+        fill(ColorLoader.getGreyColor(0));
         textSize(textSize);
         textAlign(LEFT);
         for(int i = m_linkButton.length; i < m_infoText.length; i++){
@@ -2769,6 +2868,7 @@ class InterferenceInputSection extends GUISection{
         super(b);
 
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_generator = new InstantGenerator[2];
 
@@ -2783,6 +2883,8 @@ class InterferenceInputSection extends GUISection{
                                             resolution);
             m_generator[i].setFrequencyRange(0.5f, 25);
             m_generator[i].setFrequency(1);
+            m_generator[i].setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(i), ColorLoader.getGreyColor(0));
+
         }
 
         m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
@@ -2870,6 +2972,7 @@ class InterferenceOutputSection extends GUISection{
     InterferenceOutputSection(Bounds b, int resolution){
         super(b);
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Output");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
         
         Bounds area = m_bounds.withFrame(m_spacer/4);
 
@@ -2879,6 +2982,7 @@ class InterferenceOutputSection extends GUISection{
                             ).withoutLeft(m_spacer/4
                             ).withYPos(area.getYPos() + area.getYLen()/2 - m_spacer/4),
                             modeNames);
+        m_modeTabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
@@ -2926,6 +3030,7 @@ class MainSection extends GUISection{
 
         String[] tempTabNames = new String[]{"+&x", "Aliasing", "DFT", "Info"};
         m_tabs = new VerticalTabs(m_bounds.withoutTop(m_spacer).withXLen(m_spacer), tempTabNames);
+        m_tabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_tutorial = new Tutorial(m_bounds, m_spacer, tempTabNames);
     }
@@ -2963,6 +3068,154 @@ class MainSection extends GUISection{
     }
 
 
+}
+static class MouseControl{
+    static private int m_idIterator;
+
+    static private boolean m_isConstructed = false;
+
+    static private int m_frame;
+    static private boolean m_hasUpdated = false;
+    static private boolean m_hasUpdatedClick = false;
+
+    static private boolean[] m_isFirstClick;
+    static private boolean m_isPreviousClick = false;
+
+    static private int[] m_touchedID;
+    static private int m_state;
+
+    MouseControl(){}
+
+    static public int getID(){
+        construct();
+        return m_idIterator++;
+    }
+
+    static private void construct(){
+        if(!m_isConstructed){
+            m_idIterator = 0;
+
+            m_touchedID = new int [2];
+
+            for(int i = 0; i < m_touchedID.length; i++){
+                m_touchedID[i] = -1;
+            }
+
+            m_isFirstClick = new boolean [2];
+
+            for(int i = 0; i < m_touchedID.length; i++){
+                m_isFirstClick[i] = false;
+            }
+
+            m_state = 0;
+
+            m_isConstructed = true;
+        }
+        
+    }
+
+    static private void update(boolean isClicked, int frame){
+        if(m_frame != frame){
+            m_hasUpdated = false;
+            m_hasUpdatedClick = false;
+        }
+
+        if(!m_hasUpdated){
+            iterateState();
+
+            m_touchedID[getCurrentState()] = -1;
+
+            m_frame = frame;
+
+            
+
+            m_hasUpdated = true;
+        }
+
+        if(!m_hasUpdatedClick){
+            m_isFirstClick[getCurrentState()] = isClicked && !m_isPreviousClick;
+            m_isPreviousClick = isClicked;
+
+            m_hasUpdatedClick = true;
+        }
+
+    }
+
+    static private void update(int frame){
+        if(m_frame != frame){
+            m_hasUpdated = false;
+            m_hasUpdatedClick = false;
+        }
+
+        if(!m_hasUpdated){
+            iterateState();
+
+            m_touchedID[getCurrentState()] = -1;
+
+            m_frame = frame;
+
+            
+
+            m_hasUpdated = true;
+        }
+
+    }
+
+    static private int getCurrentState(){
+        return m_state;
+    }
+
+    static private int getLastState(){
+        if(m_state == 0){
+            return 1;
+        }
+
+        return 0;
+    }
+
+    static private void iterateState(){
+        if(m_state == 0){
+            m_state = 1;
+        }else{
+            m_state = 0;
+        }
+    }
+
+    static public boolean amIClicked(int controllerID, boolean isTargeted, boolean isClicked, int frame){
+        update(isClicked, frame);
+
+        if(isTargeted){
+            m_touchedID[getCurrentState()] = controllerID;
+        }
+
+        if(m_isFirstClick[getLastState()] && controllerID == m_touchedID[getLastState()]){
+            return true;
+        }
+
+        return false;
+    }
+
+    static public boolean amIHovered(int controllerID, boolean isTargeted, int frame){
+        update(frame);
+
+        if(isTargeted){
+            m_touchedID[getCurrentState()] = controllerID;
+        }
+
+        if(controllerID == m_touchedID[getLastState()]){
+            return true;
+        }
+
+        return false;
+    }
+
+    static public void onTop(boolean isTargeted, int frame){
+        update(frame);
+
+        if(isTargeted){
+            m_touchedID[getCurrentState()] = -1;
+        }
+    }
 }
 class OneGraphDisplay{
     protected Bounds m_bounds;
@@ -3186,6 +3439,7 @@ class AliasGraphDisplay extends OneGraphDisplay{
         m_graph.setDisplayMode(2);
 
         m_sampledGraph = new SampledGraph(m_bounds, sampledMaxResolution);
+        m_sampledGraph.setTouchRightBorder(false);
     }
 
     public void setSampleRate(int samplerate){
@@ -3231,6 +3485,7 @@ class InterpolationGraphDisplay {
         m_bounds = b;
 
         m_graph = new InterpolationGraph(m_bounds);
+        m_graph.setTouchRightBorder(false);
     }
 
     public void setData(float[] data){
@@ -3271,8 +3526,10 @@ class SignalDisplay{
     SignalDisplay(Bounds b, int testSineAmount, int resolution){
         m_bounds = b;
 
-        m_automation = new Automation(m_bounds, ColorLoader.getGraphColor(2), false);
+        m_automation = new Automation(m_bounds);
         m_automation.setRealValueRange(-1, 1);
+        m_automation.setDrawBackground(false);
+        m_automation.setColor(ColorLoader.getGreyColor(1), ColorLoader.getGreyColor(2), ColorLoader.getGraphColor(2));
 
         m_input = new Graph(m_bounds, resolution);
         m_input.setColor(ColorLoader.getGraphColor(0));
@@ -3451,30 +3708,14 @@ class Tabs extends Controller{
         m_tabName = tabName;
     }
 
-    protected void click(){
-        if(mousePressed && (m_firstClick || m_selected)){
-            m_firstClick = false;
+    protected void adjust(){
+        if(m_selected){
 
-            if(m_bounds.checkHitbox(mouseX, mouseY)){
+            int xPartitions = m_tabName.length;
 
-                int xPartitions = m_tabName.length;
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-
-                m_value = m_bounds.checkHitboxXPartition(mouseX, xPartitions);
-
-            }
+            m_value = m_bounds.checkHitboxXPartition(mouseX, xPartitions);
 
         }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
     protected void draw(){
@@ -3549,10 +3790,6 @@ class SinCosTabs extends Tabs{
         //Background
         noStroke();
         fill(m_backgroundColor2);
-        /*rect(m_pos.x,
-            m_pos.y + m_len.y/10,
-            m_len.x,
-            4 * m_len.y / 5);*/
         rect(m_bounds.withYFrameRatio(0.1f));
         
         //Unmarked Tabs
@@ -3614,31 +3851,18 @@ class SinCosTabs extends Tabs{
         }
     }
 
-    protected void click(){
-        if(mousePressed && (m_firstClick || m_selected)){
-            
-            m_firstClick = false;
+    protected void adjust(){
+        if(m_selected){
 
-            if(m_bounds.checkHitbox(mouseX, mouseY)){
+            int xPartitions = (m_tabName.length % 2 == 0)? m_tabName.length/2 : m_tabName.length/2 + 1;
 
-                int xPartitions = (m_tabName.length % 2 == 0)? m_tabName.length/2 : m_tabName.length/2 + 1;
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-
-                m_value = constrain(xPartitions * m_bounds.checkHitboxYPartition(mouseY, 2) + m_bounds.checkHitboxXPartition(mouseX, xPartitions), 0, m_tabName.length - 1);
-
-            }
+            m_value = constrain(
+                xPartitions * m_bounds.checkHitboxYPartition(mouseY, 2)
+                + m_bounds.checkHitboxXPartition(mouseX, xPartitions),
+                0,
+                m_tabName.length - 1);
 
         }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
 
@@ -3690,8 +3914,9 @@ class HoverTabs extends Tabs{
     }
 
     protected void hover(){
-        if(m_firstClick && 
-            m_bounds.checkHitbox(mouseX, mouseY)){
+        if(MouseControl.amIHovered(m_id,
+                                m_bounds.checkHitbox(mouseX, mouseY),
+                                frameCount)/*m_bounds.checkHitbox(mouseX, mouseY)*/ ){
 
             int xPartitions = m_tabName.length;
 
@@ -3712,30 +3937,14 @@ class VerticalTabs extends Tabs{
         super(b, tabName);
     }
 
-    protected void click(){
-        if(mousePressed && (m_firstClick || m_selected)){
-            m_firstClick = false;
+    protected void adjust(){
+        if(m_selected){
 
-            if(m_bounds.checkHitbox(mouseX, mouseY)){
+            int yPartitions = m_tabName.length;
 
-                int yPartitions = m_tabName.length;
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-
-                m_value = m_bounds.checkHitboxYPartition(mouseY, yPartitions);
-
-            }
+            m_value = m_bounds.checkHitboxYPartition(mouseY, yPartitions);
 
         }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
     protected void draw(){
@@ -3799,8 +4008,9 @@ class Tutorial{
         m_spacer = spacer;
 
         m_questionmark = new QuestionMarkTickbox(m_bounds.withLen(m_spacer, m_spacer));
-        
-        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5f).withFrame(m_spacer/2), tabName, m_spacer);
+        m_questionmark.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
+        m_text = new TextBox(m_bounds.withoutLeftRatio(0.5f).withFrame(m_spacer/2).withYFrameRatio(1.0f/6.0f), tabName, m_spacer);
     }
 
     public void update(){
@@ -3854,11 +4064,10 @@ class TextBox{
             m_bounds.withoutTop(m_bounds.getYLen() - m_spacer/2
             ).withoutLeft(m_bounds.getXLen() - m_spacer)
             );
+        m_page.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
-        
-
-        m_backgroundColor = color(0, 118, 96);
-        m_textColor = color(200);
+        m_backgroundColor = ColorLoader.getBackgroundColor(0);
+        m_textColor = ColorLoader.getGreyColor(0);
         m_font = createFont("Courier New", 20);
         m_currentText = new String[1];
         m_currentText[0] = "Test";
@@ -3875,6 +4084,7 @@ class TextBox{
         m_previousPageCache = -1;
 
         m_topic = new Tabs(m_bounds.withYLen(m_spacer/2), new String[]{"No Topics loaded"});
+        m_topic.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         for(int i = 0; i < m_pageCache.length; i++){
             int topicsPerTab = 1;
@@ -3951,8 +4161,7 @@ class TextBox{
 
             jsonTabIndex = getJSONTabIndex(data, m_tabCache);
             
-            //set page value
-            m_page.setPage(m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
+            
             //get the text
             //set the text
             //divide text into line sensibly
@@ -3971,6 +4180,9 @@ class TextBox{
         if(hasTopicChanged || hasTabChanged){
             //set max page-number of m_page
             m_page.setMaxPage( getMaxPage(data, jsonTabIndex, m_topicCache[m_tabCache]) );
+
+            //set page value
+            m_page.setPage(m_pageCache[m_tabCache][m_topicCache[m_tabCache]]);
 
             m_previousTopicCache = m_topicCache[m_tabCache];
         }
@@ -4033,23 +4245,31 @@ class TextBox{
                     ).getString("text");
 
         int lastCutIndex = 0;
-        int lineLength = 34;
+        int lineLength = 36;
         
-        for(int i = 0; i < ret.length; i++){
-            int nextCut = lastCutIndex + lineLength;
+        for(int i = 0; i < ret.length; i++){ //Fill each index of the array
+            int nextCut = lastCutIndex + lineLength; //set nextCut to a whole line
             
-            if(lastCutIndex >= temp.length()){
+            if(lastCutIndex >= temp.length()){ //fill remaining lines with nothing, when all text is gone
                 ret[i] = "";
-            }else if(nextCut > temp.length()){
+            }else if(nextCut >= temp.length()){ //if nextCut is at the end, fill in the last line
                 nextCut = temp.length();
                 ret[i] = temp.substring(lastCutIndex, nextCut);
                 lastCutIndex  = nextCut + 1;
-            }else{
-                while(temp.charAt(nextCut) != ' '){
+            }else{ // if there's still text left, cut it at the nearest space
+                
+                while(temp.charAt(nextCut) != ' '){ //only cut if the char after the cut is space
                     nextCut--;
+
+                    if(nextCut <= lastCutIndex + 1){ //cut off the word, if it occupies more than the entire line
+                        nextCut = lastCutIndex + lineLength;
+
+                        break;
+                    }
                 }
-                ret[i] = temp.substring(lastCutIndex, nextCut);
-                lastCutIndex = nextCut + 1;
+
+                ret[i] = temp.substring(lastCutIndex, nextCut); //get the text
+                lastCutIndex = nextCut + 1; //start the next line without the space
             }
             
             
@@ -4099,23 +4319,27 @@ class TextBox{
         
 
         fill(m_backgroundColor);
-        noStroke();
-        rect(m_bounds, 10);
+        stroke(ColorLoader.getGreyColor(1));
+        strokeWeight(4);
+        rect(m_bounds);
 
-        Bounds textBounds = m_bounds.withFrame(m_spacer/2).withoutBottomRatio(0.33f);
+        Bounds textBounds = m_bounds.withFrame(m_spacer/2);
         textFont(m_font);
         textAlign(LEFT);
         fill(m_textColor);
         for(int i = 0; i < m_currentText.length; i++){
             text(m_currentText[i], textBounds.asSectionOfYDivisions(i, m_currentText.length), LEFT);
         }
-        
+
+        MouseControl.onTop(m_bounds.checkHitbox(mouseX, mouseY), frameCount);
+
+        m_page.update();
+        m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();
     
         m_topic.update();
         m_topicCache[m_tabCache] = m_topic.getValue();
 
-        m_page.update();
-        m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();
+        
     }
 
     public void setTabCache(int tabCache){

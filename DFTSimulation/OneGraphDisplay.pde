@@ -220,6 +220,7 @@ class AliasGraphDisplay extends OneGraphDisplay{
         m_graph.setDisplayMode(2);
 
         m_sampledGraph = new SampledGraph(m_bounds, sampledMaxResolution);
+        m_sampledGraph.setTouchRightBorder(false);
     }
 
     public void setSampleRate(int samplerate){
@@ -265,6 +266,7 @@ class InterpolationGraphDisplay {
         m_bounds = b;
 
         m_graph = new InterpolationGraph(m_bounds);
+        m_graph.setTouchRightBorder(false);
     }
 
     public void setData(float[] data){

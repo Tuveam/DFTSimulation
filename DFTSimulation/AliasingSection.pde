@@ -40,6 +40,7 @@ class AliasInputSection extends GUISection{
         super(b);
 
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         Bounds area = m_bounds.withFrame(m_spacer/4);
 
@@ -51,8 +52,9 @@ class AliasInputSection extends GUISection{
                 ).withFrame(m_spacer/4),
                 m_spacer,
                 resolution);
-        m_generator.setFrequencyRange(0.5, 25);
+        m_generator.setFrequencyRange(0.5, 60);
         m_generator.setFrequency(1);
+        m_generator.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
 
         int maxSamplerate = 150;
@@ -61,6 +63,7 @@ class AliasInputSection extends GUISection{
         m_sampleRate.setRealValueRange(1, maxSamplerate);
         m_sampleRate.setRealValue(20);
         m_sampleRate.setSnapSteps(maxSamplerate - 1);
+        m_sampleRate.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_graphDisplay = new AliasGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
@@ -101,6 +104,8 @@ class InterpolationSection extends GUISection{
         super(b);
 
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Interpolated");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         Bounds area = m_bounds.withFrame(m_spacer/4);
         m_graphDisplay = new InterpolationGraphDisplay(area.withoutLeftRatio(2.0f/7));
 

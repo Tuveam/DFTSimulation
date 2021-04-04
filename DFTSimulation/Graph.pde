@@ -11,6 +11,8 @@ class Graph{
 
     private int m_displayMode = 0;
 
+    protected boolean m_isTouchingRightBorder = true;
+
     Graph(Bounds b, int resolution){
         m_bounds = b;
 
@@ -93,11 +95,23 @@ class Graph{
         
     }
 
+    private float getSpacing(){
+        float spacing;
+        if(m_isTouchingRightBorder){
+            spacing = m_bounds.getXLen() / (m_dataLength - 1);
+        }else{
+            spacing = m_bounds.getXLen() / (m_dataLength);
+        }
+        return spacing;
+    }
+
     private void drawPointsAndLines(){
         noFill();
         stroke(m_color);
         strokeWeight(2);
-        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
+
+        float spacing = getSpacing();
+        
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
@@ -139,7 +153,7 @@ class Graph{
         stroke(m_color);
         strokeWeight(2);
         beginShape();
-        float spacing = m_bounds.getXLen() / (m_dataLength - 1);
+        float spacing = getSpacing();
         for(int i = 0; i < m_dataLength; i++){
 
             float drawValue = getDrawValue(i);
@@ -167,6 +181,10 @@ class Graph{
     public int getLength(){
         return m_dataLength;
     }
+
+    public void setTouchRightBorder(boolean isTouching){
+        m_isTouchingRightBorder = isTouching;
+    }
 }
 
 //==========================================================================================
@@ -193,11 +211,20 @@ class SampledGraph extends Graph{
     }
 
     protected void translateData(){
-        for(int i = 0; i < m_dataLength - 1; i++){
-            m_data[i] = m_inputData[i * m_inputData.length/(m_dataLength - 1) ];
+        float factor;
+
+        if(m_isTouchingRightBorder){
+            factor = (1.0f * m_inputData.length)/(m_dataLength - 1.0f);
+        }else{
+            factor = (1.0f * m_inputData.length)/(m_dataLength);
         }
 
-        m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
+        for(int i = 0; i < m_dataLength /*- 1*/; i++){
+            int index = floor(i * factor);
+            m_data[i] = m_inputData[index];
+        }
+
+        //m_data[m_dataLength - 1] = m_inputData[m_inputData.length - 1];
     }
 
     public int getDrawIndex(int index){

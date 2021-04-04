@@ -11,30 +11,14 @@ class Tabs extends Controller{
         m_tabName = tabName;
     }
 
-    protected void click(){
-        if(mousePressed && (m_firstClick || m_selected)){
-            m_firstClick = false;
+    protected void adjust(){
+        if(m_selected){
 
-            if(m_bounds.checkHitbox(mouseX, mouseY)){
+            int xPartitions = m_tabName.length;
 
-                int xPartitions = m_tabName.length;
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-
-                m_value = m_bounds.checkHitboxXPartition(mouseX, xPartitions);
-
-            }
+            m_value = m_bounds.checkHitboxXPartition(mouseX, xPartitions);
 
         }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
     protected void draw(){
@@ -109,10 +93,6 @@ class SinCosTabs extends Tabs{
         //Background
         noStroke();
         fill(m_backgroundColor2);
-        /*rect(m_pos.x,
-            m_pos.y + m_len.y/10,
-            m_len.x,
-            4 * m_len.y / 5);*/
         rect(m_bounds.withYFrameRatio(0.1));
         
         //Unmarked Tabs
@@ -174,31 +154,18 @@ class SinCosTabs extends Tabs{
         }
     }
 
-    protected void click(){
-        if(mousePressed && (m_firstClick || m_selected)){
-            
-            m_firstClick = false;
+    protected void adjust(){
+        if(m_selected){
 
-            if(m_bounds.checkHitbox(mouseX, mouseY)){
+            int xPartitions = (m_tabName.length % 2 == 0)? m_tabName.length/2 : m_tabName.length/2 + 1;
 
-                int xPartitions = (m_tabName.length % 2 == 0)? m_tabName.length/2 : m_tabName.length/2 + 1;
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-
-                m_value = constrain(xPartitions * m_bounds.checkHitboxYPartition(mouseY, 2) + m_bounds.checkHitboxXPartition(mouseX, xPartitions), 0, m_tabName.length - 1);
-
-            }
+            m_value = constrain(
+                xPartitions * m_bounds.checkHitboxYPartition(mouseY, 2)
+                + m_bounds.checkHitboxXPartition(mouseX, xPartitions),
+                0,
+                m_tabName.length - 1);
 
         }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
 
@@ -250,8 +217,9 @@ class HoverTabs extends Tabs{
     }
 
     protected void hover(){
-        if(m_firstClick && 
-            m_bounds.checkHitbox(mouseX, mouseY)){
+        if(MouseControl.amIHovered(m_id,
+                                m_bounds.checkHitbox(mouseX, mouseY),
+                                frameCount)/*m_bounds.checkHitbox(mouseX, mouseY)*/ ){
 
             int xPartitions = m_tabName.length;
 
@@ -272,30 +240,14 @@ class VerticalTabs extends Tabs{
         super(b, tabName);
     }
 
-    protected void click(){
-        if(mousePressed && (m_firstClick || m_selected)){
-            m_firstClick = false;
+    protected void adjust(){
+        if(m_selected){
 
-            if(m_bounds.checkHitbox(mouseX, mouseY)){
+            int yPartitions = m_tabName.length;
 
-                int yPartitions = m_tabName.length;
-
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
-
-                m_selected = true;
-
-                m_value = m_bounds.checkHitboxYPartition(mouseY, yPartitions);
-
-            }
+            m_value = m_bounds.checkHitboxYPartition(mouseY, yPartitions);
 
         }
-        
-        if(!mousePressed){
-            m_selected = false;
-            m_firstClick = true;
-        }
-        
     }
 
     protected void draw(){

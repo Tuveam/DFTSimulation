@@ -133,6 +133,15 @@ class Generator{
         m_knob[0].setRealValue(frequency);
     }
 
+    public void setColor(color capColor, color barColor, color fillColor, color textColor){
+        for(int i = 0; i < m_knob.length; i++){
+            m_knob[i].setColor(capColor, barColor, fillColor, textColor);
+        }
+
+        m_tabs.setColor(capColor, barColor, fillColor, textColor);
+        m_switch.setColor(capColor, barColor, fillColor, textColor);
+    }
+
 }
 
 //===========================================================================
