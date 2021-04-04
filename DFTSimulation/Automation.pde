@@ -10,25 +10,30 @@ class Automation extends Controller{
     Automation(Bounds b){
         super(b);
 
-        m_point.add( new AutomationPoint(b, new PVector(0, 0.5), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.001, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.999, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(1, 0.5), m_fillColor) );
-    }
-
-    Automation(Bounds b, color fillColor, boolean drawBackground){
-        super(b);
-        m_fillColor = fillColor;
-        m_drawBackground = drawBackground;
-
-        m_point.add( new AutomationPoint(b, new PVector(0, 0.5), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.001, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(0.999, 1), m_fillColor) );
-        m_point.add( new AutomationPoint(b, new PVector(1, 0.5), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(0, 1), m_fillColor) );
+        m_point.add( new AutomationPoint(b, new PVector(1, 1), m_fillColor) );
     }
 
     public void setBaseValue(float baseValue){
-        m_baseValue = baseValue;
+        m_baseValue = constrain(baseValue, 0, 1);
+
+        for(int i = 0; i < m_point.size(); i++){
+            m_point.get(i).setBaseValue(baseValue);
+        }
+    }
+
+    public void setDrawBackground(boolean drawBackground){
+        m_drawBackground = drawBackground;
+    }
+
+    public void setColor(color backgroundColor, color lineColor, color fillColor){
+        m_backgroundColor2 = backgroundColor;
+        m_backgroundColor1 = lineColor;
+        m_fillColor = fillColor;
+
+        for(int i = 0; i < m_point.size(); i++){
+            m_point.get(i).setColor(backgroundColor, lineColor, fillColor);
+        }
     }
 
     public void setRealValueRange(float minRealValue, float maxRealValue){
@@ -47,53 +52,60 @@ class Automation extends Controller{
     }
 
     protected void click(){
-        if(mousePressed && m_firstClick && mouseButton == RIGHT){
-            m_firstClick = false;
-
-            boolean createPoint = true;
-
-            for(int i = 1; i < m_point.size() - 1 && createPoint; i++){
-                if(m_point.get(i).checkHitbox()){
-                    createPoint  = false;
-                    m_point.remove(i);
-                }
-
-                if(m_point.get(i).checkCurveHandleHitbox(m_point, i)){
-                    createPoint  = false;
-                    m_point.get(i).resetCurve();
-                }
-            }
-
-            if(createPoint){
-                if( m_bounds.checkHitbox(mouseX, mouseY)){
-
-                    m_mouseClicked.x = mouseX;
-                    m_mouseClicked.y = mouseY;
-
-                    m_selected = true;
-
-                    int index = m_point.size()-1;
-
-                    for(int i = m_point.size()-2; i >= 0; i--){
-                        if(m_point.get(i).getActualPosition().x < mouseX){
-                            break;
-                        }
-                        index = i;
-                    }
-
-                    PVector temp = new PVector( (mouseX - m_bounds.getXPos()) / m_bounds.getXLen(), 1 - (mouseY - m_bounds.getYPos()) / m_bounds.getYLen());
-
-                    insertPointAtIndex(new AutomationPoint(m_bounds, temp, m_fillColor), m_point, index);
-
-                }
-            }
+        if(
+            MouseControl.amIClicked(m_id,
+                                m_bounds.checkHitbox(mouseX, mouseY),
+                                mousePressed,
+                                frameCount)
+            && mouseButton == RIGHT
+            ){
+            
+            m_selected = true;
+            
         }
         
         if(!mousePressed){
             m_selected = false;
-            m_firstClick = true;
         }
         
+    }
+
+    protected void adjust(){
+        if(m_selected){
+            boolean createPoint = true;
+
+            for(int i = 1; i < m_point.size() - 1 && createPoint; i++){
+                if(m_point.get(i).checkHitbox()){
+                    createPoint = false;
+                    m_point.remove(i);
+                    m_selected = false;
+                    return;
+                }
+            }
+
+            if(createPoint){
+
+                m_mouseClicked.x = mouseX;
+                m_mouseClicked.y = mouseY;
+
+                int index = m_point.size()-1;
+
+                for(int i = m_point.size()-2; i >= 0; i--){
+                    if(m_point.get(i).getActualPosition().x < mouseX){
+                        break;
+                    }
+                    index = i;
+                }
+
+                PVector temp = new PVector( (mouseX - m_bounds.getXPos()) / m_bounds.getXLen(), 1 - (mouseY - m_bounds.getYPos()) / m_bounds.getYLen());
+
+                insertPointAtIndex(new AutomationPoint(m_bounds, temp, m_fillColor), m_point, index);
+                
+                m_selected = false;
+                
+                return;
+            }
+        }
     }
 
     public void draw(){
@@ -109,14 +121,15 @@ class Automation extends Controller{
         for(int i = 0; i < m_point.size(); i++){
             m_point.get(i).update(m_point, i);
             PVector temp = m_point.get(i).getActualPosition();
-            vertex(temp.x, temp.y);
+            
         }
         vertex(m_bounds.getXPos() + m_bounds.getXLen(),
                 m_bounds.getYPos() + m_bounds.getYLen() * m_baseValue);
 
-        noStroke();
+        strokeWeight(2);
+        stroke(m_fillColor);
         fill(m_fillColor, 30);
-        endShape(CLOSE);
+        endShape(OPEN);
 
     }
 
@@ -161,34 +174,38 @@ class Automation extends Controller{
 
 }
 
+//====================================================================
+
 class AutomationPoint extends Controller{
 
+    private int m_curveHandleID;
+
     private PVector m_value;
+    private float m_baseValue;
 
     private float m_curve;
     private float m_previousCurve;
-    private int m_displayIncrement = 10;
+    private int m_displayIncrement = 1;
     private boolean m_selectedCurveHandle = false;
     private float m_curveHandleSensitivity = 1;
 
     private float m_radius = 6;
 
-    AutomationPoint(Bounds windowBounds, PVector value){
-        super(windowBounds);
-
-        m_value = value;
-        m_curve = 0.5;
-        m_previousCurve = m_curve;
-    }
-
     AutomationPoint(Bounds windowBounds, PVector value, color fillColor){
         super(windowBounds);
 
+        m_curveHandleID = MouseControl.getID();
+
         m_value = value;
+        m_baseValue = 0.5;
         m_curve = 0.5;
         m_previousCurve = m_curve;
 
         setColor(m_backgroundColor1, m_backgroundColor2, fillColor);
+    }
+
+    public void setBaseValue(float baseValue){
+        m_baseValue = constrain(baseValue, 0, 1);
     }
 
     public PVector getActualPosition(){
@@ -208,17 +225,25 @@ class AutomationPoint extends Controller{
     }
 
     protected void click(ArrayList<AutomationPoint> others, int myIndex){
-        if(mousePressed && m_firstClick){
-            m_firstClick = false;
-            if(checkHitbox()){
+        if(
+            MouseControl.amIClicked(m_id,
+                                checkHitbox() && mouseButton == LEFT,
+                                mousePressed,
+                                frameCount)
+            ){
 
-                m_mouseClicked.x = mouseX;
-                m_mouseClicked.y = mouseY;
+            m_mouseClicked.x = mouseX;
+            m_mouseClicked.y = mouseY;
 
-                m_selected = true;
-
+            m_selected = true;
+        }
                 
-            }else if(checkCurveHandleHitbox(others, myIndex)){
+        if(
+            MouseControl.amIClicked(m_curveHandleID,
+                                checkCurveHandleHitbox(others, myIndex),
+                                mousePressed,
+                                frameCount)
+            ){
                 
                 m_mouseClicked.x = mouseX;
                 m_mouseClicked.y = mouseY;
@@ -227,12 +252,11 @@ class AutomationPoint extends Controller{
                 m_previousCurve = m_curve;
 
             }
-        }
+        
         
         if(!mousePressed){
             m_selected = false;
             m_selectedCurveHandle = false;
-            m_firstClick = true;
             
         }
         
@@ -245,8 +269,11 @@ class AutomationPoint extends Controller{
     protected void adjust(ArrayList<AutomationPoint> others, int myIndex){
         
         if(m_selected){
-            
             setActualPosition(mouseX, mouseY);
+
+            if(keyPressed && key == CODED && keyCode == CONTROL){
+                m_value.y = m_baseValue;
+            }
 
             if(myIndex == 0){
                 m_value.x = 0;
@@ -273,21 +300,20 @@ class AutomationPoint extends Controller{
             //println(m_value);
         }else if(m_selectedCurveHandle){
 
-            //println(m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_len.y);
-            if(myIndex < others.size() - 1){
-                if(others.get(myIndex + 1).getValue().y > getValue().y){
-                    m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
-                }else{
-                    m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
+            if(mouseButton == LEFT){
+                if(myIndex < others.size() - 1){
+                    if(others.get(myIndex + 1).getValue().y > getValue().y){
+                        m_curve = m_previousCurve + m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
+                    }else{
+                        m_curve = m_previousCurve - m_curveHandleSensitivity * (m_mouseClicked.y - mouseY) / m_bounds.getYLen();
+                    }
+
+                    m_curve = constrain(m_curve, 0, 1);
                 }
-                if(m_curve < 0){
-                    m_curve = 0;
-                }
-                
-                if(m_curve > 1){
-                    m_curve = 1;
-                }
+            }else if(mouseButton == RIGHT){
+                resetCurve();
             }
+            
             
         }
     }
@@ -309,22 +335,23 @@ class AutomationPoint extends Controller{
         popMatrix();
 
         //Curve
+        
         if(myIndex < others.size() - 1){
+            vertex(getActualPosition());
             if(m_curve == 0.5 || getActualPosition().x == others.get(myIndex + 1).getActualPosition().x){
-                strokeWeight(2);
-                stroke(m_fillColor);
-                line(getActualPosition().x, getActualPosition().y, others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
+                
             }else{
-                beginShape();
-                for(int i = int(getActualPosition().x); i < others.get(myIndex + 1).getActualPosition().x; i += m_displayIncrement){
+                
+                for(int i = int(getActualPosition().x) + m_displayIncrement; i < others.get(myIndex + 1).getActualPosition().x; i += m_displayIncrement){
                     float x = map(i, getActualPosition().x, others.get(myIndex + 1).getActualPosition().x, 0, 1);
                     float actualY = map(getY(x), 0, 1, getActualPosition().y, others.get(myIndex + 1).getActualPosition().y);
 
                     vertex(i, actualY);
                 }
                 vertex(others.get(myIndex + 1).getActualPosition().x, others.get(myIndex + 1).getActualPosition().y);
-                endShape();
+                
             }
+            vertex(others.get(myIndex + 1).getActualPosition());
         }
 
         //CurveHandle

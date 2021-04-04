@@ -332,6 +332,7 @@ class TextBox{
             text(m_currentText[i], textBounds.asSectionOfYDivisions(i, m_currentText.length), LEFT);
         }
 
+        MouseControl.onTop(m_bounds.checkHitbox(mouseX, mouseY), frameCount);
 
         m_page.update();
         m_pageCache[m_tabCache][m_topicCache[m_tabCache]] = m_page.getPage();

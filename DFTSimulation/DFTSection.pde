@@ -106,10 +106,15 @@ class MenuSection extends GUISection{
     protected void initializeControllers(){
         Bounds area = m_bounds.withoutLeft(m_bounds.getXLen() - 4 * m_spacer);
         m_playButton = new PlayButton(area.asSectionOfXDivisions(0, 4));
+        m_playButton.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         m_skipButton = new SkipButton(area.asSectionOfXDivisions(1, 4));
+        m_skipButton.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         m_sampleRateKnob = new Knob(area.asSectionOfXDivisions(2, 4), "Samplerate");
         m_sampleRateKnob.setRealValueRange(60, 1);
         m_sampleRateKnob.setSnapSteps(59);
+        m_sampleRateKnob.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
     }
 
     public void update(){
@@ -197,6 +202,8 @@ class InputSection extends GUISection{
                 ).withYLen(m_bounds.getYLen()/2),
                 m_spacer,
                 m_sampleNumber);
+        m_generator.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         m_signalDisplay = new SignalDisplay(area.withoutLeftRatio(2.0f/7),
                                             testFreqAmount,
                                             m_sampleNumber);
@@ -206,14 +213,19 @@ class InputSection extends GUISection{
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input Signal");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        
         m_testFreqTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + m_spacer/2,
                                         m_bounds.getYPos() + 5 * m_spacer / 2,
                                         m_spacer/3,
                                         m_spacer/3), "Test Frequency");
+        m_testFreqTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(1), ColorLoader.getGreyColor(0));
+        
         m_windowShapeTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + m_spacer/2,
                                         m_bounds.getYPos() + 19 * m_spacer / 6,
                                         m_spacer/3,
                                         m_spacer/3), "Window Shape");
+        m_windowShapeTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(2), ColorLoader.getGreyColor(0));
         
     }
 
@@ -289,6 +301,7 @@ class MathSection extends GUISection{
             ).withYLen(m_spacer/2
             ).withoutLeftRatio(0.2),
             temp);
+        m_tabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(1), ColorLoader.getGreyColor(0));
 
         m_mult = new OneGraphDisplay(m_bounds.withXFrame(m_spacer/4
             ).withoutLeftRatio(2.0f/7
@@ -300,6 +313,8 @@ class MathSection extends GUISection{
     protected void initializeControllers(){
         
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Multiplication");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
     }
 
     protected int getSelectedFrequency(){
@@ -370,19 +385,25 @@ class SpectrumSection extends GUISection{
 
     protected void initializeControllers(){
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Spectrum");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_sinTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
                                     m_bounds.getYPos() + 4 * m_spacer/6, 
                                     m_spacer/3, 
                                     m_spacer/3), "Sine");
+        m_sinTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(1), ColorLoader.getGreyColor(0));
+
         m_cosTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
                                     m_bounds.getYPos() + 4 * m_spacer/6 + m_spacer/2, 
                                     m_spacer/3, 
                                     m_spacer/3), "Cos");
+        m_cosTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(2), ColorLoader.getGreyColor(0));
+
         m_spectrumTickbox = new Tickbox(new Bounds(m_bounds.getXPos() + 4 * m_spacer/6,
                                     m_bounds.getYPos() + 4 * m_spacer/6 + m_spacer, 
                                     m_spacer/3, 
                                     m_spacer/3), "Spectrum");
+        m_spectrumTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
     }
 

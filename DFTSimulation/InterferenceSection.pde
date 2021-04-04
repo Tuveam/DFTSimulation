@@ -43,6 +43,7 @@ class InterferenceInputSection extends GUISection{
         super(b);
 
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Input");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_generator = new InstantGenerator[2];
 
@@ -57,6 +58,8 @@ class InterferenceInputSection extends GUISection{
                                             resolution);
             m_generator[i].setFrequencyRange(0.5, 25);
             m_generator[i].setFrequency(1);
+            m_generator[i].setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(i), ColorLoader.getGreyColor(0));
+
         }
 
         m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
@@ -144,6 +147,7 @@ class InterferenceOutputSection extends GUISection{
     InterferenceOutputSection(Bounds b, int resolution){
         super(b);
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Output");
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
         
         Bounds area = m_bounds.withFrame(m_spacer/4);
 
@@ -153,6 +157,7 @@ class InterferenceOutputSection extends GUISection{
                             ).withoutLeft(m_spacer/4
                             ).withYPos(area.getYPos() + area.getYLen()/2 - m_spacer/4),
                             modeNames);
+        m_modeTabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,

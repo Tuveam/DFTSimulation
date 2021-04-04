@@ -211,6 +211,10 @@ class Bounds{
     void translate(Bounds b){
         translate(b.getXPos(), b.getYPos());
     }
+//_________________Vertex_______________________________________________________
+    void vertex(PVector v){
+        vertex(v.x, v.y);
+    }
 //_________________Rectangle____________________________________________________
     void rect(Bounds b, float tl, float tr, float br, float bl){
         rectMode(CORNER);
