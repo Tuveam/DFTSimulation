@@ -799,6 +799,11 @@ class PageButton{
         int actualPage = m_page + 1;
         m_pageIndicator = actualPage + "/" + m_maxPage;
     }
+
+    public void setColor(color capColor, color barColor, color fillColor, color textColor){
+        m_backward.setColor(capColor, barColor, fillColor, textColor);
+        m_forward.setColor(capColor, barColor, fillColor, textColor);
+    }
 }
 
 

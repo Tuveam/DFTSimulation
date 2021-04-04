@@ -11,7 +11,8 @@ class Tutorial{
         m_spacer = spacer;
 
         m_questionmark = new QuestionMarkTickbox(m_bounds.withLen(m_spacer, m_spacer));
-        
+        m_questionmark.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+
         m_text = new TextBox(m_bounds.withoutLeftRatio(0.5).withFrame(m_spacer/2).withYFrameRatio(1.0f/6.0f), tabName, m_spacer);
     }
 
@@ -66,11 +67,10 @@ class TextBox{
             m_bounds.withoutTop(m_bounds.getYLen() - m_spacer/2
             ).withoutLeft(m_bounds.getXLen() - m_spacer)
             );
+        m_page.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
-        
-
-        m_backgroundColor = color(0, 118, 96);
-        m_textColor = color(200);
+        m_backgroundColor = ColorLoader.getBackgroundColor(0);
+        m_textColor = ColorLoader.getGreyColor(0);
         m_font = createFont("Courier New", 20);
         m_currentText = new String[1];
         m_currentText[0] = "Test";
@@ -87,6 +87,7 @@ class TextBox{
         m_previousPageCache = -1;
 
         m_topic = new Tabs(m_bounds.withYLen(m_spacer/2), new String[]{"No Topics loaded"});
+        m_topic.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         for(int i = 0; i < m_pageCache.length; i++){
             int topicsPerTab = 1;
@@ -321,8 +322,9 @@ class TextBox{
         
 
         fill(m_backgroundColor);
-        noStroke();
-        rect(m_bounds, 10);
+        stroke(ColorLoader.getGreyColor(1));
+        strokeWeight(4);
+        rect(m_bounds);
 
         Bounds textBounds = m_bounds.withFrame(m_spacer/2);
         textFont(m_font);
