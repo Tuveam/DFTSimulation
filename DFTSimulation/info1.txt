@@ -1,9 +1,9 @@
 https://www.youtube.com/channel/UCp2nS43h4WGIEQmuvKihn9Q
 https://github.com/Tuveam/DFTSimulation
-https://youtu.be/dQw4w9WgXcQ
+https://youtube.com/playlist?list=PLJSEsI-CkKka1NJEANA5oO7uh-SJ8q7Rj
 
 DFT-Simulation
-v0.2
+v1.0
 Made by Victor Keilhack
 
 This Program aims at simulating a Discrete Fourier Transform
@@ -15,6 +15,6 @@ constructive and destructive interference, signal multiplica-
 tion and more. If you want a more guided approach, press the 
 question mark in the upper left corner.
 
-Also check out the (soon to be coming) video on YouTube about
-this program. If you want to modify or look at the code, this
-project is (soon) available on GitHub.
+Also check out the video playlist on YouTube about this 
+program. If you want to modify or look at the code, this 
+project is available on GitHub.

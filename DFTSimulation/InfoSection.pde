@@ -5,7 +5,28 @@ class InfoSection extends GUISection{
 
     InfoSection(Bounds b){
         super(b);
-        m_infoText = loadStrings("info.txt");
+
+        boolean isLoaded = true;
+        println("In Runtime");
+        m_infoText = new String[1];
+        m_infoText[0] = "Not Text";
+
+        String[] temp = new String[1];
+        temp[0] = "No Text";
+
+        try{
+            temp = loadStrings("info.txt");
+        }catch(Exception e){
+            
+            isLoaded = false;
+        }
+
+        if(isLoaded){
+            m_infoText = temp;
+        }
+
+        println(isLoaded);
+        
 
         m_linkButton = new LinkButton[3];
 
@@ -15,7 +36,11 @@ class InfoSection extends GUISection{
         for(int i = 0; i < m_linkButton.length; i++){
             m_linkButton[i] = new LinkButton(area.withYPos(area.getYPos() + i * 3 * m_spacer/2
                 ).withYLen(m_spacer));
-            m_linkButton[i].setLink(m_infoText[i]);
+            
+            if(!isLoaded){
+                m_linkButton[i].setLink(m_infoText[i]);
+            }
+            
             m_linkButton[i].setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
         }
 
