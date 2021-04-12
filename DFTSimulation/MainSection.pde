@@ -20,6 +20,7 @@ class MainSection extends GUISection{
         m_tabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_tutorial = new Tutorial(m_bounds, m_spacer, tempTabNames);
+
     }
 
     protected void initializeSections(){

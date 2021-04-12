@@ -84,9 +84,10 @@ class AliasInputSection extends GUISection{
 
         int resolution = floor(area.withoutLeftRatio(2.0f/7).getXLen());
 
+        Bounds inputArea = area.withoutRightRatio(5.0f/7.0f);
+
         m_generator = new InstantGenerator(
-                area.withoutRightRatio(5.0f/7
-                ).asSectionOfYDivisions(0, 2
+                inputArea.asSectionOfYDivisions(0, 2
                 ).withFrame(m_spacer/4),
                 m_spacer,
                 resolution);
@@ -96,16 +97,23 @@ class AliasInputSection extends GUISection{
 
 
         int maxSamplerate = 150;
-        m_sampleRate = new Knob(area.withoutTopRatio(0.5f).withLen(m_spacer, m_spacer),
-                                "Samplerate");
+        m_sampleRate = new Knob(
+            new Bounds(
+                inputArea.getXPos() + inputArea.getXLen()/2 - m_spacer/2,
+                inputArea.getYPos() + 3 * inputArea.getYLen()/4 - m_spacer/2,
+                m_spacer,
+                m_spacer),
+            "Samplerate");
         m_sampleRate.setRealValueRange(1, maxSamplerate);
         m_sampleRate.setRealValue(20);
         m_sampleRate.setSnapSteps(maxSamplerate - 1);
-        m_sampleRate.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        m_sampleRate.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(1), ColorLoader.getGreyColor(0));
 
         m_graphDisplay = new AliasGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
                                             maxSamplerate);
+        m_graphDisplay.setGraphColor(ColorLoader.getGraphColor(0));
+        m_graphDisplay.setSampledColor(ColorLoader.getGraphColor(1));
 
         m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
@@ -142,10 +150,11 @@ class InterpolationSection extends GUISection{
         super(b);
 
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Interpolated");
-        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(2), ColorLoader.getGreyColor(0));
 
         Bounds area = m_bounds.withFrame(m_spacer/4);
         m_graphDisplay = new InterpolationGraphDisplay(area.withoutLeftRatio(2.0f/7));
+        m_graphDisplay.setColor(ColorLoader.getGraphColor(2));
 
         m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
@@ -2780,7 +2789,10 @@ class InfoSection extends GUISection{
 
     InfoSection(Bounds b){
         super(b);
+
         m_infoText = loadStrings("info.txt");
+        
+        
 
         m_linkButton = new LinkButton[3];
 
@@ -2790,7 +2802,11 @@ class InfoSection extends GUISection{
         for(int i = 0; i < m_linkButton.length; i++){
             m_linkButton[i] = new LinkButton(area.withYPos(area.getYPos() + i * 3 * m_spacer/2
                 ).withYLen(m_spacer));
+            
+            
             m_linkButton[i].setLink(m_infoText[i]);
+            
+            
             m_linkButton[i].setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
         }
 
@@ -2972,21 +2988,22 @@ class InterferenceOutputSection extends GUISection{
     InterferenceOutputSection(Bounds b, int resolution){
         super(b);
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Output");
-        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(2), ColorLoader.getGreyColor(0));
         
         Bounds area = m_bounds.withFrame(m_spacer/4);
 
         String[] modeNames = new String[]{"Addition", "Multiplication"};
-        m_modeTabs = new Tabs(area.withYLen(m_spacer/2
+        m_modeTabs = new Tabs(m_bounds.withYLen(m_spacer/2
                             ).withoutRightRatio(5.0f/7
-                            ).withoutLeft(m_spacer/4
+                            ).withXFrame(m_spacer/2
                             ).withYPos(area.getYPos() + area.getYLen()/2 - m_spacer/4),
                             modeNames);
-        m_modeTabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        m_modeTabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getBackgroundColor(2), ColorLoader.getGreyColor(0));
 
         m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
                                             1);
+        m_graphDisplay.setColor(0, ColorLoader.getGraphColor(2));
 
         m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }
@@ -3033,6 +3050,7 @@ class MainSection extends GUISection{
         m_tabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
 
         m_tutorial = new Tutorial(m_bounds, m_spacer, tempTabNames);
+
     }
 
     protected void initializeSections(){
@@ -3446,6 +3464,14 @@ class AliasGraphDisplay extends OneGraphDisplay{
         m_sampledGraph.setSampleRate(samplerate);
     }
 
+    public void setGraphColor(int c){
+        m_graph.setColor(c);
+    }
+
+    public void setSampledColor(int c){
+        m_sampledGraph.setColor(c);
+    }
+
     public void setData(float[] data){
         m_graph.setData(data);
         m_sampledGraph.setData(data);
@@ -3490,6 +3516,10 @@ class InterpolationGraphDisplay {
 
     public void setData(float[] data){
         m_graph.setData(data);
+    }
+
+    public void setColor(int c){
+        m_graph.setColor(c);
     }
 
     public void draw(){

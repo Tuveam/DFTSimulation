@@ -227,6 +227,14 @@ class AliasGraphDisplay extends OneGraphDisplay{
         m_sampledGraph.setSampleRate(samplerate);
     }
 
+    public void setGraphColor(color c){
+        m_graph.setColor(c);
+    }
+
+    public void setSampledColor(color c){
+        m_sampledGraph.setColor(c);
+    }
+
     public void setData(float[] data){
         m_graph.setData(data);
         m_sampledGraph.setData(data);
@@ -271,6 +279,10 @@ class InterpolationGraphDisplay {
 
     public void setData(float[] data){
         m_graph.setData(data);
+    }
+
+    public void setColor(color c){
+        m_graph.setColor(c);
     }
 
     public void draw(){

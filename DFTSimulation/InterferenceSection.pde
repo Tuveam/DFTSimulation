@@ -147,21 +147,22 @@ class InterferenceOutputSection extends GUISection{
     InterferenceOutputSection(Bounds b, int resolution){
         super(b);
         m_sectionTickbox = new Tickbox(m_bounds.withLen(m_spacer/2, m_spacer/2), "Output");
-        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        m_sectionTickbox.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(2), ColorLoader.getGreyColor(0));
         
         Bounds area = m_bounds.withFrame(m_spacer/4);
 
         String[] modeNames = new String[]{"Addition", "Multiplication"};
-        m_modeTabs = new Tabs(area.withYLen(m_spacer/2
+        m_modeTabs = new Tabs(m_bounds.withYLen(m_spacer/2
                             ).withoutRightRatio(5.0f/7
-                            ).withoutLeft(m_spacer/4
+                            ).withXFrame(m_spacer/2
                             ).withYPos(area.getYPos() + area.getYLen()/2 - m_spacer/4),
                             modeNames);
-        m_modeTabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
+        m_modeTabs.setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getBackgroundColor(2), ColorLoader.getGreyColor(0));
 
         m_graphDisplay = new ContinuousGraphDisplay(area.withoutLeftRatio(2.0f/7),
                                             resolution,
                                             1);
+        m_graphDisplay.setColor(0, ColorLoader.getGraphColor(2));
 
         m_backgroundColor = ColorLoader.getBackgroundColor(1);
     }

@@ -5,7 +5,10 @@ class InfoSection extends GUISection{
 
     InfoSection(Bounds b){
         super(b);
+
         m_infoText = loadStrings("info.txt");
+        
+        
 
         m_linkButton = new LinkButton[3];
 
@@ -15,7 +18,11 @@ class InfoSection extends GUISection{
         for(int i = 0; i < m_linkButton.length; i++){
             m_linkButton[i] = new LinkButton(area.withYPos(area.getYPos() + i * 3 * m_spacer/2
                 ).withYLen(m_spacer));
+            
+            
             m_linkButton[i].setLink(m_infoText[i]);
+            
+            
             m_linkButton[i].setColor(ColorLoader.getGreyColor(2), ColorLoader.getGreyColor(1), ColorLoader.getFillColor(0), ColorLoader.getGreyColor(0));
         }
 
